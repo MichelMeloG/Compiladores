@@ -1,11 +1,3 @@
-# RoboFlow: A Linguagem de Comportamento de Estação
-
-**Conexão do Projeto com Linguagens Formais e Compiladores**  
-**Versão:** 2.0 (Seguidor de Linha Industrial)  
-**Data:** Agosto 2026
-
----
-
 ## 🎯 Escopo da Linguagem
 
 RoboFlow **não é uma linguagem de robótica geral**. Ela resolve um problema específico e delimitado: **descrever o que o AGV faz em cada estação da linha**.
@@ -33,6 +25,9 @@ Isso é proposital e é o que torna o projeto viável academicamente:
       └─────────────────────┘
 ```
 
+![[Linguagens formais e Compiladores/Projeto/context_flow_diagram.png]]# Como o Compilador RoboFlow Gera o Módulo de Decisão de Estação
+
+
 ---
 
 ## 📖 Sintaxe da Linguagem
@@ -55,15 +50,17 @@ station "carga" {
 
 | Comando                                                | Efeito                                                                           |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `stop()`                                               | Publica `/station_cmd = STOP`                                                    |
+| `stop()`                                               | Envia `CMD STOP` na serial                                                       |
 | `set_speed(v)`                                         | Define velocidade de seguimento (respeitando limite físico)                      |
-| `turn_left()` / `turn_right()` / `continue_straight()` | Escolha de ramal em bifurcação                                                   |
+| `turn_left()` / `turn_right()` / `continue_straight()` | Comando fixo de manobra numa estação (a *escolha automática* entre eles via `if`/`else` está adiada — ver seção 2.2) |
 | `wait_signal(nome, timeout)`                           | Aguarda evento externo (ex: sensor de carga, botão) ou expira                    |
 | `signal_buzzer()` / `signal_light()`                   | Sinalização para operadores humanos                                              |
 | `log(msg)`                                             | Registro para auditoria                                                          |
 | `resume_line_following()`                              | Devolve controle à malha rápida (PID no ESP32) — **obrigatório em todo caminho** |
 
-### Condicionais
+### Condicionais (Adiado — ver seção 2.2)
+
+> Esta parte da linguagem ainda **não está implementada** — depende de um mecanismo (variáveis vindas de fora do programa) que ainda não foi coberto em aula. Fica registrado aqui como próximo passo, não como parte do escopo atual.
 
 ```roboflow
 station "bifurcacao_A" {
@@ -128,7 +125,119 @@ Tokens:
 [RBRACE] [RBRACE]
 ```
 
-### 3. Análise Sintática — Gramática (BNF simplificada)
+### 2.1 Tabela Completa de Tokens
+
+Como o backend do compilador é Python, cada token da linguagem já nasce com um destino conhecido: ou vira uma construção sintática do próprio Python, ou vira uma chamada para uma função do runtime (`roboflow_runtime.py`) que o `station_runner.py` importa junto com o módulo gerado. Não existe token em RoboFlow sem uma tradução 1:1 definida.
+
+| Categoria                       | Token (lexema)          | Tipo de Token         | Construção Python Gerada                      | Runtime necessário                      | Observações                                                                                                                           |
+| ------------------------------- | ----------------------- | --------------------- | --------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Estrutura**                   | `station`               | `KEYWORD`             | `def handle_<nome>(send_cmd, context=None):`  | —                                       | Toda função gerada sempre aceita `context`, mesmo que não use — `station_runner.py` sempre chama `handler(send_cmd, context=context)` |
+|                                 | `default`               | `KEYWORD`             | `def handle_default(send_cmd, context=None):` | —                                       | —                                                                                                                                     |
+|                                 | `on_arrival`            | `KEYWORD`             | (delimita o corpo — não gera código)          | —                                       | —                                                                                                                                     |
+|                                 | `{` `}`                 | `LBRACE` / `RBRACE`   | Indentação de bloco Python (4 espaços)        | —                                       | —                                                                                                                                     |
+|                                 | `(` `)`                 | `LPAREN` / `RPAREN`   | Parênteses de chamada de função               | —                                       | —                                                                                                                                     |
+| **Comandos de movimento**       | `stop`                  | `KEYWORD`             | `send_cmd('CMD STOP')`                        | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
+|                                 | `set_speed`             | `KEYWORD`             | `send_cmd(f'CMD SET_SPEED {v}')`              | `send_cmd(str)`                         | Recebe parâmetro numérico `v`                                                                                                         |
+|                                 | `turn_left`             | `KEYWORD`             | `send_cmd('CMD TURN_LEFT')`                   | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
+|                                 | `turn_right`            | `KEYWORD`             | `send_cmd('CMD TURN_RIGHT')`                  | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
+|                                 | `continue_straight`     | `KEYWORD`             | `send_cmd('CMD CONTINUE_STRAIGHT')`           | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
+|                                 | `resume_line_following` | `KEYWORD`             | `send_cmd('CMD RESUME_LINE_FOLLOWING')`       | `send_cmd(str)`                         | Obrigatório em todo caminho de execução                                                                                               |
+| **Sinalização**                 | `signal_buzzer`         | `KEYWORD`             | `send_cmd('CMD SIGNAL_BUZZER')`               | `send_cmd(str)`                         | —                                                                                                                                     |
+|                                 | `signal_light`          | `KEYWORD`             | `send_cmd('CMD SIGNAL_LIGHT')`                | `send_cmd(str)`                         | —                                                                                                                                     |
+| **Espera/sincronização**        | `wait_signal`           | `KEYWORD`             | `wait_for_signal('<nome>', timeout=<t>)`      | `wait_for_signal(str, timeout) -> bool` | Bloqueia até sinal ou timeout                                                                                                         |
+|                                 | `timeout`               | `KEYWORD`             | Argumento nomeado `timeout=`                  | —                                       | Valor em segundos ou `none` (infinito)                                                                                                |
+|                                 | `none`                  | `KEYWORD`             | `None` (literal Python)                       | —                                       | Indica espera infinita                                                                                                                |
+| **Diagnóstico**                 | `log`                   | `KEYWORD`             | `log_event('<msg>')`                          | `log_event(str)`                        | Registra em auditoria                                                                                                                 |
+| **Literais**                    | `"..."` (string)        | `STRING`              | `'...'` (string Python)                       | —                                       | Nomes de sinais, mensagens, etc                                                                                                       |
+|                                 | `0.5`, `30` (número)    | `NUMBER`              | `float`/`int` Python nativo                   | —                                       | Velocidades, timeouts, etc                                                                                                            |
+| **Variáveis externas** (futuro) | `identificador`         | `ID`                  | `context.get('<identificador>')`              | `dict` (context)                        | Vem do ESP32 na serial; só com `if`/`else`                                                                                            |
+|                                 | `next_destination` (ex) | `ID`                  | `context.get('next_destination')`             | Fornecido pelo ESP32                    | Valor de um sensor/RFID/câmera                                                                                                        |
+| **Comentário**                  | `// ...`                | (descartado no lexer) | Não gera código                               | —                                       | —                                                                                                                                     |
+
+**Por que a coluna "Runtime necessário" importa:** todo `KEYWORD` de comando (`stop`, `set_speed`, `turn_left`, etc.) se resolve na mesma função Python, `send_cmd(str)` — a única coisa que muda é a string enviada. O gerador de código não precisa de uma função Python diferente por comando: ele produz sempre `send_cmd('CMD <AÇÃO> <parâmetros>')`, e quem interpreta essa string é o firmware do ESP32, não o Python. As únicas funções de runtime que o `station_runner.py` precisa fornecer são três: `send_cmd`, `wait_for_signal` e `log_event`.
+
+**Nota Importante sobre Identificadores e Escopo (Extensão Futura com `if`/`else`):**
+
+Quando a linguagem suportar `if`/`else`, identificadores como `next_destination` serão acessados via `context.get('next_destination')` — um dicionário Python que o `station_runner.py` constrói a partir de variáveis que o **ESP32 envia na mensagem serial**. 
+
+Exemplo:
+```
+Mensagem serial do ESP32:
+STATION bifurcacao_A next_destination:linha_2 urgency:high
+
+station_runner.py extrai:
+context = {"next_destination": "linha_2", "urgency": "high"}
+
+Compilador gera:
+if context.get('next_destination') == 'linha_2':
+    send_cmd('CMD TURN_RIGHT')
+```
+
+Essa clareza sobre origem das variáveis (vêm do ESP32, não são definidas no RoboFlow) é importante para a análise semântica futura: o compilador poderá validar que toda variável usada num `if` vai estar presente no `context` em tempo de execução.
+
+> **Nesta versão atual da linguagem, cada estação executa uma sequência fixa de comandos, sem decisão condicional.** A estação `bifurcacao_A` (que usaria `if`/`else`) fica de fora por enquanto — depende do mecanismo de `context` que está documentado na seção 2.2 abaixo, mas ainda não foi validado com o professor.
+
+### 2.2 Condicionais e Variáveis Externas — O Mecanismo de `context`
+
+A ideia original incluía uma estação com decisão condicional:
+
+```roboflow
+station "bifurcacao_A" {
+    on_arrival {
+        if next_destination == "linha_2" {
+            turn_right()
+        } else {
+            continue_straight()
+        }
+        resume_line_following()
+    }
+}
+```
+
+**De onde vem `next_destination`?** Não é definida no RoboFlow. É uma informação que o **ESP32 lê de um sensor** (câmera que identifica o tipo de peça, código de barras, RFID, etc) e **fornece junto com o evento de estação**.
+
+#### Como Funciona
+
+1. **ESP32 detecta marcador** e lê a variável via sensor
+2. **ESP32 escreve na serial:**
+   ```
+   STATION bifurcacao_A next_destination:linha_2 urgency:high
+   ```
+3. **`station_runner.py` parseia** a mensagem:
+   ```
+   station_id = "bifurcacao_A"
+   context = {"next_destination": "linha_2", "urgency": "high"}
+   ```
+4. **Compilador gerou:**
+   ```python
+   def handle_bifurcacao_A(send_cmd, context=None):
+       if context.get('next_destination') == 'linha_2':
+           send_cmd('CMD TURN_RIGHT')
+       else:
+           send_cmd('CMD CONTINUE_STRAIGHT')
+       send_cmd('CMD RESUME_LINE_FOLLOWING')
+   ```
+5. **`station_runner.py` chama** com o `context`:
+   ```python
+   handler(send_cmd, context=context)
+   ```
+
+#### Por Que Está Adiado?
+
+Isso ainda **não está implementado** por duas razões:
+
+1. **Análise Semântica:** o compilador precisa validar que toda variável usada em um `if` (ex: `next_destination`) vai estar presente no `context` em tempo de execução — isso é "checagem de escopo", um tópico da disciplina que seu professor vai cobrir.
+
+2. **Definição de Escopo:** há várias formas de passar variáveis entre escopo externo e funções geradas (dicionário, argumentos nomeados, variáveis globais, objetos). Qual seu professor prefere? Melhor perguntar antes de implementar.
+
+#### Status
+
+- **Sem `if`/`else`:** ✅ Pronto pra usar hoje
+- **Com `if`/`else` e `context`:** ⏳ Estrutura básica pronta (ESP32 → serial → `station_runner.py` → dicionário), mas análise semântica ainda adiada
+
+### 3. Análise Sintática — Gramática (BNF simplificada, escopo atual)
+
+Gramática da linguagem sem condicionais — reflete o que já pode ser implementado com o conteúdo visto até agora:
 
 ```bnf
 program        ::= station_decl+ default_decl
@@ -139,9 +248,14 @@ default_decl   ::= "station" "default" "{" "on_arrival" "{" stmt_list "}" "}"
 
 stmt_list      ::= stmt*
 
-stmt           ::= command_call | if_stmt
+stmt           ::= command_call
 
 command_call   ::= identifier "(" arg_list ")"
+```
+
+**Extensão futura (não implementada ainda — depende de aula sobre escopo/ambiente de variáveis):**
+```bnf
+stmt           ::= command_call | if_stmt
 
 if_stmt        ::= "if" condition "{" stmt_list "}" ("else" "{" stmt_list "}")?
 
@@ -158,13 +272,16 @@ Diferente de um compilador genérico, aqui as validações **são a parte intere
 ❌ ERRO: Estação "descarga" existe na pista mas não tem bloco RoboFlow
 ```
 
-**Determinismo:** duas definições para a mesma estação, ou duas condições de `if` que se sobrepõem, são erro de compilação — não faz sentido o AGV ter duas respostas possíveis para a mesma situação.
+**Determinismo:** duas definições para a mesma estação são erro de compilação — não faz sentido o AGV ter duas respostas possíveis para a mesma situação. (Quando `if`/`else` for implementado — seção 2.2 — essa checagem se estende para condições de `if` que se sobrepõem.)
 
-**Terminação / Ausência de Deadlock:** todo caminho de execução dentro de `on_arrival` precisa terminar em `resume_line_following()` (ou em `wait_signal(..., timeout: none)`, que é uma espera deliberada e explícita). Um caminho que "esquece" de retomar a linha trava o AGV para sempre — isso é检testável estaticamente percorrendo a árvore de statements.
+**Terminação / Ausência de Deadlock:** todo caminho de execução dentro de `on_arrival` precisa terminar em `resume_line_following()` (ou em `wait_signal(..., timeout: none)`, que é uma espera deliberada e explícita). Um caminho que "esquece" de retomar a linha trava o AGV para sempre — isso é testável estaticamente percorrendo a árvore de statements.
 
 ```
-❌ ERRO: station "bifurcacao_A" tem um caminho (else) sem resume_line_following()
+❌ ERRO (exemplo, válido só quando if/else existir): station "bifurcacao_A" tem um
+   caminho (else) sem resume_line_following()
 ```
+
+No escopo atual (sem `if`/`else`), essa checagem é mais simples: basta verificar se a última instrução de cada `station { on_arrival { ... } }` é `resume_line_following()` ou `wait_signal(..., timeout: none)`.
 
 **Limite Físico:** `set_speed(v)` não pode exceder a velocidade máxima do motor real — validação de tipo/faixa, configurável por hardware.
 
@@ -187,9 +304,7 @@ station "carga" {
 ```python
 def handle_carga(send_cmd, context=None):
     send_cmd('CMD STOP')
-    ok = wait_for_signal('carga_completa', timeout=30)
-    if not ok:
-        log_event('timeout em carga_completa')
+    wait_for_signal('carga_completa', timeout=30)
     send_cmd('CMD RESUME_LINE_FOLLOWING')
 
 # ... outras estações geram uma função cada, registradas em STATION_HANDLERS ...
