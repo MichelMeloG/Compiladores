@@ -1,8 +1,5 @@
 # Como o Compilador RoboFlow Gera o Módulo de Decisão de Estação
 
-**Documento Técnico Detalhado**  
-**Versão:** 3.0 (Seguidor de Linha Industrial, sem ROS 2)  
-**Data:** Agosto 2026
 
 ---
 
@@ -11,6 +8,27 @@
 Este documento detalha as quatro fases do compilador RoboFlow, aplicadas ao problema concreto do projeto: transformar uma descrição de **comportamento de estação** em um módulo Python (`compiled_behavior.py`) que o script `station_runner.py` importa e usa para despachar comandos pela serial.
 
 Importante: o compilador **não gera o código de seguimento de linha** (isso é PID fixo em firmware, fora do escopo da linguagem) e **não usa ROS 2** — o alvo de geração é uma função Python simples por estação, não um nó de middleware.
+
+> **Nota de escopo:** os exemplos de `bifurcacao_A` abaixo usam `if`/`else` e um parâmetro `context` para representar variáveis que o **ESP32 fornece** quando detecta a estação (ex: `next_destination` lido de um sensor). O `context` é um dicionário que `station_runner.py` constrói a partir da mensagem serial `STATION bifurcacao_A next_destination:linha_2` e passa para a função gerada. 
+> 
+> Para a versão atual, sem condicionais, ver LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1. As estações `handle_carga`, `handle_cruzamento_pedestres` e `handle_default` (sem `if`) já são válidas hoje; `handle_bifurcacao_A` (com `if`) é a extensão futura.
+
+---
+
+## 🎯 Por Que Apenas Um Backend (Python) e Não Dois
+
+Um compilador poderia, em tese, ter múltiplos *backends* de geração de código — a mesma AST alimentando geradores diferentes conforme o alvo de execução (é assim que o LLVM gera para x86, ARM e RISC-V a partir de uma única representação intermediária). Este projeto **decide deliberadamente não fazer isso** e implementa só o backend Python. A justificativa é sobre onde cada linguagem é obrigatória versus onde é escolha:
+
+| Dispositivo | Roda SO? | Linguagem possível | Por que |
+|---|---|---|---|
+| ESP32 | Não (bare metal/RTOS leve) | **C/C++ obrigatório** | Sem sistema operacional, não há interpretador Python disponível; e a malha de seguimento de linha exige timing de PID confiável a ~100 Hz, que só C/C++ compilado garante nesse hardware |
+| Raspberry Pi | Sim (Linux) | **Qualquer uma** — Python, C++, etc. | Tem interpretador, sistema de arquivos, tudo que uma linguagem de alto nível precisa |
+
+A lógica de estação — o que o compilador RoboFlow gera — **roda inteiramente no Raspberry Pi**, nunca no ESP32. O ESP32 só recebe comandos já decididos (`CMD STOP`, `CMD TURN_LEFT`) via serial; ele nunca interpreta RoboFlow nem executa código gerado pelo compilador. Como o único alvo de geração é um dispositivo que roda Linux, e a decisão de estação acontece poucas vezes por minuto (sem exigência de tempo real), não há motivo técnico para pagar o custo de um segundo backend C++: seria mais complexidade no compilador (dois geradores de código para manter e testar) sem ganho de performance real, porque o gargalo nunca é CPU — é a latência da própria serial e do tempo de espera por sinais externos (`wait_signal`).
+
+Se um dia o projeto decidisse que a lógica de estação deveria rodar dentro do próprio ESP32 (por exemplo, para eliminar de vez a dependência do Raspberry Pi), aí sim seria necessário um segundo backend C++ — mas isso mudaria a arquitetura inteira (o ESP32 passaria a interpretar ou executar código gerado, não só obedecer comandos), e não é o caminho escolhido aqui.
+
+O firmware do ESP32 (seguimento de linha + veto de segurança), por sua vez, **não é gerado pelo compilador** — é escrito à mão em C++ uma única vez, porque essa lógica não muda por estação nem por comissionamento de pista; é fixa por design.
 
 ---
 
@@ -59,63 +77,86 @@ station default {
 
 ## 🔨 Fase 1: Análise Léxica
 
+> ⚠️ **Extensão futura incluída neste Lexer:** os tokens `if`/`else` fazem parte deste exemplo porque ele mostra o compilador **completo e final**, incluindo condicionais. Na versão atual (sem `if`/`else`, pendente de validação com o professor — ver LINGUAGEM_ROBO_COMPILADOR.md seção 2.2), basta remover `'if', 'else'` do conjunto `KEYWORDS` abaixo; o resto do Lexer não muda.
+
+Implementação dirigida diretamente pela especificação de expressões regulares (ver LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1). A ordem da lista `ESPEC` **importa**: `DURATION` vem antes de `NUMBER` para que `30s` case por inteiro, em vez de virar `NUMBER(30)` + `ID(s)`.
+
 ```python
+import re
+
 class Lexer:
     KEYWORDS = {'station', 'default', 'on_arrival', 'if', 'else',
                 'stop', 'set_speed', 'turn_left', 'turn_right',
-                'continue_straight', 'wait_signal', 'signal_buzzer',
-                'signal_light', 'log', 'resume_line_following', 'timeout'}
-    
+                'continue_straight', 'resume_line_following',
+                'signal_buzzer', 'signal_light', 'log',
+                'wait_signal', 'timeout', 'none'}
+
+    # (nome_do_token, expressão regular) — ordem = prioridade
+    ESPEC = [
+        ('WS',       r'[ \t\r\n]+'),
+        ('COMMENT',  r'//[^\n]*'),
+        ('STRING',   r'"[^"\n]*"'),
+        ('DURATION', r'[0-9]+(\.[0-9]+)?s'),   # antes de NUMBER!
+        ('NUMBER',   r'[0-9]+(\.[0-9]+)?'),
+        ('ID',       r'[a-zA-Z_][a-zA-Z0-9_]*'),
+        ('OP',       r'=='),                    # ⚠️ extensão futura (if/else)
+        ('LBRACE',   r'\{'),
+        ('RBRACE',   r'\}'),
+        ('LPAREN',   r'\('),
+        ('RPAREN',   r'\)'),
+        ('COLON',    r':'),
+        ('COMMA',    r','),
+    ]
+
     def __init__(self, text):
         self.text = text
         self.pos = 0
-    
+        self.regras = [(nome, re.compile(p)) for nome, p in self.ESPEC]
+
     def tokenize(self):
         tokens = []
         while self.pos < len(self.text):
-            ch = self.text[self.pos]
-            if ch.isspace():
-                self.pos += 1
-            elif self.text[self.pos:self.pos+2] == '//':
-                while self.pos < len(self.text) and self.text[self.pos] != '\n':
-                    self.pos += 1
-            elif ch == '"':
-                self.pos += 1
-                start = self.pos
-                while self.text[self.pos] != '"':
-                    self.pos += 1
-                tokens.append(('STRING', self.text[start:self.pos]))
-                self.pos += 1
-            elif ch in '{}()':
-                tokens.append(('BRACE', ch))
-                self.pos += 1
-            elif ch == '=' and self.text[self.pos:self.pos+2] == '==':
-                tokens.append(('OP', '=='))
-                self.pos += 2
-            elif ch.isdigit():
-                start = self.pos
-                while self.pos < len(self.text) and (self.text[self.pos].isdigit() or self.text[self.pos] == '.'):
-                    self.pos += 1
-                tokens.append(('NUMBER', float(self.text[start:self.pos])))
-            elif ch.isalpha() or ch == '_':
-                start = self.pos
-                while self.pos < len(self.text) and (self.text[self.pos].isalnum() or self.text[self.pos] == '_'):
-                    self.pos += 1
-                word = self.text[start:self.pos]
-                tokens.append(('KEYWORD', word) if word in self.KEYWORDS else ('ID', word))
+            for nome, regex in self.regras:
+                m = regex.match(self.text, self.pos)
+                if not m:
+                    continue
+
+                lexema = m.group(0)
+                self.pos = m.end()
+
+                if nome in ('WS', 'COMMENT'):
+                    pass                                   # descarta
+                elif nome == 'STRING':
+                    tokens.append(('STRING', lexema[1:-1]))  # tira as aspas
+                elif nome == 'DURATION':
+                    tokens.append(('DURATION', float(lexema[:-1])))  # tira o 's'
+                elif nome == 'NUMBER':
+                    tokens.append(('NUMBER', float(lexema)))
+                elif nome == 'ID':
+                    # Palavra reservada x identificador: consulta a tabela
+                    tipo = 'KEYWORD' if lexema in self.KEYWORDS else 'ID'
+                    tokens.append((tipo, lexema))
+                else:
+                    tokens.append((nome, lexema))
+                break
             else:
-                self.pos += 1
+                ch = self.text[self.pos]
+                raise SyntaxError(f"Caractere inesperado {ch!r} na posição {self.pos}")
         return tokens
 ```
 
+Diferente de um lexer que varre caractere a caractere, esta versão é uma tradução literal da tabela de ERs — se a especificação mudar, muda só a lista `ESPEC`. Note também que caracteres não reconhecidos agora geram **erro léxico explícito**, em vez de serem silenciosamente ignorados.
+
 **Tokens gerados para `station "carga" {`:**
 ```
-[KEYWORD:station] [STRING:carga] [BRACE:{]
+[KEYWORD:station] [STRING:carga] [LBRACE]
 ```
 
 ---
 
 ## 🌳 Fase 2: Análise Sintática
+
+> ⚠️ **Extensão futura incluída nesta gramática:** a produção `if_stmt` faz parte da versão completa/final do compilador. Na versão atual (sem condicionais), a regra `stmt` se reduz a `stmt ::= command_call`, e as produções `if_stmt`/`condition` abaixo não existem ainda — ver a gramática "escopo atual" em LINGUAGEM_ROBO_COMPILADOR.md, seção 3.
 
 ### Gramática BNF
 
@@ -174,28 +215,28 @@ class Parser:
     def parse_station(self):
         self.expect('KEYWORD', 'station')
         name = self.expect('STRING')[1]
-        self.expect('BRACE', '{')
+        self.expect('LBRACE')
         self.expect('KEYWORD', 'on_arrival')
-        self.expect('BRACE', '{')
+        self.expect('LBRACE')
         stmts = self.parse_stmt_list()
-        self.expect('BRACE', '}')
-        self.expect('BRACE', '}')
+        self.expect('RBRACE')
+        self.expect('RBRACE')
         return ('Station', name, stmts)
     
     def parse_default(self):
         self.expect('KEYWORD', 'station')
         self.expect('KEYWORD', 'default')
-        self.expect('BRACE', '{')
+        self.expect('LBRACE')
         self.expect('KEYWORD', 'on_arrival')
-        self.expect('BRACE', '{')
+        self.expect('LBRACE')
         stmts = self.parse_stmt_list()
-        self.expect('BRACE', '}')
-        self.expect('BRACE', '}')
+        self.expect('RBRACE')
+        self.expect('RBRACE')
         return ('Default', stmts)
     
     def parse_stmt_list(self):
         stmts = []
-        while self.peek() and not (self.peek()[0] == 'BRACE' and self.peek()[1] == '}'):
+        while self.peek() and not (self.peek()[0] == 'RBRACE'):
             if self.peek()[1] == 'if':
                 stmts.append(self.parse_if())
             else:
@@ -209,25 +250,25 @@ class Parser:
         right_tok = self.peek()
         right = right_tok[1]
         self.pos += 1
-        self.expect('BRACE', '{')
+        self.expect('LBRACE')
         true_branch = self.parse_stmt_list()
-        self.expect('BRACE', '}')
+        self.expect('RBRACE')
         false_branch = []
         if self.peek() and self.peek()[1] == 'else':
             self.pos += 1
-            self.expect('BRACE', '{')
+            self.expect('LBRACE')
             false_branch = self.parse_stmt_list()
-            self.expect('BRACE', '}')
+            self.expect('RBRACE')
         return ('If', ('Condition', left, right), true_branch, false_branch)
     
     def parse_command(self):
         name = self.expect('KEYWORD')[1]
-        self.expect('BRACE', '(')
+        self.expect('LPAREN')
         args = []
-        while not (self.peek()[0] == 'BRACE' and self.peek()[1] == ')'):
+        while not (self.peek()[0] == 'RPAREN'):
             args.append(self.peek())
             self.pos += 1
-        self.expect('BRACE', ')')
+        self.expect('RPAREN')
         return ('Command', name, args)
 ```
 
@@ -247,6 +288,8 @@ Station(
 ---
 
 ## ✅ Fase 3: Análise Semântica
+
+> ⚠️ **Extensão futura incluída aqui:** a lógica de `_all_paths_terminate` abaixo já trata o nó `If` (ambos os ramos precisam terminar). Na versão atual sem condicionais, essa checagem é mais simples — só olha se o último statement da lista é `resume_line_following()` ou `wait_signal(..., timeout: none)`, sem precisar percorrer ramos de `if`/`else`.
 
 Aqui está o núcleo do valor acadêmico do projeto: cada validação corresponde a uma propriedade de segurança física do AGV.
 
@@ -387,7 +430,9 @@ ERRO: Estação 'carga' definida mais de uma vez
 
 ## 🔧 Fase 4: Geração de Código
 
-O alvo de geração é `compiled_behavior.py`: um módulo Python com uma função por estação e um dicionário `STATION_HANDLERS` que o `station_runner.py` consulta. Cada função recebe `send_cmd` (a função que escreve na serial) e, quando precisa de contexto externo (como `next_destination`), recebe também um dicionário de contexto.
+> ⚠️ **Extensão futura incluída aqui:** `_emit_if` e o tratamento de nós `If` no `CodeGenerator` abaixo pertencem à versão completa/final do compilador. Na versão atual (sem condicionais), o gerador só precisa de `_emit_stmts` chamando `_emit_command` — sem nunca encontrar um nó `If` na AST, já que o Parser da versão atual não produz esse nó (ver ressalva na Fase 2).
+
+O alvo de geração é `compiled_behavior.py`: um módulo Python com uma função por estação e um dicionário `STATION_HANDLERS` que o `station_runner.py` consulta. Cada função sempre recebe `send_cmd` (a função que escreve na serial) e `context` (dicionário vindo do ESP32 — usado apenas pelas estações com `if`, mas presente em toda função gerada, por consistência de assinatura).
 
 ```python
 class CodeGenerator:
@@ -462,10 +507,10 @@ class CodeGenerator:
     
     def _extract_timeout(self, args):
         for arg in args:
-            if arg[0] == 'NUMBER':
+            if arg[0] == 'DURATION':      # ex: 30s  -> 30.0
                 return arg[1]
             if arg[0] == 'KEYWORD' and arg[1] == 'none':
-                return 'None'
+                return 'None'             # espera infinita
         return 'None'
     
     def _emit_if(self, stmt, indent):
@@ -490,6 +535,8 @@ class CodeGenerator:
 
 ### Saída Python Gerada (`compiled_behavior.py`, trecho)
 
+Abaixo, `handle_carga`, `handle_cruzamento_pedestres` e `handle_default` já são válidas hoje (não usam `if`). **`handle_bifurcacao_A` está marcada separadamente** por depender de `if`/`context`, que é extensão futura — ela só entraria em `STATION_HANDLERS` quando essa parte da linguagem for implementada.
+
 ```python
 """Gerado automaticamente pelo compilador RoboFlow. Não editar manualmente."""
 
@@ -503,13 +550,6 @@ def handle_cruzamento_pedestres(send_cmd, context=None):
     send_cmd('CMD SIGNAL_BUZZER')
     send_cmd('CMD RESUME_LINE_FOLLOWING')
 
-def handle_bifurcacao_A(send_cmd, context=None):
-    if context.get('next_destination') == 'linha_2':
-        send_cmd('CMD TURN_RIGHT')
-    else:
-        send_cmd('CMD CONTINUE_STRAIGHT')
-    send_cmd('CMD RESUME_LINE_FOLLOWING')
-
 def handle_default(send_cmd, context=None):
     send_cmd('CMD STOP')
     log_event('Estação desconhecida')
@@ -518,13 +558,25 @@ def handle_default(send_cmd, context=None):
 STATION_HANDLERS = {
     'carga': handle_carga,
     'cruzamento_pedestres': handle_cruzamento_pedestres,
-    'bifurcacao_A': handle_bifurcacao_A,
 }
 
 DEFAULT_HANDLER = handle_default
+
+
+# ⚠️ EXTENSÃO FUTURA — só existe quando if/else + context forem implementados.
+# Ver LINGUAGEM_ROBO_COMPILADOR.md, seção 2.2.
+def handle_bifurcacao_A(send_cmd, context=None):
+    if context.get('next_destination') == 'linha_2':
+        send_cmd('CMD TURN_RIGHT')
+    else:
+        send_cmd('CMD CONTINUE_STRAIGHT')
+    send_cmd('CMD RESUME_LINE_FOLLOWING')
+
+# Quando implementado, seria adicionado assim:
+# STATION_HANDLERS['bifurcacao_A'] = handle_bifurcacao_A
 ```
 
-Esse módulo é importado diretamente pelo `station_runner.py` (visto em PROJETO_ROBO_SLAM_TECNICO.md) — não há passo de compilação/linking, é Python interpretado normalmente.
+Esse módulo é importado diretamente pelo `station_runner.py` (visto em HARDWARE.md) — não há passo de compilação/linking, é Python interpretado normalmente.
 
 ---
 
@@ -541,7 +593,10 @@ Esse módulo é importado diretamente pelo `station_runner.py` (visto em PROJETO
 
 ## 🧪 Testes do Compilador
 
+> ⚠️ **`test_rejeita_estacao_sem_terminacao` abaixo usa `if`/`else`, extensão futura ainda não implementada.** Ele só passaria a valer quando o Parser/Semântica dessa parte da linguagem existir. Os outros dois testes (`test_rejeita_estacao_faltando`, `test_aceita_programa_valido`) já são válidos hoje, sem depender de condicionais.
+
 ```python
+# ⚠️ Depende de if/else (extensão futura) — ver nota acima
 def test_rejeita_estacao_sem_terminacao():
     src = '''
     station "bifurcacao_A" {
@@ -592,3 +647,4 @@ def test_aceita_programa_valido():
 ---
 
 **Consulte PROJETO_ROBO.md, LINGUAGEM_ROBO_COMPILADOR.md e ARQUITETURA_DUAS_CAMADAS.md para o restante da documentação.**
+
