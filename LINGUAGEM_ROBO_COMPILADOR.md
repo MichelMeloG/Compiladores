@@ -1,3 +1,5 @@
+# RoboFlow: A Linguagem de Comportamento de Estação
+
 ## 🎯 Escopo da Linguagem
 
 RoboFlow **não é uma linguagem de robótica geral**. Ela resolve um problema específico e delimitado: **descrever o que o AGV faz em cada estação da linha**.
@@ -24,6 +26,11 @@ Isso é proposital e é o que torna o projeto viável academicamente:
       │  (roda no Pi)        │
       └─────────────────────┘
 ```
+
+![[Linguagens formais e Compiladores/Projeto/context_flow_diagram.png]]# Como o Compilador RoboFlow Gera o Módulo de Decisão de Estação
+
+
+---
 
 ## 📖 Sintaxe da Linguagem
 
@@ -120,55 +127,119 @@ Tokens:
 [RBRACE] [RBRACE]
 ```
 
-### 2.1 Tabela Completa de Tokens
+### 2.1 Especificação Léxica (Definição por Expressões Regulares)
 
-Como o backend do compilador é Python, cada token da linguagem já nasce com um destino conhecido: ou vira uma construção sintática do próprio Python, ou vira uma chamada para uma função do runtime (`roboflow_runtime.py`) que o `station_runner.py` importa junto com o módulo gerado. Não existe token em RoboFlow sem uma tradução 1:1 definida.
+O analisador léxico é definido formalmente por um conjunto de **expressões regulares**, uma para cada classe de token. Essa é a especificação completa do lexer: qualquer implementação que reconheça exatamente estas ERs é um lexer válido para RoboFlow.
 
-| Categoria                       | Token (lexema)          | Tipo de Token         | Construção Python Gerada                      | Runtime necessário                      | Observações                                                                                                                           |
-| ------------------------------- | ----------------------- | --------------------- | --------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Estrutura**                   | `station`               | `KEYWORD`             | `def handle_<nome>(send_cmd, context=None):`  | —                                       | Toda função gerada sempre aceita `context`, mesmo que não use — `station_runner.py` sempre chama `handler(send_cmd, context=context)` |
-|                                 | `default`               | `KEYWORD`             | `def handle_default(send_cmd, context=None):` | —                                       | —                                                                                                                                     |
-|                                 | `on_arrival`            | `KEYWORD`             | (delimita o corpo — não gera código)          | —                                       | —                                                                                                                                     |
-|                                 | `{` `}`                 | `LBRACE` / `RBRACE`   | Indentação de bloco Python (4 espaços)        | —                                       | —                                                                                                                                     |
-|                                 | `(` `)`                 | `LPAREN` / `RPAREN`   | Parênteses de chamada de função               | —                                       | —                                                                                                                                     |
-| **Comandos de movimento**       | `stop`                  | `KEYWORD`             | `send_cmd('CMD STOP')`                        | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
-|                                 | `set_speed`             | `KEYWORD`             | `send_cmd(f'CMD SET_SPEED {v}')`              | `send_cmd(str)`                         | Recebe parâmetro numérico `v`                                                                                                         |
-|                                 | `turn_left`             | `KEYWORD`             | `send_cmd('CMD TURN_LEFT')`                   | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
-|                                 | `turn_right`            | `KEYWORD`             | `send_cmd('CMD TURN_RIGHT')`                  | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
-|                                 | `continue_straight`     | `KEYWORD`             | `send_cmd('CMD CONTINUE_STRAIGHT')`           | `send_cmd(str)`                         | Sem parâmetros                                                                                                                        |
-|                                 | `resume_line_following` | `KEYWORD`             | `send_cmd('CMD RESUME_LINE_FOLLOWING')`       | `send_cmd(str)`                         | Obrigatório em todo caminho de execução                                                                                               |
-| **Sinalização**                 | `signal_buzzer`         | `KEYWORD`             | `send_cmd('CMD SIGNAL_BUZZER')`               | `send_cmd(str)`                         | —                                                                                                                                     |
-|                                 | `signal_light`          | `KEYWORD`             | `send_cmd('CMD SIGNAL_LIGHT')`                | `send_cmd(str)`                         | —                                                                                                                                     |
-| **Espera/sincronização**        | `wait_signal`           | `KEYWORD`             | `wait_for_signal('<nome>', timeout=<t>)`      | `wait_for_signal(str, timeout) -> bool` | Bloqueia até sinal ou timeout                                                                                                         |
-|                                 | `timeout`               | `KEYWORD`             | Argumento nomeado `timeout=`                  | —                                       | Valor em segundos ou `none` (infinito)                                                                                                |
-|                                 | `none`                  | `KEYWORD`             | `None` (literal Python)                       | —                                       | Indica espera infinita                                                                                                                |
-| **Diagnóstico**                 | `log`                   | `KEYWORD`             | `log_event('<msg>')`                          | `log_event(str)`                        | Registra em auditoria                                                                                                                 |
-| **Literais**                    | `"..."` (string)        | `STRING`              | `'...'` (string Python)                       | —                                       | Nomes de sinais, mensagens, etc                                                                                                       |
-|                                 | `0.5`, `30` (número)    | `NUMBER`              | `float`/`int` Python nativo                   | —                                       | Velocidades, timeouts, etc                                                                                                            |
-| **Variáveis externas** (futuro) | `identificador`         | `ID`                  | `context.get('<identificador>')`              | `dict` (context)                        | Vem do ESP32 na serial; só com `if`/`else`                                                                                            |
-|                                 | `next_destination` (ex) | `ID`                  | `context.get('next_destination')`             | Fornecido pelo ESP32                    | Valor de um sensor/RFID/câmera                                                                                                        |
-| **Comentário**                  | `// ...`                | (descartado no lexer) | Não gera código                               | —                                       | —                                                                                                                                     |
+Cada ER abaixo pode ser convertida em AFN (construção de Thompson), depois em AFD (construção de subconjuntos) e minimizada — o caminho teórico padrão da disciplina. A união de todas elas forma o autômato finito que varre o código-fonte.
 
-**Por que a coluna "Runtime necessário" importa:** todo `KEYWORD` de comando (`stop`, `set_speed`, `turn_left`, etc.) se resolve na mesma função Python, `send_cmd(str)` — a única coisa que muda é a string enviada. O gerador de código não precisa de uma função Python diferente por comando: ele produz sempre `send_cmd('CMD <AÇÃO> <parâmetros>')`, e quem interpreta essa string é o firmware do ESP32, não o Python. As únicas funções de runtime que o `station_runner.py` precisa fornecer são três: `send_cmd`, `wait_for_signal` e `log_event`.
+| Classe de Token | Expressão Regular | Exemplo de lexema | Ação do lexer |
+|---|---|---|---|
+| `WS` | `[ \t\r\n]+` | (espaço, tab, quebra) | **Descarta** |
+| `COMMENT` | `//[^\n]*` | `// aguarda esteira` | **Descarta** |
+| `KEYWORD` (estrutura) | `station\|default\|on_arrival` | `station` | Devolve `(KEYWORD, lexema)` |
+| `KEYWORD` (comando) | `stop\|set_speed\|turn_left\|turn_right\|continue_straight\|resume_line_following\|signal_buzzer\|signal_light\|log` | `turn_right` | Devolve `(KEYWORD, lexema)` |
+| `KEYWORD` (espera) | `wait_signal\|timeout\|none` | `timeout` | Devolve `(KEYWORD, lexema)` |
+| `STRING` | `"[^"\n]*"` | `"carga_completa"` | Devolve `(STRING, conteúdo sem aspas)` |
+| `DURATION` | `[0-9]+(\.[0-9]+)?s` | `30s` | Devolve `(DURATION, valor em segundos)` |
+| `NUMBER` | `[0-9]+(\.[0-9]+)?` | `0.15` | Devolve `(NUMBER, float)` |
+| `ID` | `[a-zA-Z_][a-zA-Z0-9_]*` | `next_destination` | Devolve `(ID, lexema)` |
+| `LBRACE` | `\{` | `{` | Devolve `(LBRACE, "{")` |
+| `RBRACE` | `\}` | `}` | Devolve `(RBRACE, "}")` |
+| `LPAREN` | `\(` | `(` | Devolve `(LPAREN, "(")` |
+| `RPAREN` | `\)` | `)` | Devolve `(RPAREN, ")")` |
+| `COLON` | `:` | `:` | Devolve `(COLON, ":")` |
+| `COMMA` | `,` | `,` | Devolve `(COMMA, ",")` |
+| `EQ` ⚠️ *(futuro)* | `==` | `==` | Devolve `(OP, "==")` |
+| `KEYWORD` (condicional) ⚠️ *(futuro)* | `if\|else` | `if` | Devolve `(KEYWORD, lexema)` |
 
-**Nota Importante sobre Identificadores e Escopo (Extensão Futura com `if`/`else`):**
+⚠️ As duas últimas linhas pertencem à extensão futura com `if`/`else` — ver seção 2.2. Na versão atual, essas ERs simplesmente não fazem parte da especificação.
 
-Quando a linguagem suportar `if`/`else`, identificadores como `next_destination` serão acessados via `context.get('next_destination')` — um dicionário Python que o `station_runner.py` constrói a partir de variáveis que o **ESP32 envia na mensagem serial**. 
+#### Regras de Desambiguação
 
-Exemplo:
+Um mesmo trecho de entrada pode casar com mais de uma ER. Duas regras clássicas resolvem todo conflito:
+
+**1. Maximal munch (casamento mais longo):** o lexer sempre escolhe o maior lexema possível a partir da posição atual.
+
 ```
-Mensagem serial do ESP32:
-STATION bifurcacao_A next_destination:linha_2 urgency:high
-
-station_runner.py extrai:
-context = {"next_destination": "linha_2", "urgency": "high"}
-
-Compilador gera:
-if context.get('next_destination') == 'linha_2':
-    send_cmd('CMD TURN_RIGHT')
+Entrada: 30s
+  → NUMBER casaria com "30" (2 caracteres)
+  → DURATION casa com "30s"  (3 caracteres)  ✅ vence
 ```
 
-Essa clareza sobre origem das variáveis (vêm do ESP32, não são definidas no RoboFlow) é importante para a análise semântica futura: o compilador poderá validar que toda variável usada num `if` vai estar presente no `context` em tempo de execução.
+Sem essa regra, `30s` seria lido erradamente como `NUMBER(30)` seguido de `ID(s)`.
+
+> **Detalhe de implementação:** geradores como o `lex`/`flex` aplicam maximal munch automaticamente. Num lexer escrito à mão que testa as ERs em sequência (como o deste projeto), o mesmo resultado é obtido **listando `DURATION` antes de `NUMBER`** na especificação — a primeira ER que casar vence. As duas estratégias reconhecem a mesma linguagem.
+
+**2. Prioridade por ordem (empate no comprimento):** quando duas ERs casam o *mesmo* número de caracteres, vence a que aparece primeiro na especificação. Isso resolve o conflito clássico **palavra reservada × identificador**:
+
+```
+Entrada: stop
+  → KEYWORD casa com "stop" (4 caracteres)
+  → ID      casa com "stop" (4 caracteres)   ← empate!
+  → KEYWORD está listada antes → vence  ✅
+```
+
+```
+Entrada: next_destination
+  → KEYWORD não casa (não está na lista de reservadas)
+  → ID casa  ✅
+```
+
+**Implementação equivalente (a usada no projeto):** em vez de ordenar as ERs, o lexer casa `ID` primeiro e depois consulta uma tabela de palavras reservadas:
+
+```python
+word = casa_regex(r'[a-zA-Z_][a-zA-Z0-9_]*')
+tipo = 'KEYWORD' if word in KEYWORDS else 'ID'
+```
+
+As duas abordagens reconhecem exatamente a mesma linguagem — a segunda é só mais simples de escrever à mão, e é a que está em COMPILADOR_GERA_CONTROLE.md, Fase 1.
+
+#### Exemplo de Tokenização Completa
+
+```
+Entrada:
+    station "carga" {          // ponto de carga
+        on_arrival {
+            set_speed(0.15)
+            wait_signal("ok", timeout: 30s)
+        }
+    }
+
+Sequência de tokens produzida:
+    (KEYWORD, station) (STRING, carga) (LBRACE)
+    (KEYWORD, on_arrival) (LBRACE)
+    (KEYWORD, set_speed) (LPAREN) (NUMBER, 0.15) (RPAREN)
+    (KEYWORD, wait_signal) (LPAREN) (STRING, ok) (COMMA)
+        (KEYWORD, timeout) (COLON) (DURATION, 30) (RPAREN)
+    (RBRACE) (RBRACE)
+
+Descartados: 1 comentário, todos os espaços e quebras de linha
+```
+
+#### Tradução dos Tokens para Python (Geração de Código)
+
+Depois de reconhecidos, os tokens viram código Python. A tabela é curta porque **todos os comandos colapsam na mesma função de runtime**, `send_cmd(str)` — o que muda é apenas a string:
+
+| Token reconhecido | Python gerado | Função de runtime |
+|---|---|---|
+| `station` / `default` | `def handle_<nome>(send_cmd, context=None):` | — |
+| `on_arrival` | (delimita o corpo — não gera código) | — |
+| `stop` | `send_cmd('CMD STOP')` | `send_cmd(str)` |
+| `set_speed` + `NUMBER` | `send_cmd(f'CMD SET_SPEED {v}')` | `send_cmd(str)` |
+| `turn_left` | `send_cmd('CMD TURN_LEFT')` | `send_cmd(str)` |
+| `turn_right` | `send_cmd('CMD TURN_RIGHT')` | `send_cmd(str)` |
+| `continue_straight` | `send_cmd('CMD CONTINUE_STRAIGHT')` | `send_cmd(str)` |
+| `resume_line_following` | `send_cmd('CMD RESUME_LINE_FOLLOWING')` | `send_cmd(str)` |
+| `signal_buzzer` / `signal_light` | `send_cmd('CMD SIGNAL_BUZZER')` / `..._LIGHT` | `send_cmd(str)` |
+| `wait_signal` + `STRING` + `DURATION` | `wait_for_signal('<nome>', timeout=<t>)` | `wait_for_signal(str, timeout) -> bool` |
+| `none` (como timeout) | `timeout=None` (espera infinita) | — |
+| `log` + `STRING` | `log_event('<msg>')` | `log_event(str)` |
+| `STRING` | `'...'` (string Python) | — |
+| `NUMBER` | `float` / `int` nativo | — |
+| `ID` ⚠️ *(futuro)* | `context.get('<id>')` | `dict` (vindo do ESP32) |
+
+**Consequência prática:** o `station_runner.py` precisa fornecer apenas **três** funções de runtime — `send_cmd`, `wait_for_signal` e `log_event`. Todo o resto do vocabulário da linguagem se reduz a strings passadas para a primeira delas, e quem as interpreta é o firmware C++ do ESP32, não o Python.
 
 > **Nesta versão atual da linguagem, cada estação executa uma sequência fixa de comandos, sem decisão condicional.** A estação `bifurcacao_A` (que usaria `if`/`else`) fica de fora por enquanto — depende do mecanismo de `context` que está documentado na seção 2.2 abaixo, mas ainda não foi validado com o professor.
 
