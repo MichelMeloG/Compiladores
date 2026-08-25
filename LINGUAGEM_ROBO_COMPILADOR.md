@@ -25,11 +25,6 @@ Isso é proposital e é o que torna o projeto viável academicamente:
       └─────────────────────┘
 ```
 
-![[Linguagens formais e Compiladores/Projeto/context_flow_diagram.png]]# Como o Compilador RoboFlow Gera o Módulo de Decisão de Estação
-
-
----
-
 ## 📖 Sintaxe da Linguagem
 
 ### Unidade Básica: `station`
