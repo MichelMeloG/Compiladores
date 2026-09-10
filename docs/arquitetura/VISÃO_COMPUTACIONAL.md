@@ -112,12 +112,12 @@ Versões anteriores deste documento previam ROS 2 como middleware de comunicaç�
 
 ## 📚 Mapa dos Documentos do Projeto
 
-- **PROJETO_ROBO.md** — Visão geral, objetivos, hardware, cronograma (documento principal)
-- **PROJETO_ROBO_SLAM_TECNICO.md** — Especificações de hardware, firmware, requisitos de performance
-- **LINGUAGEM_ROBO_COMPILADOR.md** — Sintaxe do RoboFlow, gramática, conexão com autômatos
-- **ARQUITETURA_DUAS_CAMADAS.md** — Detalhe do veto de segurança e por que fica isolado em hardware
-- **COMPILADOR_GERA_CONTROLE.md** — As quatro fases do compilador com código de exemplo
-- **PROJETO_INTEGRADO_VISAO_GERAL.md** — Este documento, ponto de entrada para quem quer o resumo
+- [PROJETO_ROBO.md](../projeto/PROJETO_ROBO.md) — visão geral, objetivos, hardware e cronograma.
+- [HARDWARE.md](HARDWARE.md) — especificações de hardware, firmware e requisitos de desempenho.
+- [LINGUAGEM_ROBO_COMPILADOR.md](../linguagem/LINGUAGEM_ROBO_COMPILADOR.md) — sintaxe do RoboFlow, gramática e conexão com autômatos.
+- [ARQUITETURA_DUAS_CAMADAS.md](ARQUITETURA_DUAS_CAMADAS.md) — veto de segurança e isolamento em hardware.
+- [COMPILADOR_GERA_CONTROLE.md](../linguagem/COMPILADOR_GERA_CONTROLE.md) — fases do compilador com código de exemplo.
+- [ROADMAP_ROBOFLOW_ESP32.md](../planejamento/ROADMAP_ROBOFLOW_ESP32.md) — planejamento do backend C++ para ESP32.
 
 ---
 
@@ -127,4 +127,4 @@ Este é o modelo real de integradores de automação industrial: uma linguagem d
 
 ---
 
-**Ponto de entrada da documentação. Comece por aqui, depois vá para PROJETO_ROBO.md.**
+**Para navegar por toda a documentação, consulte o [índice principal](../README.md).**

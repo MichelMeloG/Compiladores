@@ -174,4 +174,4 @@ O projeto reproduz esse princípio em escala de protótipo acadêmico.
 
 ---
 
-**Documento técnico complementar a PROJETO_ROBO.md.**
+**Documento técnico complementar a [PROJETO_ROBO.md](../projeto/PROJETO_ROBO.md).**

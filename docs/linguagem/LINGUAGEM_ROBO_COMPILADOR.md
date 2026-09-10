@@ -1,5 +1,7 @@
 # RoboFlow: A Linguagem de Comportamento de Estação
 
+> **Roadmap para o backend ESP32:** consulte [ROADMAP_ROBOFLOW_ESP32.md](../planejamento/ROADMAP_ROBOFLOW_ESP32.md). O roadmap assume RoboFlow → C++ → ESP32 e registra a necessidade de unificar essa decisão com a arquitetura Python descrita neste documento.
+
 ## 🎯 Escopo da Linguagem
 
 RoboFlow **não é uma linguagem de robótica geral**. Ela resolve um problema específico e delimitado: **descrever o que o AGV faz em cada estação da linha**.
@@ -193,7 +195,7 @@ word = casa_regex(r'[a-zA-Z_][a-zA-Z0-9_]*')
 tipo = 'KEYWORD' if word in KEYWORDS else 'ID'
 ```
 
-As duas abordagens reconhecem exatamente a mesma linguagem — a segunda é só mais simples de escrever à mão, e é a que está em COMPILADOR_GERA_CONTROLE.md, Fase 1.
+As duas abordagens reconhecem exatamente a mesma linguagem — a segunda é só mais simples de escrever à mão, e é a que está em [COMPILADOR_GERA_CONTROLE.md](COMPILADOR_GERA_CONTROLE.md), Fase 1.
 
 #### Exemplo de Tokenização Completa
 
@@ -381,7 +383,7 @@ def handle_default(send_cmd, context=None):
     wait_for_signal('manual_override', timeout=None)
 ```
 
-Note que não há framework de robótica envolvido — o compilador gera funções Python simples, despachadas por um dicionário (`STATION_HANDLERS`) no script que lê a serial do ESP32. Ver COMPILADOR_GERA_CONTROLE.md para o gerador completo.
+Note que não há framework de robótica envolvido — o compilador gera funções Python simples, despachadas por um dicionário (`STATION_HANDLERS`) no script que lê a serial do ESP32. Ver [COMPILADOR_GERA_CONTROLE.md](COMPILADOR_GERA_CONTROLE.md) para o gerador completo.
 
 ---
 

@@ -11,7 +11,7 @@ Importante: o compilador **não gera o código de seguimento de linha** (isso é
 
 > **Nota de escopo:** os exemplos de `bifurcacao_A` abaixo usam `if`/`else` e um parâmetro `context` para representar variáveis que o **ESP32 fornece** quando detecta a estação (ex: `next_destination` lido de um sensor). O `context` é um dicionário que `station_runner.py` constrói a partir da mensagem serial `STATION bifurcacao_A next_destination:linha_2` e passa para a função gerada. 
 > 
-> Para a versão atual, sem condicionais, ver LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1. As estações `handle_carga`, `handle_cruzamento_pedestres` e `handle_default` (sem `if`) já são válidas hoje; `handle_bifurcacao_A` (com `if`) é a extensão futura.
+> Para a versão atual, sem condicionais, ver [LINGUAGEM_ROBO_COMPILADOR.md](LINGUAGEM_ROBO_COMPILADOR.md), seção 2.1. As estações `handle_carga`, `handle_cruzamento_pedestres` e `handle_default` (sem `if`) já são válidas hoje; `handle_bifurcacao_A` (com `if`) é a extensão futura.
 
 ---
 
@@ -77,9 +77,9 @@ station default {
 
 ## 🔨 Fase 1: Análise Léxica
 
-> ⚠️ **Extensão futura incluída neste Lexer:** os tokens `if`/`else` fazem parte deste exemplo porque ele mostra o compilador **completo e final**, incluindo condicionais. Na versão atual (sem `if`/`else`, pendente de validação com o professor — ver LINGUAGEM_ROBO_COMPILADOR.md seção 2.2), basta remover `'if', 'else'` do conjunto `KEYWORDS` abaixo; o resto do Lexer não muda.
+> ⚠️ **Extensão futura incluída neste Lexer:** os tokens `if`/`else` fazem parte deste exemplo porque ele mostra o compilador **completo e final**, incluindo condicionais. Na versão atual (sem `if`/`else`, pendente de validação com o professor — ver [LINGUAGEM_ROBO_COMPILADOR.md](LINGUAGEM_ROBO_COMPILADOR.md), seção 2.2), basta remover `'if', 'else'` do conjunto `KEYWORDS` abaixo; o resto do Lexer não muda.
 
-Implementação dirigida diretamente pela especificação de expressões regulares (ver LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1). A ordem da lista `ESPEC` **importa**: `DURATION` vem antes de `NUMBER` para que `30s` case por inteiro, em vez de virar `NUMBER(30)` + `ID(s)`.
+Implementação dirigida diretamente pela especificação de expressões regulares (ver [LINGUAGEM_ROBO_COMPILADOR.md](LINGUAGEM_ROBO_COMPILADOR.md), seção 2.1). A ordem da lista `ESPEC` **importa**: `DURATION` vem antes de `NUMBER` para que `30s` case por inteiro, em vez de virar `NUMBER(30)` + `ID(s)`.
 
 ```python
 import re
@@ -156,7 +156,7 @@ Diferente de um lexer que varre caractere a caractere, esta versão é uma tradu
 
 ## 🌳 Fase 2: Análise Sintática
 
-> ⚠️ **Extensão futura incluída nesta gramática:** a produção `if_stmt` faz parte da versão completa/final do compilador. Na versão atual (sem condicionais), a regra `stmt` se reduz a `stmt ::= command_call`, e as produções `if_stmt`/`condition` abaixo não existem ainda — ver a gramática "escopo atual" em LINGUAGEM_ROBO_COMPILADOR.md, seção 3.
+> ⚠️ **Extensão futura incluída nesta gramática:** a produção `if_stmt` faz parte da versão completa/final do compilador. Na versão atual (sem condicionais), a regra `stmt` se reduz a `stmt ::= command_call`, e as produções `if_stmt`/`condition` abaixo não existem ainda — ver a gramática "escopo atual" em [LINGUAGEM_ROBO_COMPILADOR.md](LINGUAGEM_ROBO_COMPILADOR.md), seção 3.
 
 ### Gramática BNF
 
@@ -576,7 +576,7 @@ def handle_bifurcacao_A(send_cmd, context=None):
 # STATION_HANDLERS['bifurcacao_A'] = handle_bifurcacao_A
 ```
 
-Esse módulo é importado diretamente pelo `station_runner.py` (visto em HARDWARE.md) — não há passo de compilação/linking, é Python interpretado normalmente.
+Esse módulo é importado diretamente pelo `station_runner.py` (visto em [HARDWARE.md](../arquitetura/HARDWARE.md)) — não há passo de compilação/linking, é Python interpretado normalmente.
 
 ---
 
@@ -646,5 +646,5 @@ def test_aceita_programa_valido():
 
 ---
 
-**Consulte PROJETO_ROBO.md, LINGUAGEM_ROBO_COMPILADOR.md e ARQUITETURA_DUAS_CAMADAS.md para o restante da documentação.**
+**Consulte [PROJETO_ROBO.md](../projeto/PROJETO_ROBO.md), [LINGUAGEM_ROBO_COMPILADOR.md](LINGUAGEM_ROBO_COMPILADOR.md) e [ARQUITETURA_DUAS_CAMADAS.md](../arquitetura/ARQUITETURA_DUAS_CAMADAS.md) para o restante da documentação.**
 

@@ -326,4 +326,4 @@ for sensor in sensors:
 
 ---
 
-**Consulte PROJETO_ROBO.md para visão geral e LINGUAGEM_ROBO_COMPILADOR.md para a linguagem RoboFlow.**
+**Consulte [PROJETO_ROBO.md](../projeto/PROJETO_ROBO.md) para a visão geral e [LINGUAGEM_ROBO_COMPILADOR.md](../linguagem/LINGUAGEM_ROBO_COMPILADOR.md) para a linguagem RoboFlow.**

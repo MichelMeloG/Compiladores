@@ -7,6 +7,7 @@
 ## 📋 Índice
 
 - [Visão Geral](#visão-geral)
+- [Documentação](#documentação)
 - [Arquitetura do Sistema](#arquitetura-do-sistema)
 - [Hardware](#hardware)
 - [A Linguagem DSL — AutoDrive Script](#a-linguagem-dsl--autodrive-script)
@@ -16,6 +17,12 @@
 - [Como Usar](#como-usar)
 - [Dependências](#dependências)
 - [Equipe](#equipe)
+
+---
+
+## Documentação
+
+Os materiais de aula, a especificação da linguagem, a arquitetura e o planejamento estão separados por assunto no [índice da documentação](docs/README.md).
 
 ---
 
@@ -236,8 +243,13 @@ autodrive-dsl/
 │   ├── vision.py              # Pipeline principal: captura, BEV e cálculo de desvio
 │   └── serial_comm.py         # Módulo de comunicação Serial com o ESP32
 │
-├── docs/                      # Documentação adicional
-│   └── arquitetura.png
+├── docs/                      # Documentação organizada por assunto
+│   ├── README.md              # Índice da documentação
+│   ├── aulas/                 # Material fornecido em aula
+│   ├── projeto/               # Visão geral e escopo
+│   ├── arquitetura/           # Hardware, visão e camadas do sistema
+│   ├── linguagem/             # Especificação da DSL e do compilador
+│   └── planejamento/          # Roadmap e cronograma
 │
 └── README.md
 ```
