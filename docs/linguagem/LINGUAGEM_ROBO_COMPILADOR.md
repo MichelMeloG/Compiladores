@@ -1,6 +1,10 @@
 # RoboFlow: A Linguagem de Comportamento de Estação
 
-> **Roadmap para o backend ESP32:** consulte [ROADMAP_ROBOFLOW_ESP32.md](../planejamento/ROADMAP_ROBOFLOW_ESP32.md). O roadmap assume RoboFlow → C++ → ESP32 e registra a necessidade de unificar essa decisão com a arquitetura Python descrita neste documento.
+**Conexão do Projeto com Linguagens Formais e Compiladores**  
+**Versão:** (Seguidor de Linha Industrial)  
+**Data:** Agosto 2026
+
+---
 
 ## 🎯 Escopo da Linguagem
 
@@ -52,19 +56,21 @@ station "carga" {
 
 ### Comandos Disponíveis (Biblioteca Padrão)
 
-| Comando                                                | Efeito                                                                           |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `stop()`                                               | Envia `CMD STOP` na serial                                                       |
-| `set_speed(v)`                                         | Define velocidade de seguimento (respeitando limite físico)                      |
-| `turn_left()` / `turn_right()` / `continue_straight()` | Comando fixo de manobra numa estação (a *escolha automática* entre eles via `if`/`else` está adiada — ver seção 2.2) |
-| `wait_signal(nome, timeout)`                           | Aguarda evento externo (ex: sensor de carga, botão) ou expira                    |
-| `signal_buzzer()` / `signal_light()`                   | Sinalização para operadores humanos                                              |
-| `log(msg)`                                             | Registro para auditoria                                                          |
-| `resume_line_following()`                              | Devolve controle à malha rápida (PID no ESP32) — **obrigatório em todo caminho** |
+| Comando | Efeito | Python gerado |
+|---|---|---|
+| `stop()` | Para o veículo na estação | `send_cmd('CMD STOP')` |
+| `set_speed(v)` | Define velocidade de seguimento (respeitando limite físico) | `send_cmd(f'CMD SET_SPEED {v}')` |
+| `turn_left()` / `turn_right()` / `continue_straight()` | Manobra fixa numa estação (a *escolha automática* entre elas via `if`/`else` já tem léxico e gramática prontos — falta só a parte semântica do `context`, ver seção 2.2) | `send_cmd('CMD TURN_LEFT')` etc. |
+| `signal_buzzer()` / `signal_light()` | Sinalização para operadores humanos | `send_cmd('CMD SIGNAL_BUZZER')` etc. |
+| `wait_signal(nome, timeout)` | Aguarda evento externo (sensor de carga, botão) ou expira | `wait_for_signal('<nome>', timeout=<t>)` |
+| `log(msg)` | Registro para auditoria | `log_event('<msg>')` |
+| `resume_line_following()` | Devolve controle à malha rápida (PID no ESP32) — **obrigatório em todo caminho** | `send_cmd('CMD RESUME_LINE_FOLLOWING')` |
 
-### Condicionais (Adiado — ver seção 2.2)
+**Só três funções de runtime.** Repare que quase todo comando colapsa em `send_cmd(str)` — o que muda é apenas a string. O gerador de código não precisa de uma função Python por comando, e quem interpreta essas strings é o firmware C++ do ESP32, não o Python. Portanto o `station_runner.py` só precisa fornecer: `send_cmd`, `wait_for_signal` e `log_event`.
 
-> Esta parte da linguagem ainda **não está implementada** — depende de um mecanismo (variáveis vindas de fora do programa) que ainda não foi coberto em aula. Fica registrado aqui como próximo passo, não como parte do escopo atual.
+### Condicionais (Léxico/Sintaxe prontos — Semântica ver seção 2.2)
+
+> A sintaxe abaixo (tokens e gramática do `if_stmt`) já está formalmente definida — ver §2.1 e §3. O que falta é a **análise semântica**: garantir que a variável usada na condição (ex: `next_destination`) sempre existe no `context` fornecido pelo ESP32 em tempo de execução. Isso depende de um mecanismo que ainda não foi coberto em aula (ver §2.2).
 
 ```roboflow
 station "bifurcacao_A" {
@@ -135,27 +141,27 @@ O analisador léxico é definido formalmente por um conjunto de **expressões re
 
 Cada ER abaixo pode ser convertida em AFN (construção de Thompson), depois em AFD (construção de subconjuntos) e minimizada — o caminho teórico padrão da disciplina. A união de todas elas forma o autômato finito que varre o código-fonte.
 
-| Classe de Token | Expressão Regular | Exemplo de lexema | Ação do lexer |
-|---|---|---|---|
-| `WS` | `[ \t\r\n]+` | (espaço, tab, quebra) | **Descarta** |
-| `COMMENT` | `//[^\n]*` | `// aguarda esteira` | **Descarta** |
-| `KEYWORD` (estrutura) | `station\|default\|on_arrival` | `station` | Devolve `(KEYWORD, lexema)` |
-| `KEYWORD` (comando) | `stop\|set_speed\|turn_left\|turn_right\|continue_straight\|resume_line_following\|signal_buzzer\|signal_light\|log` | `turn_right` | Devolve `(KEYWORD, lexema)` |
-| `KEYWORD` (espera) | `wait_signal\|timeout\|none` | `timeout` | Devolve `(KEYWORD, lexema)` |
-| `STRING` | `"[^"\n]*"` | `"carga_completa"` | Devolve `(STRING, conteúdo sem aspas)` |
-| `DURATION` | `[0-9]+(\.[0-9]+)?s` | `30s` | Devolve `(DURATION, valor em segundos)` |
-| `NUMBER` | `[0-9]+(\.[0-9]+)?` | `0.15` | Devolve `(NUMBER, float)` |
-| `ID` | `[a-zA-Z_][a-zA-Z0-9_]*` | `next_destination` | Devolve `(ID, lexema)` |
-| `LBRACE` | `\{` | `{` | Devolve `(LBRACE, "{")` |
-| `RBRACE` | `\}` | `}` | Devolve `(RBRACE, "}")` |
-| `LPAREN` | `\(` | `(` | Devolve `(LPAREN, "(")` |
-| `RPAREN` | `\)` | `)` | Devolve `(RPAREN, ")")` |
-| `COLON` | `:` | `:` | Devolve `(COLON, ":")` |
-| `COMMA` | `,` | `,` | Devolve `(COMMA, ",")` |
-| `EQ` ⚠️ *(futuro)* | `==` | `==` | Devolve `(OP, "==")` |
-| `KEYWORD` (condicional) ⚠️ *(futuro)* | `if\|else` | `if` | Devolve `(KEYWORD, lexema)` |
+| Classe de Token                       | Expressão Regular                                                                                                    | Exemplo de lexema     | Ação do lexer                           |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------- |
+| `WS`                                  | `[ \t\r\n]+`                                                                                                         | (espaço, tab, quebra) | **Descarta**                            |
+| `COMMENT`                             | `//[^\n]*`                                                                                                           | `// aguarda esteira`  | **Descarta**                            |
+| `KEYWORD` (estrutura)                 | `station\|default\|on_arrival`                                                                                       | `station`             | Devolve `(KEYWORD, lexema)`             |
+| `KEYWORD` (comando)                   | `stop\|set_speed\|turn_left\|turn_right\|continue_straight\|resume_line_following\|signal_buzzer\|signal_light\|log` | `turn_right`          | Devolve `(KEYWORD, lexema)`             |
+| `KEYWORD` (espera)                    | `wait_signal\|timeout\|none`                                                                                         | `timeout`             | Devolve `(KEYWORD, lexema)`             |
+| `STRING`                              | `"[^"\n]*"`                                                                                                          | `"carga_completa"`    | Devolve `(STRING, conteúdo sem aspas)`  |
+| `DURATION`                            | `[0-9]+(\.[0-9]+)?s`                                                                                                 | `30s`                 | Devolve `(DURATION, valor em segundos)` |
+| `NUMBER`                              | `[0-9]+(\.[0-9]+)?`                                                                                                  | `0.15`                | Devolve `(NUMBER, float)`               |
+| `ID`                                  | `[a-zA-Z_][a-zA-Z0-9_]*`                                                                                             | `next_destination`    | Devolve `(ID, lexema)`                  |
+| `LBRACE`                              | `\{`                                                                                                                 | `{`                   | Devolve `(LBRACE, "{")`                 |
+| `RBRACE`                              | `\}`                                                                                                                 | `}`                   | Devolve `(RBRACE, "}")`                 |
+| `LPAREN`                              | `\(`                                                                                                                 | `(`                   | Devolve `(LPAREN, "(")`                 |
+| `RPAREN`                              | `\)`                                                                                                                 | `)`                   | Devolve `(RPAREN, ")")`                 |
+| `COLON`                               | `:`                                                                                                                  | `:`                   | Devolve `(COLON, ":")`                  |
+| `COMMA`                               | `,`                                                                                                                  | `,`                   | Devolve `(COMMA, ",")`                  |
+| `OP` | `==` | `==` | Devolve `(OP, "==")` |
+| `KEYWORD` (condicional) | `if\|else` | `if` | Devolve `(KEYWORD, lexema)` |
 
-⚠️ As duas últimas linhas pertencem à extensão futura com `if`/`else` — ver seção 2.2. Na versão atual, essas ERs simplesmente não fazem parte da especificação.
+As duas últimas linhas fecham o vocabulário léxico necessário para condicionais (`if`/`else`/`==`). A parte que ainda depende de aula é semântica, não léxica — ver §2.2.
 
 #### Regras de Desambiguação
 
@@ -195,7 +201,24 @@ word = casa_regex(r'[a-zA-Z_][a-zA-Z0-9_]*')
 tipo = 'KEYWORD' if word in KEYWORDS else 'ID'
 ```
 
-As duas abordagens reconhecem exatamente a mesma linguagem — a segunda é só mais simples de escrever à mão, e é a que está em [COMPILADOR_GERA_CONTROLE.md](COMPILADOR_GERA_CONTROLE.md), Fase 1.
+As duas abordagens reconhecem exatamente a mesma linguagem — a segunda é só mais simples de escrever à mão, e é a que está em COMPILADOR_GERA_CONTROLE.md, Fase 1.
+
+Com `if`/`else` inclusos, a tabela de reservadas fica assim:
+
+```python
+KEYWORDS = {
+    "station", "default", "on_arrival",                       # estrutura
+    "stop", "set_speed", "turn_left", "turn_right",
+    "continue_straight", "resume_line_following",
+    "signal_buzzer", "signal_light", "log",                    # comando
+    "wait_signal", "timeout", "none",                          # espera
+    "if", "else",                                              # condicional
+}
+
+OPERATORS = {
+    "==": "OP",   # se depois entrar != < > etc, cresce aqui
+}
+```
 
 #### Exemplo de Tokenização Completa
 
@@ -219,31 +242,9 @@ Sequência de tokens produzida:
 Descartados: 1 comentário, todos os espaços e quebras de linha
 ```
 
-#### Tradução dos Tokens para Python (Geração de Código)
+> A tradução de cada comando para Python está na tabela **Comandos Disponíveis** (início deste documento); o gerador completo está em COMPILADOR_GERA_CONTROLE.md, Fase 4.
 
-Depois de reconhecidos, os tokens viram código Python. A tabela é curta porque **todos os comandos colapsam na mesma função de runtime**, `send_cmd(str)` — o que muda é apenas a string:
-
-| Token reconhecido | Python gerado | Função de runtime |
-|---|---|---|
-| `station` / `default` | `def handle_<nome>(send_cmd, context=None):` | — |
-| `on_arrival` | (delimita o corpo — não gera código) | — |
-| `stop` | `send_cmd('CMD STOP')` | `send_cmd(str)` |
-| `set_speed` + `NUMBER` | `send_cmd(f'CMD SET_SPEED {v}')` | `send_cmd(str)` |
-| `turn_left` | `send_cmd('CMD TURN_LEFT')` | `send_cmd(str)` |
-| `turn_right` | `send_cmd('CMD TURN_RIGHT')` | `send_cmd(str)` |
-| `continue_straight` | `send_cmd('CMD CONTINUE_STRAIGHT')` | `send_cmd(str)` |
-| `resume_line_following` | `send_cmd('CMD RESUME_LINE_FOLLOWING')` | `send_cmd(str)` |
-| `signal_buzzer` / `signal_light` | `send_cmd('CMD SIGNAL_BUZZER')` / `..._LIGHT` | `send_cmd(str)` |
-| `wait_signal` + `STRING` + `DURATION` | `wait_for_signal('<nome>', timeout=<t>)` | `wait_for_signal(str, timeout) -> bool` |
-| `none` (como timeout) | `timeout=None` (espera infinita) | — |
-| `log` + `STRING` | `log_event('<msg>')` | `log_event(str)` |
-| `STRING` | `'...'` (string Python) | — |
-| `NUMBER` | `float` / `int` nativo | — |
-| `ID` ⚠️ *(futuro)* | `context.get('<id>')` | `dict` (vindo do ESP32) |
-
-**Consequência prática:** o `station_runner.py` precisa fornecer apenas **três** funções de runtime — `send_cmd`, `wait_for_signal` e `log_event`. Todo o resto do vocabulário da linguagem se reduz a strings passadas para a primeira delas, e quem as interpreta é o firmware C++ do ESP32, não o Python.
-
-> **Nesta versão atual da linguagem, cada estação executa uma sequência fixa de comandos, sem decisão condicional.** A estação `bifurcacao_A` (que usaria `if`/`else`) fica de fora por enquanto — depende do mecanismo de `context` que está documentado na seção 2.2 abaixo, mas ainda não foi validado com o professor.
+> **O compilador já reconhece e tokeniza `if`/`else` (§2.1) e a gramática já prevê o `if_stmt` (§3).** O que falta para `bifurcacao_A` rodar de ponta a ponta é a análise semântica do mecanismo de `context` — documentada na seção 2.2 abaixo — que ainda não foi validada com o professor.
 
 ### 2.2 Condicionais e Variáveis Externas — O Mecanismo de `context`
 
@@ -261,6 +262,18 @@ station "bifurcacao_A" {
     }
 }
 ```
+
+**Tokenização do trecho acima** (mesmo formato do §2.1):
+
+```
+(KEYWORD, if) (ID, next_destination) (OP, ==) (STRING, linha_2) (LBRACE)
+    (KEYWORD, turn_right) (LPAREN) (RPAREN)
+(RBRACE) (KEYWORD, else) (LBRACE)
+    (KEYWORD, continue_straight) (LPAREN) (RPAREN)
+(RBRACE)
+```
+
+`next_destination` não está na tabela de reservadas, então vira `(ID, next_destination)` — é justamente esse token que o compilador traduz para `context.get('next_destination')` na geração de código (ver Fase 4 em COMPILADOR_GERA_CONTROLE.md).
 
 **De onde vem `next_destination`?** Não é definida no RoboFlow. É uma informação que o **ESP32 lê de um sensor** (câmera que identifica o tipo de peça, código de barras, RFID, etc) e **fornece junto com o evento de estação**.
 
@@ -290,9 +303,9 @@ station "bifurcacao_A" {
    handler(send_cmd, context=context)
    ```
 
-#### Por Que Está Adiado?
+#### Por Que a Parte Semântica Está Adiada?
 
-Isso ainda **não está implementado** por duas razões:
+O léxico e a gramática do `if`/`else` (§2.1 e §3) já estão fechados. O que ainda **não está implementado** é a análise semântica, por duas razões:
 
 1. **Análise Semântica:** o compilador precisa validar que toda variável usada em um `if` (ex: `next_destination`) vai estar presente no `context` em tempo de execução — isso é "checagem de escopo", um tópico da disciplina que seu professor vai cobrir.
 
@@ -300,12 +313,12 @@ Isso ainda **não está implementado** por duas razões:
 
 #### Status
 
-- **Sem `if`/`else`:** ✅ Pronto pra usar hoje
-- **Com `if`/`else` e `context`:** ⏳ Estrutura básica pronta (ESP32 → serial → `station_runner.py` → dicionário), mas análise semântica ainda adiada
+- **Léxico + Sintático (`if`/`else`/`==`, gramática do `if_stmt`):** ✅ Pronto — ver §2.1 e §3
+- **Semântico (`context`, checagem de escopo):** ⏳ Estrutura básica pronta (ESP32 → serial → `station_runner.py` → dicionário), mas validação em tempo de compilação ainda depende do professor
 
-### 3. Análise Sintática — Gramática (BNF simplificada, escopo atual)
+### 3. Análise Sintática — Gramática (BNF simplificada)
 
-Gramática da linguagem sem condicionais — reflete o que já pode ser implementado com o conteúdo visto até agora:
+Gramática completa da linguagem, já incluindo condicionais — léxico e sintaxe fechados (ver §2.1):
 
 ```bnf
 program        ::= station_decl+ default_decl
@@ -316,19 +329,18 @@ default_decl   ::= "station" "default" "{" "on_arrival" "{" stmt_list "}" "}"
 
 stmt_list      ::= stmt*
 
-stmt           ::= command_call
+stmt           ::= command_call | if_stmt
 
 command_call   ::= identifier "(" arg_list ")"
-```
-
-**Extensão futura (não implementada ainda — depende de aula sobre escopo/ambiente de variáveis):**
-```bnf
-stmt           ::= command_call | if_stmt
 
 if_stmt        ::= "if" condition "{" stmt_list "}" ("else" "{" stmt_list "}")?
 
 condition      ::= identifier "==" (string | identifier)
 ```
+
+> Condicionais encadeados (`else { if ... }`) já são uma frase válida desta gramática sem nenhuma regra extra: como `stmt_list` dentro do `else` aceita `stmt`, e `stmt` já inclui `if_stmt`, o aninhamento vem de graça.
+
+O que ainda depende de conteúdo futuro de aula não é a gramática — é a **análise semântica** da `condition` (checar que o identificador sempre existe no `context` em tempo de execução, ver §2.2).
 
 ### 4. Análise Semântica — As Validações Que Importam Aqui
 
@@ -340,16 +352,16 @@ Diferente de um compilador genérico, aqui as validações **são a parte intere
 ❌ ERRO: Estação "descarga" existe na pista mas não tem bloco RoboFlow
 ```
 
-**Determinismo:** duas definições para a mesma estação são erro de compilação — não faz sentido o AGV ter duas respostas possíveis para a mesma situação. (Quando `if`/`else` for implementado — seção 2.2 — essa checagem se estende para condições de `if` que se sobrepõem.)
+**Determinismo:** duas definições para a mesma estação são erro de compilação — não faz sentido o AGV ter duas respostas possíveis para a mesma situação. (Quando a análise semântica de `if`/`else` for implementada — seção 2.2 — essa checagem se estende para condições de `if` que se sobrepõem.)
 
 **Terminação / Ausência de Deadlock:** todo caminho de execução dentro de `on_arrival` precisa terminar em `resume_line_following()` (ou em `wait_signal(..., timeout: none)`, que é uma espera deliberada e explícita). Um caminho que "esquece" de retomar a linha trava o AGV para sempre — isso é testável estaticamente percorrendo a árvore de statements.
 
 ```
-❌ ERRO (exemplo, válido só quando if/else existir): station "bifurcacao_A" tem um
+❌ ERRO (exemplo, válido quando a checagem semântica de if/else existir): station "bifurcacao_A" tem um
    caminho (else) sem resume_line_following()
 ```
 
-No escopo atual (sem `if`/`else`), essa checagem é mais simples: basta verificar se a última instrução de cada `station { on_arrival { ... } }` é `resume_line_following()` ou `wait_signal(..., timeout: none)`.
+Hoje, sem a checagem semântica do `if`/`else` implementada, essa validação é mais simples: basta verificar se a última instrução de cada `station { on_arrival { ... } }` é `resume_line_following()` ou `wait_signal(..., timeout: none)`. Quando essa checagem entrar (§2.2), o algoritmo passa a exigir isso nos **dois ramos** (`then` e `else`), não só na última instrução da estação.
 
 **Limite Físico:** `set_speed(v)` não pode exceder a velocidade máxima do motor real — validação de tipo/faixa, configurável por hardware.
 
@@ -383,7 +395,7 @@ def handle_default(send_cmd, context=None):
     wait_for_signal('manual_override', timeout=None)
 ```
 
-Note que não há framework de robótica envolvido — o compilador gera funções Python simples, despachadas por um dicionário (`STATION_HANDLERS`) no script que lê a serial do ESP32. Ver [COMPILADOR_GERA_CONTROLE.md](COMPILADOR_GERA_CONTROLE.md) para o gerador completo.
+Note que não há framework de robótica envolvido — o compilador gera funções Python simples, despachadas por um dicionário (`STATION_HANDLERS`) no script que lê a serial do ESP32. Ver COMPILADOR_GERA_CONTROLE.md para o gerador completo.
 
 ---
 
