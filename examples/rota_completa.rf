@@ -1,0 +1,38 @@
+// RoboFlow — rota completa, incluindo condicional (if/else) e variável de
+// contexto (next_destination), fornecida pelo ESP32 via sensor.
+// Ver docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md, secao 2.2.
+
+station "carga" {
+    on_arrival {
+        stop()
+        wait_signal("carga_completa", timeout: 30s)
+        resume_line_following()
+    }
+}
+
+station "cruzamento_pedestres" {
+    on_arrival {
+        set_speed(0.15)
+        signal_buzzer()
+        resume_line_following()
+    }
+}
+
+station "bifurcacao_A" {
+    on_arrival {
+        if next_destination == "linha_2" {
+            turn_right()
+        } else {
+            continue_straight()
+        }
+        resume_line_following()
+    }
+}
+
+station default {
+    on_arrival {
+        stop()
+        log("Estacao desconhecida")
+        wait_signal("manual_override", timeout: none)
+    }
+}

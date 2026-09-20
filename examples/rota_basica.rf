@@ -1,0 +1,28 @@
+// RoboFlow — rota básica, sem condicionais.
+// Compatível com o escopo do MVP v0.1 (ver
+// docs/planejamento/ROADMAP_ROBOFLOW_ESP32.md, seção 2 e 3).
+
+station "carga" {
+    on_arrival {
+        stop()
+        signal_light()
+        wait_signal("carga_completa", timeout: 30s)
+        resume_line_following()
+    }
+}
+
+station "descarga" {
+    on_arrival {
+        stop()
+        wait_signal("descarga_completa", timeout: 60s)
+        resume_line_following()
+    }
+}
+
+station default {
+    on_arrival {
+        stop()
+        log("Estacao desconhecida")
+        wait_signal("manual_override", timeout: none)
+    }
+}
