@@ -2,6 +2,7 @@ name: Publicar dashboard no GitHub Pages
 
 # Publica a dashboard de observabilidade em
 # https://michelmelog.github.io/Compiladores/
+# https://michelmelog.github.io/Compiladores/dashboard/
 #
 # A publicação é um BUILD DE DEMONSTRAÇÃO: o GitHub Pages serve apenas
 # arquivos estáticos, e a dashboard consome um backend REST que ainda não
@@ -55,6 +56,11 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
           VITE_DEMO: 'true'
           VITE_API_URL: /api
+
+      - name: Preparar endereço direto da dashboard
+        run: |
+          mkdir -p dist/dashboard
+          cp dist/index.html dist/dashboard/index.html
 
       - name: Configurar Pages
         uses: actions/configure-pages@v5

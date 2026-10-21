@@ -58,7 +58,11 @@ valida os tipos e publica apenas a pasta `dashboard/dist`.
 
 A cada alteração nesta pasta na branch `main`, o workflow
 [`deploy-dashboard.yml`](../.github/workflows/deploy-dashboard.yml) publica em
-<https://michelmelog.github.io/Compiladores/>.
+<https://michelmelog.github.io/Compiladores/dashboard/>.
+
+O mesmo build também fica disponível na raiz `/Compiladores/`. O workflow
+copia o HTML compilado para `dist/dashboard/index.html`, mantendo os assets
+compartilhados em `/Compiladores/assets/`.
 
 Como o GitHub Pages serve apenas arquivos estáticos e não há backend hospedado,
 **a publicação é um build de demonstração**: o workflow define `VITE_DEMO=true`,
