@@ -34,6 +34,11 @@ Este diretório reúne a documentação do RoboFlow e do AGV por assunto.
 
 - [Roadmap RoboFlow → ESP32](planejamento/ROADMAP_ROBOFLOW_ESP32.md) — fases, cronograma, testes e entregas da AP1/AP2.
 
+### Observabilidade
+
+- [Dashboard de observabilidade](../dashboard/README.md) — interface web que acompanha as rotas executadas pelo AGV.
+- [Contrato de integração com o backend](../dashboard/BACKEND_INTEGRATION.md) — endpoints REST que a dashboard consome e que o backend precisa implementar.
+
 ## Observação arquitetural
 
 Parte da documentação histórica descreve geração de Python para execução no Raspberry Pi, enquanto o roadmap novo assume geração de C++ para execução no ESP32. Essa decisão deve ser consolidada antes da implementação para que todos os documentos descrevam a mesma arquitetura.
