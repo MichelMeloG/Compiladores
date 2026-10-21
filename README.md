@@ -243,6 +243,10 @@ autodrive-dsl/
 │   ├── vision.py              # Pipeline principal: captura, BEV e cálculo de desvio
 │   └── serial_comm.py         # Módulo de comunicação Serial com o ESP32
 │
+├── dashboard/                 # Interface web de observabilidade das rotas
+│   ├── src/                   # Aplicação React + TypeScript
+│   └── BACKEND_INTEGRATION.md # Contrato REST a ser implementado pelo backend
+│
 ├── docs/                      # Documentação organizada por assunto
 │   ├── README.md              # Índice da documentação
 │   ├── aulas/                 # Material fornecido em aula
