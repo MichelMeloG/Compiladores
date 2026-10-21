@@ -52,6 +52,10 @@ npm run build        # build de produção em dist/
 
 ## Publicação
 
+Em **Settings → Pages → Build and deployment → Source**, selecione
+**GitHub Actions**. O workflow usa Node.js 24, instala o lockfile com `npm ci`,
+valida os tipos e publica apenas a pasta `dashboard/dist`.
+
 A cada alteração nesta pasta na branch `main`, o workflow
 [`deploy-dashboard.yml`](../.github/workflows/deploy-dashboard.yml) publica em
 <https://michelmelog.github.io/Compiladores/>.
@@ -64,6 +68,12 @@ página.
 Esses dados vivem isolados em [`src/demo/`](src/demo/demoBackend.ts) e **não
 entram no build normal** — `src/services/` continua sendo apenas cliente HTTP,
 sem nenhuma ramificação entre dados reais e de exemplo.
+
+Na demonstração, a importação não persiste registros e os reconhecimentos de
+alertas duram apenas até recarregar a página. Os filtros de período, missão,
+severidade e busca não são aplicados integralmente pelo backend de exemplo.
+Para operar com dados reais, é necessário hospedar o backend separadamente e
+gerar um build com `VITE_API_URL` apontando para ele e sem `VITE_DEMO=true`.
 
 ## Estrutura
 
