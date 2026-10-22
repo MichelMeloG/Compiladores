@@ -42,6 +42,24 @@ const MISSION_ID_ALIASES = [
   'execucao',
 ];
 
+const ROBOT_ID_ALIASES = [
+  'robotid',
+  'robot_id',
+  'robot',
+  'robo',
+  'robo_id',
+  'id_robo',
+  'agv',
+  'agv_id',
+  'carrinho',
+  'carrinho_id',
+  'veiculo',
+  'vehicle',
+  'vehicle_id',
+  'device_id',
+  'deviceid',
+];
+
 const EVENT_TYPE_ALIASES = [
   'eventtype',
   'event_type',
@@ -222,6 +240,12 @@ export function normalizeRawRecord(record: Record<string, unknown>, index: numbe
   const rawMissionId = findFieldValue(record, MISSION_ID_ALIASES);
   const missionId = rawMissionId ? String(rawMissionId).trim() : 'unassigned';
 
+  // Arquivos vindos de um robô só costumam omitir a coluna. O evento
+  // ainda é aproveitável: entra como `unassigned` e o backend decide a
+  // quem atribuí-lo, do mesmo modo que já acontece com a missão.
+  const rawRobotId = findFieldValue(record, ROBOT_ID_ALIASES);
+  const robotId = rawRobotId ? String(rawRobotId).trim() : 'unassigned';
+
   const rawMessage = findFieldValue(record, MESSAGE_ALIASES);
   const message = rawMessage ? String(rawMessage).trim() : 'Sem mensagem descritiva';
 
@@ -243,6 +267,7 @@ export function normalizeRawRecord(record: Record<string, unknown>, index: numbe
     event: {
       id,
       missionId,
+      robotId,
       timestamp: normalizedTime,
       eventType,
       command,

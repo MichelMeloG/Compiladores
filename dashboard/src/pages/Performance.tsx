@@ -38,10 +38,15 @@ import { DashboardMetrics, LogEvent, Mission } from '../types';
 import { formatDuration, formatPercent } from '../utils/formatters';
 
 interface PerformanceProps {
+  /** Restringe a página a um robô. Ausente = frota inteira. */
+  robotId?: string;
   refreshTrigger: number;
 }
 
-export const Performance: React.FC<PerformanceProps> = ({ refreshTrigger }) => {
+export const Performance: React.FC<PerformanceProps> = ({
+  robotId,
+  refreshTrigger,
+}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -56,9 +61,9 @@ export const Performance: React.FC<PerformanceProps> = ({ refreshTrigger }) => {
       setError(null);
       try {
         const [mMetrics, mMissions, mLogs] = await Promise.all([
-          getDashboardMetrics(),
-          getMissions(),
-          getLogs(),
+          getDashboardMetrics({ period: 'all', robotId }),
+          getMissions({ period: 'all', robotId }),
+          getLogs({ robotId }),
         ]);
         if (mounted) {
           setMetrics(mMetrics);
@@ -81,7 +86,7 @@ export const Performance: React.FC<PerformanceProps> = ({ refreshTrigger }) => {
     return () => {
       mounted = false;
     };
-  }, [refreshTrigger, retryCount]);
+  }, [refreshTrigger, retryCount, robotId]);
 
   // Stops per mission average
   const avgStopsPerMission = useMemo(() => {

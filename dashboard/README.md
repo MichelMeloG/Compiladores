@@ -1,7 +1,9 @@
 # Dashboard de Observabilidade — RoboFlow
 
-Interface web para acompanhar as rotas executadas pelo AGV: percursos entre
-estações, paradas, telemetria e falhas.
+Interface web para operar uma **frota de AGVs**: a tela inicial reúne os
+percursos, paradas, telemetria e falhas de todos os robôs conectados; a barra
+lateral abre um robô específico, com o mesmo painel restrito a ele e a tela de
+**definição de rota**.
 
 É a camada de visualização do *"logging de telemetria"* previsto na Etapa 4 do
 [projeto](../docs/projeto/PROJETO_ROBO.md): os eventos que o veículo gera ao
@@ -15,7 +17,27 @@ aqui em rotas, indicadores e alertas.
                                               │ eventos / telemetria
                                               ▼
                                       backend REST  ──►  esta dashboard
+                                              ▲                │
+                                              └── lista de ────┘
+                                                  pontos da rota
 ```
+
+## As duas direções
+
+| Sentido | O que trafega |
+| :--- | :--- |
+| Robô → dashboard | Telemetria: eventos, missões, alertas, estado e bateria de cada robô |
+| Dashboard → robô | A rota: a sequência ordenada de vértices da malha que o robô deve percorrer |
+
+A rota é montada de dois modos, sobre o mesmo estado: clicando os pontos na
+malha, ou editando a lista de coordenadas abaixo dela. Ao clicar dois pontos
+distantes, a interface preenche o caminho mais curto entre eles sobre os
+trilhos, contornando pontos bloqueados — o backend recebe a rota já expandida
+passo a passo, com vértices consecutivos sempre adjacentes.
+
+A conversão desses pontos em comandos de tração (`FRENTE`, `ESQUERDA`…) é do
+backend / do compilador DSL, que conhece a orientação atual do robô. A interface
+não emite direções.
 
 ## Estado atual
 
@@ -73,8 +95,10 @@ Esses dados vivem isolados em [`src/demo/`](src/demo/demoBackend.ts) e **não
 entram no build normal** — `src/services/` continua sendo apenas cliente HTTP,
 sem nenhuma ramificação entre dados reais e de exemplo.
 
-Na demonstração, a importação não persiste registros e os reconhecimentos de
-alertas duram apenas até recarregar a página. Os filtros de período, missão,
+A demonstração traz quatro robôs fictícios, em estados diferentes (em rota,
+online, com falha e offline), para exercitar a navegação da frota. As rotas
+enviadas e os reconhecimentos de alertas duram apenas até recarregar a página, e
+a importação não persiste registros. Os filtros de período, missão,
 severidade e busca não são aplicados integralmente pelo backend de exemplo.
 Para operar com dados reais, é necessário hospedar o backend separadamente e
 gerar um build com `VITE_API_URL` apontando para ele e sem `VITE_DEMO=true`.
@@ -85,10 +109,10 @@ gerar um build com `VITE_API_URL` apontando para ele e sem `VITE_DEMO=true`.
 dashboard/
 ├── src/
 │   ├── services/      # Única camada de rede; api.ts é o único que usa fetch
-│   ├── pages/         # Visão geral, Missões, Logs, Alertas, Desempenho, Importar
-│   ├── components/    # Layout e componentes reutilizáveis
+│   ├── pages/         # Visão geral, Rota, Missões, Logs, Alertas, Desempenho, Importar
+│   ├── components/    # Layout, malha de rota e componentes reutilizáveis
 │   ├── types/         # Contrato de dados, espelho do que o backend devolve
-│   ├── utils/         # Formatação e parser de arquivos de log
+│   ├── utils/         # Formatação, parser de logs e geometria da malha (routeGrid.ts)
 │   └── demo/          # Dados fictícios da publicação estática (fora do build normal)
 └── BACKEND_INTEGRATION.md
 ```

@@ -7,6 +7,7 @@ import { Alert } from '../types';
 import { apiRequest } from './api';
 
 export interface AlertFilterParams {
+  robotId?: string;
   severity?: string;
   status?: 'all' | 'unacknowledged' | 'acknowledged';
   missionId?: string;
@@ -20,6 +21,8 @@ export interface AlertFilterParams {
  */
 export async function getAlerts(filters?: AlertFilterParams): Promise<Alert[]> {
   const params = new URLSearchParams();
+
+  if (filters?.robotId) params.set('robotId', filters.robotId);
 
   if (filters?.severity && filters.severity !== 'all') {
     params.set('severity', filters.severity);

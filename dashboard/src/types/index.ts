@@ -28,6 +28,40 @@ export type RoverState =
   | 'error'
   | 'unknown';
 
+export type RobotStatus =
+  | 'online'
+  | 'busy'
+  | 'idle'
+  | 'offline'
+  | 'error'
+  | 'maintenance';
+
+/**
+ * Um robô (AGV) conectado à central.
+ *
+ * A frota é a unidade de navegação da interface: a tela inicial agrega
+ * todos os robôs, e cada robô tem o mesmo painel restrito aos seus dados.
+ */
+export interface Robot {
+  id: string;
+  name: string;
+  /** Setor/linha de produção onde o robô opera. */
+  area?: string;
+  model?: string;
+  status: RobotStatus;
+  /** Estado do firmware no último contato. */
+  roverState?: RoverState;
+  /** Missão que o robô executa agora, quando houver. */
+  currentMissionId?: string;
+  /** Carga da bateria em percentual (0–100), ou `null` se não reportada. */
+  batteryPercent?: number | null;
+  /** Último ponto conhecido na malha, no formato "x,y". */
+  currentPoint?: string | null;
+  firmwareVersion?: string;
+  lastSeenAt: string;
+  activeAlertsCount: number;
+}
+
 export type MissionStatus =
   | 'completed'
   | 'in_progress'
@@ -38,6 +72,8 @@ export type MissionStatus =
 export interface LogEvent {
   id: string;
   missionId: string;
+  /** Robô que emitiu o evento. Obrigatório na operação multi-robô. */
+  robotId: string;
   timestamp: string; // ISO 8601 string
   eventType: EventType;
   command?: string;
@@ -55,6 +91,7 @@ export interface StopReasonCount {
 
 export interface Mission {
   id: string;
+  robotId: string;
   origin: string;
   destination: string;
   status: MissionStatus;
@@ -82,6 +119,8 @@ export interface Alert {
   severity: EventSeverity;
   timestamp: string;
   missionId?: string;
+  /** Robô de origem do alerta. Ausente em alertas da frota como um todo. */
+  robotId?: string;
   occurrenceCount: number;
   acknowledged: boolean;
   acknowledgedAt?: string;
@@ -118,6 +157,8 @@ export type TimePeriod = '24h' | '7d' | '30d' | 'all' | 'custom';
 
 export interface GlobalFilterState {
   period: TimePeriod;
+  /** Restringe a consulta a um robô. Ausente = frota inteira. */
+  robotId?: string;
   startDate?: string;
   endDate?: string;
   origin?: string;
@@ -147,4 +188,105 @@ export interface ApiResponse<T> {
 export interface ImportResult {
   importedCount: number;
   ignoredCount?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Malha de navegação e planejamento de rota
+// ---------------------------------------------------------------------------
+
+/**
+ * Um vértice da malha do chão de fábrica.
+ *
+ * A malha é uma grade de vértices ligados por trilhos ortogonais: o robô
+ * só anda sobre as linhas, nunca em diagonal. As coordenadas são
+ * 0-indexadas, com a origem `(0, 0)` no canto superior esquerdo.
+ */
+export interface GridPoint {
+  /** Coluna (eixo horizontal), 0-indexada. */
+  x: number;
+  /** Linha (eixo vertical), 0-indexada. */
+  y: number;
+  /** Rótulo opcional do ponto — nome da estação, quando houver. */
+  label?: string;
+  /**
+   * `blocked` remove o vértice da malha: o planejador nunca traça rota
+   * por ele e o operador não consegue selecioná-lo.
+   */
+  kind?: 'free' | 'station' | 'blocked';
+}
+
+/** A malha percorrível de um robô, como o backend a descreve. */
+export interface RobotGrid {
+  /** Número de vértices no eixo horizontal. */
+  cols: number;
+  /** Número de vértices no eixo vertical. */
+  rows: number;
+  /**
+   * Vértices com característica própria (estação ou bloqueio).
+   * Os vértices omitidos são livres.
+   */
+  points?: GridPoint[];
+}
+
+/** Um ponto da rota, na ordem em que o robô deve visitá-lo. */
+export interface RouteWaypoint {
+  x: number;
+  y: number;
+}
+
+/** A rota montada pelo operador, pronta para ser enviada ao robô. */
+export interface RoutePlan {
+  robotId: string;
+  /**
+   * Sequência ordenada de vértices, do primeiro ao último.
+   * Vértices consecutivos são sempre adjacentes na malha.
+   */
+  waypoints: RouteWaypoint[];
+}
+
+/** Resposta de `POST /robots/:id/route`. */
+export interface RouteSubmitResult {
+  routeId: string;
+  accepted: boolean;
+  waypointCount: number;
+  message?: string;
+}
+
+/** Rota atualmente carregada no robô — `GET /robots/:id/route`. */
+export interface ActiveRoute {
+  routeId: string;
+  robotId: string;
+  waypoints: RouteWaypoint[];
+  createdAt: string;
+  status: 'queued' | 'running' | 'completed' | 'cancelled';
+  /** Índice do waypoint que o robô já alcançou, ou `null` se não iniciou. */
+  currentWaypointIndex?: number | null;
+}
+
+/**
+ * Indicadores da frota inteira — `GET /fleet/metrics`.
+ *
+ * Estende os mesmos KPIs operacionais do painel de um robô com a
+ * contagem de robôs por estado e o recorte por robô, que alimenta o
+ * gráfico comparativo da tela inicial.
+ */
+export interface FleetMetrics extends DashboardMetrics {
+  totalRobots: number;
+  onlineRobots: number;
+  offlineRobots: number;
+  errorRobots: number;
+  /** Um resumo por robô, para comparação lado a lado. */
+  perRobot: RobotMetricsSummary[];
+}
+
+/** Recorte enxuto dos números de um robô, usado nos comparativos. */
+export interface RobotMetricsSummary {
+  robotId: string;
+  robotName: string;
+  totalMissions: number;
+  completedMissions: number;
+  totalStops: number;
+  totalErrors: number;
+  completionRate: number;
+  avgDurationSeconds: number | null;
 }

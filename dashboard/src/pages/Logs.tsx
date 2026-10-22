@@ -25,10 +25,12 @@ import { ErrorState } from '../components/common/ErrorState';
 import { LogDetailModal } from '../components/logs/LogDetailModal';
 
 interface LogsProps {
+  /** Restringe a página a um robô. Ausente = frota inteira. */
+  robotId?: string;
   refreshTrigger: number;
 }
 
-export const Logs: React.FC<LogsProps> = ({ refreshTrigger }) => {
+export const Logs: React.FC<LogsProps> = ({ robotId, refreshTrigger }) => {
   const [logs, setLogs] = useState<LogEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export const Logs: React.FC<LogsProps> = ({ refreshTrigger }) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getLogs({ period: periodFilter });
+        const data = await getLogs({ period: periodFilter, robotId });
         if (mounted) {
           setLogs(data);
           setLoading(false);
@@ -75,7 +77,7 @@ export const Logs: React.FC<LogsProps> = ({ refreshTrigger }) => {
     return () => {
       mounted = false;
     };
-  }, [refreshTrigger, retryCount, periodFilter]);
+  }, [refreshTrigger, retryCount, periodFilter, robotId]);
 
   const handleFilterChange = (setter: (val: any) => void, val: any) => {
     setter(val);
@@ -274,6 +276,7 @@ export const Logs: React.FC<LogsProps> = ({ refreshTrigger }) => {
                 <thead>
                   <tr className="border-b border-[#E4ECE6] bg-[#F7FAF8] text-[#78877D] text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">Horário</th>
+                    {!robotId && <th className="py-3 px-4">Robô</th>}
                     <th className="py-3 px-4">Missão</th>
                     <th className="py-3 px-4">Tipo</th>
                     <th className="py-3 px-4">Comando</th>
@@ -296,6 +299,11 @@ export const Logs: React.FC<LogsProps> = ({ refreshTrigger }) => {
                       </td>
 
                       {/* Mission ID */}
+                      {!robotId && (
+                        <td className="py-3 px-4 font-mono font-medium text-[#245C43] whitespace-nowrap">
+                          {log.robotId}
+                        </td>
+                      )}
                       <td className="py-3 px-4 font-mono font-medium text-[#245C43] whitespace-nowrap">
                         {log.missionId}
                       </td>

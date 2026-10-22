@@ -23,10 +23,12 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 
 interface AlertsProps {
+  /** Restringe a página a um robô. Ausente = frota inteira. */
+  robotId?: string;
   refreshTrigger: number;
 }
 
-export const Alerts: React.FC<AlertsProps> = ({ refreshTrigger }) => {
+export const Alerts: React.FC<AlertsProps> = ({ robotId, refreshTrigger }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export const Alerts: React.FC<AlertsProps> = ({ refreshTrigger }) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getAlerts();
+        const data = await getAlerts({ robotId });
         if (mounted) {
           setAlerts(data);
           setLoading(false);
@@ -62,7 +64,7 @@ export const Alerts: React.FC<AlertsProps> = ({ refreshTrigger }) => {
     return () => {
       mounted = false;
     };
-  }, [refreshTrigger, retryCount]);
+  }, [refreshTrigger, retryCount, robotId]);
 
   const handleAcknowledge = async (alertId: string) => {
     setAckError(null);
@@ -285,6 +287,11 @@ export const Alerts: React.FC<AlertsProps> = ({ refreshTrigger }) => {
               <div className="space-y-1.5 max-w-2xl">
                 <div className="flex flex-wrap items-center gap-2">
                   <SeverityBadge severity={alert.severity} />
+                  {!robotId && alert.robotId && (
+                    <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-[#F0F7F3] text-[#245C43]">
+                      {alert.robotId}
+                    </span>
+                  )}
                   <span className="text-xs font-mono font-bold text-[#245C43]">
                     {alert.missionId ? `Missão ${alert.missionId}` : 'Sistema Geral'}
                   </span>
