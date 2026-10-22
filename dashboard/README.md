@@ -4,7 +4,7 @@ Interface web para acompanhar as rotas executadas pelo AGV: percursos entre
 estações, paradas, telemetria e falhas.
 
 É a camada de visualização do *"logging de telemetria"* previsto na Etapa 4 do
-[projeto](../docs/projeto/PROJETO_ROBO.md): os eventos que o veículo gera ao
+[projeto](../docs/O_QUE_O_ROBO_FAZ.md): os eventos que o veículo gera ao
 executar o código compilado a partir da DSL (`stop()`, `signal_light()`,
 `wait_signal()`, `resume_line_following()`, leituras `PROX`) são consolidados
 aqui em rotas, indicadores e alertas.
@@ -56,9 +56,15 @@ Em **Settings → Pages → Build and deployment → Source**, selecione
 **GitHub Actions**. O workflow usa Node.js 24, instala o lockfile com `npm ci`,
 valida os tipos e publica apenas a pasta `dashboard/dist`.
 
-A cada alteração nesta pasta na branch `main`, o workflow
+A cada push de commits para a branch `main`, o workflow
 [`deploy-dashboard.yml`](../.github/workflows/deploy-dashboard.yml) publica em
 <https://michelmelog.github.io/Compiladores/dashboard/>.
+
+O deploy é automático para qualquer alteração no repositório, incluindo merges
+de pull requests na `main`. Um commit apenas local não dispara a publicação:
+é necessário enviá-lo ao GitHub com `git push origin main`.
+Também é possível iniciar uma publicação manual pela aba **Actions**, selecionando
+o workflow **Publicar dashboard no GitHub Pages** e clicando em **Run workflow**.
 
 O mesmo build também fica disponível na raiz `/Compiladores/`. O workflow
 copia o HTML compilado para `dist/dashboard/index.html`, mantendo os assets

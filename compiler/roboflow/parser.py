@@ -1,9 +1,6 @@
 """Analisador sintático (parser) da linguagem RoboFlow.
 
-Descida recursiva (recursive descent) sobre a gramática BNF de
-docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md, seção 3, detalhada
-(arg_list / timeout_arg) em docs/linguagem/COMPILADOR_GERA_CONTROLE.md,
-Fase 2:
+Descida recursiva sobre a sintaxe resumida em docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.1:
 
     program        ::= station_decl*
     station_decl   ::= "station" (STRING | "default") "{" "on_arrival" "{" stmt_list "}" "}"

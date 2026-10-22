@@ -1,9 +1,4 @@
-"""Nós da AST (Árvore de Sintaxe Abstrata) da linguagem RoboFlow.
-
-Espelha a gramática BNF de docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md,
-seção 3, detalhada (arg_list / timeout_arg) em
-docs/linguagem/COMPILADOR_GERA_CONTROLE.md, Fase 2.
-"""
+"""Nós da AST da linguagem RoboFlow. Ver docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.1."""
 
 from typing import Any, List, Optional
 

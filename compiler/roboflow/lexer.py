@@ -2,12 +2,12 @@
 
 Varredura caractere a caractere (com rastreio de linha/coluna) que
 reconhece exatamente as classes de token especificadas em
-docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1:
+docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.1:
 
     WS COMMENT KEYWORD STRING DURATION NUMBER ID
     OP LBRACE RBRACE LPAREN RPAREN COLON COMMA
 
-Regras de desambiguação seguidas à risca (ver §2.1 do documento):
+Regras de desambiguação seguidas à risca (ver implementação abaixo):
 
 - Maximal munch: dígitos seguidos de 's' formam DURATION, nunca
   NUMBER + ID (ex: "30s" é um único token, não "30" e "s").

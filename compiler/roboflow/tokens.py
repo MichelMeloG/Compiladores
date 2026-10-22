@@ -1,11 +1,4 @@
-"""Definição dos tokens da linguagem RoboFlow.
-
-Espelha a especificação léxica formal de
-docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1: cada classe de
-token abaixo corresponde a uma linha da tabela de expressões regulares
-daquele documento (WS e COMMENT são descartados pelo lexer e por isso não
-viram TokenType).
-"""
+"""Tokens e palavras reservadas da linguagem RoboFlow. Ver docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.1."""
 
 import enum
 from typing import Any
@@ -27,7 +20,7 @@ class TokenType(enum.Enum):
     EOF = "EOF"
 
 
-# Palavras reservadas da linguagem (LINGUAGEM_ROBO_COMPILADOR.md, §2.1).
+# Palavras reservadas da linguagem (ver arquitetura, seção 10.1).
 # Qualquer identificador que não esteja nesta tabela vira TokenType.ID.
 KEYWORDS = {
     "station", "default", "on_arrival",                        # estrutura

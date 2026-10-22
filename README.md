@@ -22,8 +22,12 @@
 
 ## Documentação
 
-Os materiais de aula, a especificação da linguagem, a arquitetura e o planejamento estão separados por assunto no [índice da documentação](docs/README.md).
+A documentação atual do carrinho está consolidada em dois documentos:
 
+1. [O que o robô faz](docs/O_QUE_O_ROBO_FAZ.md).
+2. [Arquitetura dos componentes](docs/ARQUITETURA_DOS_COMPONENTES.md), com pinagem, alimentação, HC-SR04, software e validação.
+
+As seções históricas abaixo descrevem uma proposta anterior com câmera e Raspberry Pi. Para a configuração atual com ESP32, três sensores de linha e tração diferencial, use os documentos acima.
 ---
 
 ## Visão Geral
@@ -247,13 +251,9 @@ autodrive-dsl/
 │   ├── src/                   # Aplicação React + TypeScript
 │   └── BACKEND_INTEGRATION.md # Contrato REST a ser implementado pelo backend
 │
-├── docs/                      # Documentação organizada por assunto
-│   ├── README.md              # Índice da documentação
-│   ├── aulas/                 # Material fornecido em aula
-│   ├── projeto/               # Visão geral e escopo
-│   ├── arquitetura/           # Hardware, visão e camadas do sistema
-│   ├── linguagem/             # Especificação da DSL e do compilador
-│   └── planejamento/          # Roadmap e cronograma
+├── docs/                      # Documentação atual do carrinho
+│   ├── O_QUE_O_ROBO_FAZ.md
+│   └── ARQUITETURA_DOS_COMPONENTES.md
 │
 └── README.md
 ```

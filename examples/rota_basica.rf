@@ -1,6 +1,5 @@
 // RoboFlow — rota básica, sem condicionais.
-// Compatível com o escopo do MVP v0.1 (ver
-// docs/planejamento/ROADMAP_ROBOFLOW_ESP32.md, seção 2 e 3).
+// Sintaxe e estado da implementação: docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.
 
 station "carga" {
     on_arrival {

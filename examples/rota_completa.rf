@@ -1,6 +1,6 @@
 // RoboFlow — rota completa, incluindo condicional (if/else) e variável de
 // contexto (next_destination), fornecida pelo ESP32 via sensor.
-// Ver docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md, secao 2.2.
+// Ver docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.
 
 station "carga" {
     on_arrival {
