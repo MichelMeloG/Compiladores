@@ -3,7 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventSeverity, EventType, MissionStatus, RoverState } from '../types';
+import {
+  EventSeverity,
+  EventType,
+  MissionStatus,
+  RobotStatus,
+  RoverState,
+} from '../types';
 
 /**
  * Formats duration in seconds into human-readable string (e.g., "1m 45s", "38s", "Indisponível")
@@ -208,4 +214,86 @@ export function getRoverStateLabel(state?: RoverState): string {
     default:
       return 'Indefinido';
   }
+}
+
+/**
+ * Aparência e rótulo do estado de conexão de um robô.
+ *
+ * Segue a mesma convenção de `getSeverityMeta`: a decisão visual mora no
+ * formatador, e os componentes só aplicam as classes recebidas.
+ */
+export function getRobotStatusMeta(status: RobotStatus): {
+  label: string;
+  badgeClass: string;
+  dotClass: string;
+  /** Cor literal, para gráficos e marcadores SVG. */
+  color: string;
+} {
+  switch (status) {
+    case 'online':
+      return {
+        label: 'Online',
+        badgeClass: 'bg-[#E8F6EE] text-[#1F7A4C] border border-[#BFE8D0]',
+        dotClass: 'bg-[#4AAB79]',
+        color: '#4AAB79',
+      };
+    case 'busy':
+      return {
+        label: 'Em rota',
+        badgeClass: 'bg-[#EAF3FB] text-[#20618F] border border-[#C5DEF2]',
+        dotClass: 'bg-[#3498DB]',
+        color: '#3498DB',
+      };
+    case 'idle':
+      return {
+        label: 'Ocioso',
+        badgeClass: 'bg-[#F0F7F3] text-[#4C6355] border border-[#E4ECE6]',
+        dotClass: 'bg-[#8AA394]',
+        color: '#8AA394',
+      };
+    case 'maintenance':
+      return {
+        label: 'Manutenção',
+        badgeClass: 'bg-[#FEF5E7] text-[#9A7D0A] border border-[#FAD7A0]',
+        dotClass: 'bg-[#E7B85C]',
+        color: '#E7B85C',
+      };
+    case 'error':
+      return {
+        label: 'Com falha',
+        badgeClass: 'bg-[#FDEDEC] text-[#A93226] border border-[#F5B7B1]',
+        dotClass: 'bg-[#D96B6B]',
+        color: '#D96B6B',
+      };
+    case 'offline':
+    default:
+      return {
+        label: 'Offline',
+        badgeClass: 'bg-[#F2F4F3] text-[#78877D] border border-[#E4ECE6]',
+        dotClass: 'bg-[#B9C4BD]',
+        color: '#B9C4BD',
+      };
+  }
+}
+
+/**
+ * Tempo decorrido desde um instante, em linguagem corrente
+ * ("agora", "há 4 min", "há 2 h").
+ *
+ * Usado no "visto por último" dos robôs, onde o horário absoluto diz
+ * menos ao operador do que a distância até agora.
+ */
+export function formatRelativeTime(isoString: string | null | undefined): string {
+  if (!isoString) return 'Nunca';
+
+  const then = new Date(isoString).getTime();
+  if (isNaN(then)) return 'Nunca';
+
+  const seconds = Math.round((Date.now() - then) / 1000);
+
+  if (seconds < 0) return 'agora';
+  if (seconds < 60) return 'agora';
+  if (seconds < 3600) return `há ${Math.floor(seconds / 60)} min`;
+  if (seconds < 86400) return `há ${Math.floor(seconds / 3600)} h`;
+  return `há ${Math.floor(seconds / 86400)} d`;
 }

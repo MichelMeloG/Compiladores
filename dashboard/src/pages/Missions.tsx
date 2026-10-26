@@ -26,13 +26,15 @@ import { ErrorState } from '../components/common/ErrorState';
 import { MissionDetailModal } from '../components/missions/MissionDetailModal';
 
 interface MissionsProps {
+  /** Restringe a página a um robô. Ausente = frota inteira. */
+  robotId?: string;
   refreshTrigger: number;
 }
 
 type SortField = 'startedAt' | 'duration' | 'stopCount';
 type SortOrder = 'asc' | 'desc';
 
-export const Missions: React.FC<MissionsProps> = ({ refreshTrigger }) => {
+export const Missions: React.FC<MissionsProps> = ({ robotId, refreshTrigger }) => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export const Missions: React.FC<MissionsProps> = ({ refreshTrigger }) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getMissions({ period: periodFilter });
+        const data = await getMissions({ period: periodFilter, robotId });
         if (mounted) {
           setMissions(data);
           setLoading(false);
@@ -80,7 +82,7 @@ export const Missions: React.FC<MissionsProps> = ({ refreshTrigger }) => {
     return () => {
       mounted = false;
     };
-  }, [refreshTrigger, retryCount, periodFilter]);
+  }, [refreshTrigger, retryCount, periodFilter, robotId]);
 
   // Reset page when filters change
   const handleFilterChange = (setter: (val: any) => void, val: any) => {
@@ -271,6 +273,7 @@ export const Missions: React.FC<MissionsProps> = ({ refreshTrigger }) => {
                 <thead>
                   <tr className="border-b border-[#E4ECE6] bg-[#F7FAF8] text-[#78877D] text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">ID da Missão</th>
+                    {!robotId && <th className="py-3 px-4">Robô</th>}
                     <th className="py-3 px-4">Trajeto</th>
                     <th
                       className="py-3 px-4 cursor-pointer hover:text-[#25372D] select-none"
@@ -315,6 +318,13 @@ export const Missions: React.FC<MissionsProps> = ({ refreshTrigger }) => {
                       <td className="py-3 px-4 font-mono font-bold text-[#245C43]">
                         {mission.id}
                       </td>
+
+                      {/* Robot — only in the fleet-wide table, where rows mix robots */}
+                      {!robotId && (
+                        <td className="py-3 px-4 font-mono font-medium text-[#245C43] whitespace-nowrap">
+                          {mission.robotId}
+                        </td>
+                      )}
 
                       {/* Origin -> Destination */}
                       <td className="py-3 px-4">

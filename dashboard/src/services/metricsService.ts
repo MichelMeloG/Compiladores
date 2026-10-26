@@ -18,6 +18,7 @@ export async function getDashboardMetrics(
 ): Promise<DashboardMetrics> {
   const params = new URLSearchParams();
 
+  if (filters?.robotId) params.set('robotId', filters.robotId);
   if (filters?.period) params.set('period', filters.period);
   if (filters?.startDate) params.set('startDate', filters.startDate);
   if (filters?.endDate) params.set('endDate', filters.endDate);
