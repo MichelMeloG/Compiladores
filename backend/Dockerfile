@@ -16,7 +16,8 @@ WORKDIR /app
 COPY contracts/package.json contracts/package-lock.json ./contracts/
 RUN npm --prefix contracts ci --ignore-scripts
 COPY contracts ./contracts
-RUN npm --prefix contracts run build && npm --prefix contracts prune --omit=dev --ignore-scripts
+# (as devDependencies de contracts ficam até o fim: o `npm ci` do backend dispara o `prepare` dele)
+RUN npm --prefix contracts run build
 
 # 2) backend: dependências (o link file:../contracts aponta para /app/contracts)
 COPY backend/package.json backend/package-lock.json ./backend/
@@ -24,7 +25,9 @@ RUN npm --prefix backend ci --ignore-scripts
 COPY backend/tsconfig.json backend/tsconfig.build.json ./backend/
 COPY backend/src ./backend/src
 COPY backend/tools ./backend/tools
-RUN npm --prefix backend run build && npm --prefix backend prune --omit=dev --ignore-scripts
+RUN npm --prefix backend run build \
+ && npm --prefix backend prune --omit=dev --ignore-scripts \
+ && npm --prefix contracts prune --omit=dev --ignore-scripts
 
 # ---------------------------------------------------------------- runtime
 # Sem shell, sem gerenciador de pacotes, usuário não-root.

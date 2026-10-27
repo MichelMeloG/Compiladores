@@ -15,7 +15,9 @@ param(
   [string]$Region = 'us-central1'
 )
 
-$ErrorActionPreference = 'Stop'
+# 'Continue': no Windows PowerShell 5.1 o stderr de programas nativos (gcloud/terraform) vira erro com 'Stop'.
+# As falhas são checadas por $LASTEXITCODE.
+$ErrorActionPreference = 'Continue'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $tfdir = Join-Path $root 'infra\terraform'
 $registry = "$Region-docker.pkg.dev/$Project/roboflow"

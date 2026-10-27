@@ -22,7 +22,9 @@ param(
   [switch]$Smoke
 )
 
-$ErrorActionPreference = 'Stop'
+# 'Continue': no Windows PowerShell 5.1 o stderr de programas nativos (gcloud/terraform) vira erro com 'Stop'.
+# As falhas são checadas por $LASTEXITCODE.
+$ErrorActionPreference = 'Continue'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
 if (-not $Tag) {
