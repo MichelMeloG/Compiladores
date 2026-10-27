@@ -1,6 +1,6 @@
 # Teste de bancada por Wi-Fi: sensores e motores
 
-O sketch [`teste_wifi.ino`](../../firmware/teste_wifi/teste_wifi.ino) é independente do firmware de missão e do backend. Ele cria um ponto de acesso Wi-Fi no ESP32, mostra os quatro sensores de linha e oferece comandos manuais momentâneos para testar as duas rodas dianteiras. **Não faz seguimento de linha nem executa rotas.**
+O sketch [`teste_wifi.ino`](../../firmware/teste_wifi/teste_wifi.ino) é independente do firmware de missão e do backend. Ele cria um ponto de acesso Wi-Fi no ESP32, mostra os quatro sensores de linha e oferece um **joystick analógico virtual** para testar as duas rodas dianteiras. **Não faz seguimento de linha nem executa rotas.**
 
 ## Ligações esperadas
 
@@ -28,14 +28,14 @@ Antes de alimentar:
 1. Abra `firmware/teste_wifi/teste_wifi.ino` na Arduino IDE, selecione a placa ESP32 correta e grave.
 2. Conecte o celular/computador à rede `RoboFlow-Teste`, senha `RoboFlow32`, e abra `http://192.168.4.1`.
 3. Na página, confira as leituras ADC e HIGH/LOW dos quatro GPIOs. A saída ADC ajuda a avaliar módulos analógicos; a indicação HIGH/LOW ajuda nos módulos digitais. O sketch não supõe qual nível representa a faixa.
-4. Mantenha um botão de direção pressionado para mover para frente ou girar; solte para parar. Use `PARAR` para interromper. A marcha à ré está desabilitada porque não há sensor traseiro.
+4. Arraste o joystick para frente, para trás ou para os lados. A direção e a inclinação controlam o sentido e a velocidade; solte o joystick ou toque `PARAR` para interromper.
 
 ## Limites e segurança do teste
 
-- O HC-SR04 é um veto local: movimento só é aceito com eco válido e recente; para a primeira liberação, são necessárias três leituras acima de 25 cm. A leitura a 20 cm ou menos, falta de eco, leitura vencida ou perda do comando Wi-Fi param os motores.
-- O HC-SR04 é frontal: ele não protege a traseira nem toda a área varrida ao girar. Por isso a ré está desabilitada e os giros devem ser testados em espaço livre, preferencialmente com as rodas suspensas.
+- O HC-SR04 é opcional. Sem eco, o movimento não é bloqueado por esse sensor. Se houver leituras válidas, uma distância de 20 cm ou menos aciona o veto; a liberação exige três leituras acima de 25 cm. Um bloqueio já detectado permanece até leituras seguras válidas.
+- O HC-SR04 é frontal: não protege a traseira nem toda a área varrida ao girar. A marcha à ré está disponível no joystick, mas fica sem proteção ultrassônica; teste-a em espaço livre, preferencialmente com as rodas suspensas.
 - O limite de 20 cm e a lógica são apenas uma barreira de bancada, **não uma garantia contra colisão**. O HC-SR04 pode falhar com superfícies inclinadas, pequenas, macias ou fora do cone; a distância de parada real não foi medida. Use baixa velocidade, rodas suspensas e parada física acessível.
-- O PWM inicial é 120/255 (`MOTOR_PWM`). Ajuste somente com as rodas suspensas e depois de verificar que o conjunto motor/ponte/fonte é compatível.
+- O joystick ajusta o PWM proporcionalmente à inclinação (até 255/255), com zona morta para evitar movimentos involuntários. Teste primeiro com as rodas suspensas e, se necessário, limite a velocidade no código antes de colocar o carrinho no chão.
 - GPIO 34 e 35 não têm pull-up/pull-down interno. Cada módulo deve dirigir níveis definidos, e as saídas devem ser compatíveis com 3,3 V. Para entrada analógica, ligue AO; para digital, ligue DO.
 - A rede é um AP local com senha de teste fixa no sketch. Troque `AP_PASSWORD` se outras pessoas puderem alcançar o carrinho.
 - Este sketch não implementa TLS, nuvem, watchdog de hardware nem a lógica de missão do firmware planejado; não o use como firmware de operação.
