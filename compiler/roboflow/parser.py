@@ -13,14 +13,15 @@ Descida recursiva sobre a sintaxe resumida em docs/ARQUITETURA_DOS_COMPONENTES.m
     if_stmt        ::= "if" condition "{" stmt_list "}" ("else" "{" stmt_list "}")?
     condition      ::= ID "==" (STRING | ID)
 
-Escopo desta fase (só léxico + sintático): o parser aceita qualquer
-KEYWORD como nome de comando e não valida se uma estação `default` existe,
-se é única, ou se cada comando pertence à biblioteca padrão — essas
-checagens são análise semântica (catálogo RF3001/RF3002/RF3003 do
-roadmap) e ficam para uma fase futura, não implementada aqui.
+A gramática é deliberadamente mais permissiva que a linguagem: aceita
+qualquer KEYWORD como nome de comando e qualquer quantidade de `default`.
+Essas restrições são checadas em semantic.py (RF3001/RF3002/RF3003).
+
+Entrada incompleta (comum quando a IDE compila a cada tecla) nunca gera
+IndexError/TypeError: todo erro vira um CompileError com posição.
 """
 
-from typing import List, NoReturn, Optional
+from typing import List, NoReturn
 
 from .ast_nodes import (
     ASTNode,
@@ -33,11 +34,8 @@ from .ast_nodes import (
     ProgramNode,
     StationNode,
 )
+from .diagnostics import CompileError, Diagnostic
 from .tokens import Token, TokenType
-
-
-class ParserError(SyntaxError):
-    pass
 
 
 class Parser:
@@ -83,34 +81,32 @@ class Parser:
 
     def _error(self, message: str) -> NoReturn:
         tok = self.peek()
-        raise ParserError(
-            f"[Erro sintático] linha {tok.line}, coluna {tok.column}, "
-            f"perto de {tok.value!r}: {message}"
-        )
+        if tok.type == TokenType.EOF and self.current > 0:
+            # O EOF fica depois de espaços e comentários finais; o último token
+            # real é onde o programador parou de digitar.
+            last = self.tokens[self.current - 1]
+            raise CompileError(Diagnostic(
+                "parser", "error", f"fim de arquivo inesperado: {message}", last.line, last.col,
+            ))
+        raise CompileError(Diagnostic(
+            "parser", "error", f"{message} (encontrado {tok.value!r})", tok.line, tok.col,
+        ))
 
     # -- gramática -----------------------------------------------------------
 
     def parse(self) -> ProgramNode:
         stations: List[StationNode] = []
-        default: Optional[StationNode] = None
-
         while not self.is_at_end():
-            station = self.station_decl()
-            if station.is_default:
-                default = station
-            else:
-                stations.append(station)
-
-        return ProgramNode(stations, default)
+            stations.append(self.station_decl())
+        return ProgramNode(stations)
 
     def station_decl(self) -> StationNode:
-        self.consume(TokenType.KEYWORD, "station", "esperado 'station'")
+        kw = self.consume(TokenType.KEYWORD, "station", "esperado 'station'")
 
         is_default = self.match(TokenType.KEYWORD, "default")
         name = None
         if not is_default:
-            name_tok = self.consume(TokenType.STRING, message="esperado o nome da estação (string)")
-            name = name_tok.value
+            name = self.consume(TokenType.STRING, message="esperado o nome da estação (string)").value
 
         self.consume(TokenType.LBRACE, message="esperado '{' após o cabeçalho da estação")
         self.consume(TokenType.KEYWORD, "on_arrival", "esperado 'on_arrival'")
@@ -121,7 +117,7 @@ class Parser:
         self.consume(TokenType.RBRACE, message="esperado '}' para fechar on_arrival")
         self.consume(TokenType.RBRACE, message="esperado '}' para fechar a estação")
 
-        return StationNode(name, is_default, body)
+        return StationNode(name, is_default, body, kw.line, kw.col)
 
     def stmt_list(self) -> List[ASTNode]:
         stmts: List[ASTNode] = []
@@ -145,36 +141,37 @@ class Parser:
                 args.append(self.arg())
         self.consume(TokenType.RPAREN, message=f"esperado ')' para fechar '{name_tok.value}'")
 
-        return CommandCallNode(name_tok.value, args)
+        return CommandCallNode(name_tok.value, args, name_tok.line, name_tok.col)
 
     def arg(self) -> ASTNode:
         if self.check(TokenType.KEYWORD, "timeout"):
             return self.timeout_arg()
-        if self.match(TokenType.STRING):
-            return LiteralNode(self.previous().value, "STRING")
-        if self.match(TokenType.NUMBER):
-            return LiteralNode(self.previous().value, "NUMBER")
-        if self.match(TokenType.DURATION):
-            return LiteralNode(self.previous().value, "DURATION")
+        for type_ in (TokenType.STRING, TokenType.NUMBER, TokenType.DURATION):
+            if self.match(type_):
+                tok = self.previous()
+                return LiteralNode(tok.value, type_.value, tok.line, tok.col)
         if self.match(TokenType.ID):
-            return IdentifierNode(self.previous().value)
+            tok = self.previous()
+            return IdentifierNode(tok.value, tok.line, tok.col)
         self._error("argumento inválido")
 
     def timeout_arg(self) -> NamedArgNode:
-        self.consume(TokenType.KEYWORD, "timeout")
+        kw = self.consume(TokenType.KEYWORD, "timeout")
         self.consume(TokenType.COLON, message="esperado ':' após 'timeout'")
 
         if self.match(TokenType.DURATION):
-            value: ASTNode = LiteralNode(self.previous().value, "DURATION")
+            tok = self.previous()
+            value = LiteralNode(tok.value, "DURATION", tok.line, tok.col)
         elif self.match(TokenType.KEYWORD, "none"):
-            value = LiteralNode(None, "NONE")
+            tok = self.previous()
+            value = LiteralNode(None, "NONE", tok.line, tok.col)
         else:
             self._error("esperado uma duração (ex: 30s) ou 'none' após 'timeout:'")
 
-        return NamedArgNode("timeout", value)
+        return NamedArgNode("timeout", value, kw.line, kw.col)
 
     def if_stmt(self) -> IfStmtNode:
-        self.consume(TokenType.KEYWORD, "if")
+        kw = self.consume(TokenType.KEYWORD, "if")
         condition = self.condition()
 
         self.consume(TokenType.LBRACE, message="esperado '{' após a condição do if")
@@ -187,17 +184,20 @@ class Parser:
             else_branch = self.stmt_list()
             self.consume(TokenType.RBRACE, message="esperado '}' para fechar o bloco else")
 
-        return IfStmtNode(condition, then_branch, else_branch)
+        return IfStmtNode(condition, then_branch, else_branch, kw.line, kw.col)
 
     def condition(self) -> ConditionNode:
         left_tok = self.consume(TokenType.ID, message="esperado identificador na condição")
         self.consume(TokenType.OP, "==", "esperado '==' na condição")
 
         if self.match(TokenType.STRING):
-            right: ASTNode = LiteralNode(self.previous().value, "STRING")
+            tok = self.previous()
+            right: ASTNode = LiteralNode(tok.value, "STRING", tok.line, tok.col)
         elif self.match(TokenType.ID):
-            right = IdentifierNode(self.previous().value)
+            tok = self.previous()
+            right = IdentifierNode(tok.value, tok.line, tok.col)
         else:
-            self._error("condição precisa comparar com uma string ou identificador")
+            self._error("a condição precisa comparar com uma string ou um identificador")
 
-        return ConditionNode(IdentifierNode(left_tok.value), "==", right)
+        left = IdentifierNode(left_tok.value, left_tok.line, left_tok.col)
+        return ConditionNode(left, "==", right, left_tok.line, left_tok.col)

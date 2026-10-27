@@ -1,5 +1,14 @@
-"""Nós da AST da linguagem RoboFlow. Ver docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.1."""
+"""Nós da AST (Árvore de Sintaxe Abstrata) da linguagem RoboFlow.
 
+Espelha a gramática BNF de docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md,
+seção 3, detalhada (arg_list / timeout_arg) em
+docs/linguagem/COMPILADOR_GERA_CONTROLE.md, Fase 2.
+
+Todo nó carrega `line`/`col` do token que o inicia, para que a análise
+semântica aponte o erro no ponto exato do código-fonte.
+"""
+
+from dataclasses import dataclass
 from typing import Any, List, Optional
 
 
@@ -16,45 +25,50 @@ class ASTNode:
         raise NotImplementedError
 
 
+@dataclass
 class LiteralNode(ASTNode):
-    """STRING, NUMBER, DURATION ou NONE (o "none" de timeout: none)."""
-
-    def __init__(self, value: Any, type_name: str):
-        self.value = value
-        self.type_name = type_name
+    value: Any
+    type_name: str      # "STRING" | "NUMBER" | "DURATION" | "NONE"
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         return f"{_branch(indent, is_last)}💎 {self.type_name}: {self.value!r}\n"
 
 
+@dataclass
 class IdentifierNode(ASTNode):
     """Referência a uma variável de contexto (ex: next_destination)."""
 
-    def __init__(self, name: str):
-        self.name = name
+    name: str
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         return f"{_branch(indent, is_last)}🔖 ID: {self.name}\n"
 
 
+@dataclass
 class NamedArgNode(ASTNode):
     """Argumento nomeado de um comando (hoje, só `timeout: <valor>`)."""
 
-    def __init__(self, name: str, value: ASTNode):
-        self.name = name
-        self.value = value
+    name: str
+    value: LiteralNode
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         res = f"{_branch(indent, is_last)}🏷️ {self.name}:\n"
-        new_indent = _child_indent(indent, is_last)
-        res += self.value.print_tree(new_indent, True)
+        res += self.value.print_tree(_child_indent(indent, is_last), True)
         return res
 
 
+@dataclass
 class CommandCallNode(ASTNode):
-    def __init__(self, name: str, args: List[ASTNode]):
-        self.name = name
-        self.args = args
+    name: str
+    args: List[ASTNode]
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         res = f"{_branch(indent, is_last)}⚙️ COMMAND: {self.name}()\n"
@@ -64,11 +78,13 @@ class CommandCallNode(ASTNode):
         return res
 
 
+@dataclass
 class ConditionNode(ASTNode):
-    def __init__(self, left: IdentifierNode, op: str, right: ASTNode):
-        self.left = left
-        self.op = op
-        self.right = right
+    left: IdentifierNode
+    op: str
+    right: ASTNode      # LiteralNode (STRING) ou IdentifierNode
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         res = f"{_branch(indent, is_last)}⚖️ ({self.op})\n"
@@ -78,16 +94,13 @@ class ConditionNode(ASTNode):
         return res
 
 
+@dataclass
 class IfStmtNode(ASTNode):
-    def __init__(
-        self,
-        condition: ConditionNode,
-        then_branch: List[ASTNode],
-        else_branch: Optional[List[ASTNode]],
-    ):
-        self.condition = condition
-        self.then_branch = then_branch
-        self.else_branch = else_branch
+    condition: ConditionNode
+    then_branch: List[ASTNode]
+    else_branch: Optional[List[ASTNode]]
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         res = f"{_branch(indent, is_last)}🚦 IF\n"
@@ -111,11 +124,13 @@ class IfStmtNode(ASTNode):
         return res
 
 
+@dataclass
 class StationNode(ASTNode):
-    def __init__(self, name: Optional[str], is_default: bool, body: List[ASTNode]):
-        self.name = name
-        self.is_default = is_default
-        self.body = body
+    name: Optional[str]     # None quando is_default
+    is_default: bool
+    body: List[ASTNode]
+    line: int
+    col: int
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         label = "🎯 STATION default" if self.is_default else f'🏭 STATION "{self.name}"'
@@ -128,17 +143,18 @@ class StationNode(ASTNode):
         return res
 
 
+@dataclass
 class ProgramNode(ASTNode):
-    def __init__(self, stations: List[StationNode], default: Optional[StationNode]):
-        self.stations = stations
-        self.default = default
+    """Todas as estações na ordem do código, `default` inclusive — quantas
+    `default` existem é verificado na análise semântica (RF3002)."""
+
+    stations: List[StationNode]
+    line: int = 1
+    col: int = 1
 
     def print_tree(self, indent: str = "", is_last: bool = True) -> str:
         res = f"{_branch(indent, is_last)}📄 PROGRAM\n"
         new_indent = _child_indent(indent, is_last)
-        children: List[StationNode] = list(self.stations)
-        if self.default is not None:
-            children.append(self.default)
-        for i, child in enumerate(children):
-            res += child.print_tree(new_indent, i == len(children) - 1)
+        for i, station in enumerate(self.stations):
+            res += station.print_tree(new_indent, i == len(self.stations) - 1)
         return res

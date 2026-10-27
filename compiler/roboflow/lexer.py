@@ -17,13 +17,10 @@ Regras de desambiguação seguidas à risca (ver implementação abaixo):
   ordenar expressões regulares por prioridade.
 """
 
-from typing import List
+from typing import List, NoReturn
 
+from .diagnostics import CompileError, Diagnostic
 from .tokens import KEYWORDS, Token, TokenType
-
-
-class LexerError(SyntaxError):
-    pass
 
 
 class Lexer:
@@ -50,7 +47,7 @@ class Lexer:
             # Comentário de linha: // até o fim da linha (descartado)
             if char == "/" and self._peek() == "/":
                 while self.pos < len(self.source) and self.source[self.pos] != "\n":
-                    self.pos += 1
+                    self._advance()
                 continue
 
             if char == "=" and self._peek() == "=":
@@ -83,7 +80,7 @@ class Lexer:
                 self._read_identifier()
                 continue
 
-            self._error(f"caractere inesperado {char!r}")
+            self._error(f"caractere inesperado {char!r}", self.line, self.column)
 
         self.tokens.append(Token(TokenType.EOF, "EOF", self.line, self.column))
         return self.tokens
@@ -96,11 +93,11 @@ class Lexer:
         value = ""
         while self.pos < len(self.source) and self.source[self.pos] != '"':
             if self.source[self.pos] == "\n":
-                self._error("string não pode conter quebra de linha (Cometa sem cauda!)")
+                self._error("string não pode conter quebra de linha", start_line, start_col)
             value += self.source[self.pos]
             self._advance()
         if self.pos >= len(self.source):
-            self._error("string não terminada")
+            self._error("string não terminada", start_line, start_col)
         self._advance()  # consome a aspa de fechamento
         self.tokens.append(Token(TokenType.STRING, value, start_line, start_col))
 
@@ -113,7 +110,7 @@ class Lexer:
         ):
             if self.source[self.pos] == ".":
                 if is_float:
-                    self._error("número malformado com múltiplos pontos decimais")
+                    self._error("número malformado com múltiplos pontos decimais", self.line, self.column)
                 is_float = True
             num_str += self.source[self.pos]
             self._advance()
@@ -152,5 +149,5 @@ class Lexer:
     def _emit(self, type_: TokenType, value) -> None:
         self.tokens.append(Token(type_, value, self.line, self.column))
 
-    def _error(self, message: str) -> None:
-        raise LexerError(f"[Erro léxico] linha {self.line}, coluna {self.column}: {message}")
+    def _error(self, message: str, line: int, col: int) -> NoReturn:
+        raise CompileError(Diagnostic("lexer", "error", message, line, col))

@@ -1,10 +1,20 @@
-"""Tokens e palavras reservadas da linguagem RoboFlow. Ver docs/ARQUITETURA_DOS_COMPONENTES.md, seção 10.1."""
+"""Vocabulário da linguagem RoboFlow: classes de token, catálogo de comandos e
+palavras reservadas.
+
+Espelha a especificação léxica formal de
+docs/linguagem/LINGUAGEM_ROBO_COMPILADOR.md, seção 2.1: cada classe de
+token abaixo corresponde a uma linha da tabela de expressões regulares
+daquele documento (WS e COMMENT são descartados pelo lexer e por isso não
+viram TokenType).
+"""
 
 import enum
-from typing import Any
+from typing import Any, Dict, NamedTuple, Tuple
 
 
-class TokenType(enum.Enum):
+class TokenType(str, enum.Enum):
+    """Herda de `str` para que `TokenType.KEYWORD == "KEYWORD"` seja verdade."""
+
     KEYWORD = "KEYWORD"      # station, on_arrival, stop, if, timeout, none, ...
     ID = "ID"                # identificadores (ex: next_destination)
     STRING = "STRING"        # "texto entre aspas"
@@ -20,21 +30,37 @@ class TokenType(enum.Enum):
     EOF = "EOF"
 
 
-# Palavras reservadas da linguagem (ver arquitetura, seção 10.1).
-# Qualquer identificador que não esteja nesta tabela vira TokenType.ID.
-KEYWORDS = {
-    "station", "default", "on_arrival",                        # estrutura
-    "stop", "set_speed", "turn_left", "turn_right",
-    "continue_straight", "resume_line_following",
-    "signal_buzzer", "signal_light", "log",                    # comandos
-    "wait_signal", "timeout", "none",                          # espera
-    "if", "else",                                              # condicional
+# Biblioteca padrão: nome -> (aridade, tipos dos argumentos, em ordem).
+# Tipos são classes de token ("STRING", "NUMBER") ou "TIMEOUT", o argumento
+# nomeado `timeout: <duração | none>`. Única fonte de verdade sobre comandos:
+# análise semântica, gerador de código e IDE (autocomplete/highlight) leem daqui.
+COMMANDS: Dict[str, Tuple[int, Tuple[str, ...]]] = {
+    "stop":                  (0, ()),
+    "set_speed":             (1, ("NUMBER",)),
+    "turn_left":             (0, ()),
+    "turn_right":            (0, ()),
+    "continue_straight":     (0, ()),
+    "signal_buzzer":         (0, ()),
+    "signal_light":          (0, ()),
+    "wait_signal":           (2, ("STRING", "TIMEOUT")),
+    "log":                   (1, ("STRING",)),
+    "resume_line_following": (0, ()),
 }
 
+# Palavras reservadas (LINGUAGEM_ROBO_COMPILADOR.md, §2.1). Qualquer
+# identificador fora desta tabela vira TokenType.ID.
+KEYWORDS = {
+    "station", "default", "on_arrival",                        # estrutura
+    "timeout", "none",                                         # espera
+    "if", "else",                                              # condicional
+} | set(COMMANDS)                                              # comandos
 
-class Token:
-    def __init__(self, type_: TokenType, value: Any, line: int, column: int):
-        self.type = type_
-        self.value = value
-        self.line = line
-        self.column = column
+
+class Token(NamedTuple):
+    type: TokenType
+    value: Any
+    line: int
+    col: int
+
+    def __repr__(self) -> str:
+        return f"Token({self.type.name:<8} {self.value!r}, {self.line}:{self.col})"
