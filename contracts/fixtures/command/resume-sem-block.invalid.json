@@ -1,0 +1,14 @@
+{
+  "schema": "command.resume",
+  "description": "blockId obrigatório",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "missionId": "RF-0113",
+    "validForMs": 5000,
+    "type": "resume",
+    "messageId": "cmd-13",
+    "routeRevision": 1
+  }
+}

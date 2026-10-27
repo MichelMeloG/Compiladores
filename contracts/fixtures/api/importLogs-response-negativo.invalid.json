@@ -1,0 +1,7 @@
+{
+  "schema": "importLogs.response",
+  "description": "contagem negativa",
+  "value": {
+    "importedCount": -1
+  }
+}

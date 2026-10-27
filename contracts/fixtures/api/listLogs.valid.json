@@ -1,0 +1,412 @@
+{
+  "schema": "listLogs.response",
+  "description": "Mais recente primeiro",
+  "value": [
+    {
+      "id": "evt-11203",
+      "missionId": "RF-0112",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T17:52:00.000Z",
+      "eventType": "state_change",
+      "roverState": "navigating",
+      "severity": "info",
+      "message": "Ponto (2, 1) alcançado. Seguindo para (3, 1)."
+    },
+    {
+      "id": "evt-11202",
+      "missionId": "RF-0112",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T17:35:00.000Z",
+      "eventType": "command",
+      "command": "resume_line_following()",
+      "roverState": "moving",
+      "severity": "info",
+      "message": "Seguimento de linha retomado após carregamento."
+    },
+    {
+      "id": "evt-11201",
+      "missionId": "RF-0112",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T17:34:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"carga\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na estação carga, destino descarga."
+    },
+    {
+      "id": "evt-10903",
+      "missionId": "RF-0109",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-26T16:22:51.000Z",
+      "eventType": "error",
+      "command": "stop()",
+      "roverState": "error",
+      "severity": "error",
+      "message": "Linha perdida: transição FOLLOWING -> LOST_TRACK. Rota interrompida."
+    },
+    {
+      "id": "evt-10902",
+      "missionId": "RF-0109",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-26T16:22:38.000Z",
+      "eventType": "warning",
+      "roverState": "navigating",
+      "severity": "warning",
+      "message": "Erro de trajetória acima do limite: desvio lateral de 68px."
+    },
+    {
+      "id": "evt-10901",
+      "missionId": "RF-0109",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-26T16:22:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"triagem\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na triagem, destino inspeção."
+    },
+    {
+      "id": "evt-11006",
+      "missionId": "RF-0110",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-26T11:07:03.000Z",
+      "eventType": "mission_end",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída com 1 parada preventiva."
+    },
+    {
+      "id": "evt-11005",
+      "missionId": "RF-0110",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-26T11:07:02.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"doca 1\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada na doca 1."
+    },
+    {
+      "id": "evt-11004",
+      "missionId": "RF-0110",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-26T11:06:10.000Z",
+      "eventType": "resume",
+      "command": "resume_line_following()",
+      "roverState": "moving",
+      "severity": "info",
+      "message": "Corredor liberado, retomando trajeto."
+    },
+    {
+      "id": "evt-11003",
+      "missionId": "RF-0110",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-26T11:05:34.000Z",
+      "eventType": "stop_preventive",
+      "command": "stop()",
+      "roverState": "stopped",
+      "severity": "warning",
+      "message": "Parada preventiva por detecção de presença."
+    },
+    {
+      "id": "evt-11002",
+      "missionId": "RF-0110",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-26T11:05:33.000Z",
+      "eventType": "presence_detected",
+      "roverState": "obstacle_hold",
+      "severity": "warning",
+      "message": "PROX 25cm — operador no corredor."
+    },
+    {
+      "id": "evt-11001",
+      "missionId": "RF-0110",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-26T11:05:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"estoque\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada no estoque, destino doca 1."
+    },
+    {
+      "id": "evt-11107",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:16:49.000Z",
+      "eventType": "mission_end",
+      "command": "wait_signal(\"descarga_completa\")",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída. Aguardando sinal de descarga."
+    },
+    {
+      "id": "evt-11106",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:16:48.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"descarga\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada na estação descarga."
+    },
+    {
+      "id": "evt-11105",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:16:03.000Z",
+      "eventType": "resume",
+      "command": "resume_line_following()",
+      "roverState": "moving",
+      "severity": "info",
+      "message": "Via liberada, seguimento de linha retomado."
+    },
+    {
+      "id": "evt-11104",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:15:42.000Z",
+      "eventType": "stop_preventive",
+      "command": "stop()",
+      "roverState": "stopped",
+      "severity": "warning",
+      "message": "Parada preventiva executada. Aguardando via livre."
+    },
+    {
+      "id": "evt-11103",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:15:41.000Z",
+      "eventType": "presence_detected",
+      "roverState": "obstacle_hold",
+      "severity": "warning",
+      "message": "PROX 42cm — obstáculo detectado à frente."
+    },
+    {
+      "id": "evt-11102",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:15:04.000Z",
+      "eventType": "command",
+      "command": "resume_line_following()",
+      "roverState": "moving",
+      "severity": "info",
+      "message": "Seguimento de linha retomado após carregamento."
+    },
+    {
+      "id": "evt-11101",
+      "missionId": "RF-0111",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T08:15:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"carga\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na estação carga, destino descarga."
+    },
+    {
+      "id": "evt-10203",
+      "missionId": "RF-0102",
+      "robotId": "RB-04",
+      "timestamp": "2026-10-26T05:41:37.000Z",
+      "eventType": "mission_end",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída. Robô recolhido para manutenção preventiva."
+    },
+    {
+      "id": "evt-10202",
+      "missionId": "RF-0102",
+      "robotId": "RB-04",
+      "timestamp": "2026-10-26T05:41:36.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"pátio\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada no pátio."
+    },
+    {
+      "id": "evt-10201",
+      "missionId": "RF-0102",
+      "robotId": "RB-04",
+      "timestamp": "2026-10-26T05:40:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"doca 3\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na doca 3, destino pátio."
+    },
+    {
+      "id": "evt-10705",
+      "missionId": "RF-0107",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-25T14:14:39.000Z",
+      "eventType": "mission_end",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída."
+    },
+    {
+      "id": "evt-10704",
+      "missionId": "RF-0107",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-25T14:14:38.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"doca 2\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada na doca 2."
+    },
+    {
+      "id": "evt-10703",
+      "missionId": "RF-0107",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-25T14:13:20.000Z",
+      "eventType": "resume",
+      "command": "resume_line_following()",
+      "roverState": "moving",
+      "severity": "info",
+      "message": "Trajetória corrigida pelo PID, retomando."
+    },
+    {
+      "id": "evt-10702",
+      "missionId": "RF-0107",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-25T14:12:55.000Z",
+      "eventType": "warning",
+      "roverState": "navigating",
+      "severity": "warning",
+      "message": "Erro de trajetória acima do limite: desvio lateral de 54px."
+    },
+    {
+      "id": "evt-10701",
+      "missionId": "RF-0107",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-25T14:12:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"doca 1\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na doca 1, destino doca 2."
+    },
+    {
+      "id": "evt-10803",
+      "missionId": "RF-0108",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-25T07:41:13.000Z",
+      "eventType": "mission_end",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída sem interrupções."
+    },
+    {
+      "id": "evt-10802",
+      "missionId": "RF-0108",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-25T07:41:12.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"carga\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada na estação carga."
+    },
+    {
+      "id": "evt-10801",
+      "missionId": "RF-0108",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-25T07:40:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"descarga\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na estação descarga, destino carga."
+    },
+    {
+      "id": "evt-10602",
+      "missionId": "RF-0106",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-24T09:30:47.000Z",
+      "eventType": "error",
+      "roverState": "error",
+      "severity": "critical",
+      "message": "Timeout na leitura serial do ESP32 após 3 tentativas."
+    },
+    {
+      "id": "evt-10601",
+      "missionId": "RF-0106",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-24T09:30:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"inspeção\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na inspeção, destino rejeito."
+    },
+    {
+      "id": "evt-10403",
+      "missionId": "RF-0104",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-23T09:03:09.000Z",
+      "eventType": "mission_end",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída sem interrupções."
+    },
+    {
+      "id": "evt-10402",
+      "missionId": "RF-0104",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-23T09:03:08.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"estoque\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada no estoque."
+    },
+    {
+      "id": "evt-10401",
+      "missionId": "RF-0104",
+      "robotId": "RB-02",
+      "timestamp": "2026-10-23T09:02:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"doca 2\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na doca 2, destino estoque."
+    },
+    {
+      "id": "evt-10303",
+      "missionId": "RF-0103",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-22T10:19:45.000Z",
+      "eventType": "mission_end",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota concluída."
+    },
+    {
+      "id": "evt-10302",
+      "missionId": "RF-0103",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-22T10:19:44.000Z",
+      "eventType": "destination_reached",
+      "command": "station \"rejeito\"",
+      "roverState": "completed",
+      "severity": "info",
+      "message": "Chegada confirmada no rejeito."
+    },
+    {
+      "id": "evt-10301",
+      "missionId": "RF-0103",
+      "robotId": "RB-03",
+      "timestamp": "2026-10-22T10:18:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"triagem\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na triagem, destino rejeito."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "schema": "startMission.request",
+  "description": "Corpo vazio é válido",
+  "value": {}
+}

@@ -1,0 +1,7 @@
+{
+  "schema": "listLogs.query",
+  "description": "severity inválida",
+  "value": {
+    "severity": "fatal"
+  }
+}

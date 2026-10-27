@@ -1,0 +1,7 @@
+{
+  "schema": "internalEvents.request",
+  "description": "message obrigatório",
+  "value": {
+    "subscription": "s"
+  }
+}

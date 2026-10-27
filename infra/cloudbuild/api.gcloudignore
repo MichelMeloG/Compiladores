@@ -1,0 +1,15 @@
+# O que NÃO sobe para o staging ao construir o backend (menos bytes = menos operações e tempo).
+# Mantém: backend/, contracts/ e o que o Dockerfile precisar.
+.git
+.github
+.codegraph
+**/node_modules
+dashboard
+docs
+compiler
+examples
+infra
+**/.terraform
+*.tfstate
+*.tfvars
+.env*

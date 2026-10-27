@@ -1,0 +1,7 @@
+{
+  "schema": "internalEvents.response",
+  "description": "Processado (2xx confirma a entrega ao Pub/Sub)",
+  "value": {
+    "processed": true
+  }
+}

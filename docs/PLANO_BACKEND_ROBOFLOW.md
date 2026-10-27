@@ -2,6 +2,8 @@
 
 Atualizado em 21/10/2026. Plano de implementação, sem backend implementado nesta entrega.
 
+> **Aviso (26/10/2026):** a arquitetura de nuvem — **Cloud Run, poll HTTPS do ESP32, Firestore, Pub/Sub** — **supera** as passagens deste plano sobre serial USB, backend no computador, heartbeat/parada de 250 ms / 1.000 ms e "linguagem/banco não escolhidos". Elas seguem abaixo marcadas como **SUPERADAS**. Convenção de coordenadas: **y para baixo** (§4–§5 atualizadas). Decisões em [docs/adr/0001 a 0005](adr) e [0008](adr/0008-um-start-resume-pendente-por-vez.md); modelo de dados em [FIRESTORE_MODEL.md](FIRESTORE_MODEL.md).
+
 A especificação técnica para a futura implementação está em [backend/README.md](../backend/README.md), com modelos, estados, contratos HTTP, protocolo do dispositivo e critérios de validação. Este plano mantém a visão das etapas e decisões do projeto.
 
 ## 1. Objetivo e fontes
@@ -33,8 +35,8 @@ As decisões desta conversa atualizam a divisão de responsabilidades dos docume
 | Parar por obstáculo, leitura inválida/vencida ou perda de linha | Definido |
 | Retomada explícita, condicionada pelo ESP32 | Política definida na conversa |
 | Sketch completo copiado para Arduino IDE | Saída definida para o compilador |
-| USB serial inicialmente; Wi-Fi posteriormente | Proposta deste plano, mantendo a interface inicial dos documentos |
-| Parada por perda de comunicação | Proposta a implementar; prazo inicial abaixo exige teste |
+| ~~USB serial inicialmente; Wi-Fi posteriormente~~ | **SUPERADA** (ADR 0001): poll HTTPS ao Cloud Run |
+| ~~Parada por perda de comunicação~~ | **SUPERADA** (ADR 0002): fila local, vetos locais, sem nuvem segura no próximo cruzamento |
 | Pista em grade de linhas e colunas; cruzamentos são pontos `(x,y)` | Definido pelo usuário |
 | Cada comando termina no próximo cruzamento | Definido pelo usuário |
 | Reconhecimento dos cruzamentos pelos três sensores | Implementação e validação física pendentes |
@@ -71,7 +73,7 @@ Usar um incremento de coordenada por cruzamento. Uma sequência `(0,0) → (0,2)
 
 Uma rota cadastrada armazena a sequência de IDs de nós, versão do mapa e orientação inicial. O backend obtém os pontos do mapa, sem confiar em coordenadas arbitrárias enviadas pelo navegador.
 
-Proposta de convenção: `x` aumenta para leste e `y` para norte. Orientações são `N`, `E`, `S`, `W`. Não confundir orientação `E` (east/leste) com comando `E` (esquerda).
+Convenção adotada ([ADR 0004](adr/0004-eixo-de-coordenadas.md)): origem `(0,0)` no canto superior esquerdo, `x` aumenta para a direita (leste) e `y` aumenta para **baixo** (sul). Orientações `N=(0,-1)`, `E=(+1,0)`, `S=(0,+1)`, `W=(-1,0)`. Não confundir orientação `E` (east/leste) com comando `E` (esquerda).
 
 ```json
 {
@@ -80,7 +82,7 @@ Proposta de convenção: `x` aumenta para leste e `y` para norte. Orientações 
   "mapVersion": 1,
   "initialHeading": "N",
   "nodeIds": ["A", "B", "C", "D"],
-  "points": [{"x":0,"y":0},{"x":0,"y":1},{"x":1,"y":1},{"x":1,"y":2}]
+  "points": [{"x":0,"y":3},{"x":0,"y":2},{"x":1,"y":2},{"x":1,"y":1}]
 }
 ```
 
@@ -110,13 +112,13 @@ Para cada aresta, calcular o rumo desejado a partir de `dx`/`dy`, comparar com a
 | 90° à esquerda | `E` | Rumo da aresta |
 | Oposto | `T` | Mantida, pois desloca em ré |
 
-Com os pontos do exemplo e orientação `N`, a fila é `["F","D","E"]`. Uma aresta de `(0,0)` para `(0,-1)`, com orientação `N`, produz `T` se a ré for permitida naquela aresta e suportada pelo robô.
+Com os pontos do exemplo e orientação `N`, a fila é `["F","D","E"]`. Uma aresta de `(0,3)` para `(0,4)` (para baixo, sul), com orientação `N`, produz `T` se a ré for permitida naquela aresta e suportada pelo robô.
 
 | Índice | Origem → destino | Rumo antes → depois | Comando |
 |---|---|---|---|
-| 0 | `(0,0) → (0,1)` | N → N | F |
-| 1 | `(0,1) → (1,1)` | N → E (leste) | D |
-| 2 | `(1,1) → (1,2)` | E (leste) → N | E (esquerda) |
+| 0 | `(0,3) → (0,2)` | N → N | F |
+| 1 | `(0,2) → (1,2)` | N → E (leste) | D |
+| 2 | `(1,2) → (1,1)` | E (leste) → N | E (esquerda) |
 
 A origem não conta como uma ação concluída. São quatro cruzamentos na rota e três comandos; cada confirmação atualiza um único destino. A última chegada encerra a fila e solicita a parada local.
 
@@ -162,6 +164,8 @@ backend/
   persistence/         Transações e migrações
   tests/               Planejador, protocolo, API e simulador de dispositivo
 ```
+
+> **SUPERADO (ADR 0001, 0003):** ~~A linguagem, o framework e o banco do backend ainda não foram escolhidos.~~ Escolhidos: TypeScript no Cloud Run e Firestore nativo; o contrato executável está em `contracts/`.
 
 A linguagem, o framework e o banco do backend ainda não foram escolhidos. O plano define os contratos antes dessa escolha; não depende de um fornecedor externo.
 
@@ -232,7 +236,9 @@ A interface de operação deverá mostrar prévia, início confirmado, índice d
 
 ## 8. Protocolo backend ↔ ESP32
 
-### 8.1 Transporte
+### 8.1 Transporte — SUPERADO
+
+> **SUPERADO pelo [ADR 0001](adr/0001-transporte-agv-nuvem.md):** poll HTTPS ao Cloud Run; backend na nuvem, não no computador conectado ao robô. O texto abaixo é histórico.
 
 Proposta inicial: USB serial, 115200 baud, 8N1, mensagens JSON UTF-8 delimitadas por `\n`, sem texto livre misturado. O backend roda no computador conectado ao robô. Esse cabo limita o ensaio móvel; um adaptador Wi-Fi será necessário para operação sem cabo, mantendo o contrato lógico. Não presumir internet pública ou backend hospedado como requisito.
 
@@ -282,6 +288,8 @@ O ESP32 é a autoridade final para habilitar motores, mesmo recebendo uma fila i
 Parâmetros iniciais dos documentos físicos: parada em distância ≤20 cm; recuperação com três medições consecutivas ≥25 cm; leitura de distância com idade >200 ms é vencida; aquisição do ultrassom inicialmente a cada 70 ms. Esses valores continuam sujeitos a validação na pista.
 
 Para retomada, exigir todos os bloqueios resolvidos, linha válida, três leituras recentes com distância liberada e comando explícito da dashboard, encaminhado pelo backend. O ESP verifica novamente no recebimento. Rejeição não fica pendente para executar depois. Reconhecer alerta é uma ação independente.
+
+> **SUPERADO pelo [ADR 0002](adr/0002-perda-de-comunicacao.md):** sem heartbeat de 250 ms nem parada em 1.000 ms; fila local, vetos locais soberanos e, sem nuvem, o AGV segura no próximo cruzamento.
 
 Proposta para falha de comunicação: heartbeat a cada 250 ms e parada após 1000 ms sem autorização válida, mesmo com fila restante. Isso é um limite de comunicação, não o tempo de reação ao obstáculo. Validar no transporte real antes de operar. Retomar comunicação não retoma motores; exige nova liberação. TTL de comandos de movimento/liberação deve estar ligado à sessão e a um relógio monotônico local, sem depender de o ESP ter hora UTC correta.
 

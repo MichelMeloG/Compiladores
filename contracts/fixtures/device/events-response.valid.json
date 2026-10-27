@@ -1,0 +1,18 @@
+{
+  "schema": "deviceEvents.response",
+  "description": "Resposta com rejeitados",
+  "value": {
+    "sessionId": "boot-7",
+    "serverTime": "2026-10-26T18:00:00.000Z",
+    "nextPollMs": 1500,
+    "ackedSequence": 33,
+    "commands": [],
+    "resync": false,
+    "rejected": [
+      {
+        "sequence": 12,
+        "reason": "sessão antiga"
+      }
+    ]
+  }
+}

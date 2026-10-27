@@ -1,0 +1,8 @@
+{
+  "schema": "submitRoute.response",
+  "description": "accepted obrigatório",
+  "value": {
+    "routeId": "RT-1",
+    "waypointCount": 2
+  }
+}

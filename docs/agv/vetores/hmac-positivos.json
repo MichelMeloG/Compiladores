@@ -1,0 +1,166 @@
+{
+  "aviso": "Segredo FICTÍCIO. Gerado por contracts/dist/signing.js em 26/10/2026.",
+  "vetores": [
+    {
+      "id": "v1-poll-corpo-vazio",
+      "note": "GET sem corpo: sha256(\"\") na última linha",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "GET",
+      "path": "/device/poll",
+      "timestamp": 1790000000,
+      "sequence": 2,
+      "body": "",
+      "bodyByteLength": 0,
+      "bodySha256Hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stringToSign": "GET\n/device/poll\n1790000000\n2\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signatureHex": "934f5cf363f5a475a68427519c51b24e9d56fc8b124609d8fd96d4706287c92e",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "2",
+        "X-Timestamp": "1790000000",
+        "X-Signature": "934f5cf363f5a475a68427519c51b24e9d56fc8b124609d8fd96d4706287c92e"
+      }
+    },
+    {
+      "id": "v2-hello",
+      "note": "POST /device/hello, primeira requisição da sessão (X-Sequence=1)",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "POST",
+      "path": "/device/hello",
+      "timestamp": 1790000000,
+      "sequence": 1,
+      "body": "{\"v\":1,\"type\":\"hello\",\"messageId\":\"hello-boot-7-lq3k9z\",\"deviceId\":\"RB-01\",\"sessionId\":\"boot-7-lq3k9z\",\"sequence\":1,\"uptimeMs\":1840,\"firmwareVersion\":\"0.1.0\",\"protocolVersion\":1,\"capabilities\":{\"supportsReverse\":false,\"maxActions\":64,\"maxMessageBytes\":4096},\"state\":\"ready\"}",
+      "bodyByteLength": 274,
+      "bodySha256Hex": "0b359b44c0dfedc7f9968e271af4eb0d37e62c03d7f045805c2d80cf688745e2",
+      "stringToSign": "POST\n/device/hello\n1790000000\n1\n0b359b44c0dfedc7f9968e271af4eb0d37e62c03d7f045805c2d80cf688745e2",
+      "signatureHex": "1bf48adb31abd2266970fa76c9315256214ff3f3c21715bb69a4f3c9067967c8",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "1",
+        "X-Timestamp": "1790000000",
+        "X-Signature": "1bf48adb31abd2266970fa76c9315256214ff3f3c21715bb69a4f3c9067967c8"
+      }
+    },
+    {
+      "id": "v3-events-ack",
+      "note": "POST /device/events com um ack",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "POST",
+      "path": "/device/events",
+      "timestamp": 1790000003,
+      "sequence": 3,
+      "body": "{\"events\":[{\"v\":1,\"type\":\"ack\",\"messageId\":\"evt-boot-7-lq3k9z-2\",\"deviceId\":\"RB-01\",\"sessionId\":\"boot-7-lq3k9z\",\"sequence\":2,\"uptimeMs\":5210,\"replyTo\":\"cmd-0001\",\"result\":\"accepted\",\"missionId\":\"RF-0113\",\"routeRevision\":1}]}",
+      "bodyByteLength": 224,
+      "bodySha256Hex": "b1ba6b6dca6de5fd466a989059aa524939b5c5b02e45c646863963a2d63231e1",
+      "stringToSign": "POST\n/device/events\n1790000003\n3\nb1ba6b6dca6de5fd466a989059aa524939b5c5b02e45c646863963a2d63231e1",
+      "signatureHex": "05d906dfc073166985c15d14bd4a75a91c3db3105aaf3721c9919789dfbcc938",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "3",
+        "X-Timestamp": "1790000003",
+        "X-Signature": "05d906dfc073166985c15d14bd4a75a91c3db3105aaf3721c9919789dfbcc938"
+      }
+    },
+    {
+      "id": "v4-events-progresso",
+      "note": "Lote com dois eventos (action_started + action_completed)",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "POST",
+      "path": "/device/events",
+      "timestamp": 1790000010,
+      "sequence": 4,
+      "body": "{\"events\":[{\"v\":1,\"type\":\"action_started\",\"messageId\":\"evt-boot-7-lq3k9z-3\",\"deviceId\":\"RB-01\",\"sessionId\":\"boot-7-lq3k9z\",\"sequence\":3,\"uptimeMs\":9000,\"missionId\":\"RF-0113\",\"routeRevision\":1,\"actionIndex\":0,\"command\":\"F\"},{\"v\":1,\"type\":\"action_completed\",\"messageId\":\"evt-boot-7-lq3k9z-4\",\"deviceId\":\"RB-01\",\"sessionId\":\"boot-7-lq3k9z\",\"sequence\":4,\"uptimeMs\":12500,\"missionId\":\"RF-0113\",\"routeRevision\":1,\"actionIndex\":0,\"expectedNode\":\"0,2\"}]}",
+      "bodyByteLength": 446,
+      "bodySha256Hex": "3c98c7047313d0c16e3459b0af9f594531e418f8637d4dd2bad76909a17e0238",
+      "stringToSign": "POST\n/device/events\n1790000010\n4\n3c98c7047313d0c16e3459b0af9f594531e418f8637d4dd2bad76909a17e0238",
+      "signatureHex": "f4a7f39233b3afb104260ddde88727bde82afea1699dc6440b9f92eb330b2386",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "4",
+        "X-Timestamp": "1790000010",
+        "X-Signature": "f4a7f39233b3afb104260ddde88727bde82afea1699dc6440b9f92eb330b2386"
+      }
+    },
+    {
+      "id": "v5-events-utf8",
+      "note": "Corpo com caracteres não ASCII: o hash é dos BYTES UTF-8 enviados",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "POST",
+      "path": "/device/events",
+      "timestamp": 1790000044,
+      "sequence": 5,
+      "body": "{\"events\":[{\"v\":1,\"type\":\"fault\",\"messageId\":\"evt-boot-7-lq3k9z-9\",\"deviceId\":\"RB-01\",\"sessionId\":\"boot-7-lq3k9z\",\"sequence\":9,\"uptimeMs\":40000,\"code\":\"ULTRASONIC_TIMEOUT\",\"message\":\"Sensor frontal sem eco — obstáculo ou leitura inválida\",\"severity\":\"error\",\"missionId\":\"RF-0113\"}]}",
+      "bodyByteLength": 286,
+      "bodySha256Hex": "77a63bf11955fc580ea23c204c19d369df7606decd64063c7294802ff80ef9cc",
+      "stringToSign": "POST\n/device/events\n1790000044\n5\n77a63bf11955fc580ea23c204c19d369df7606decd64063c7294802ff80ef9cc",
+      "signatureHex": "a46a13f5d46b0378ae2048aa68b84b37b44dc5f0d71ec3d0c99210ffcb25ce16",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "5",
+        "X-Timestamp": "1790000044",
+        "X-Signature": "a46a13f5d46b0378ae2048aa68b84b37b44dc5f0d71ec3d0c99210ffcb25ce16"
+      }
+    },
+    {
+      "id": "v6-64bits",
+      "note": "Timestamp acima de 2^31 e sequência acima de 2^16: pegam inteiro de 32 bits com sinal",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "GET",
+      "path": "/device/poll",
+      "timestamp": 2200000000,
+      "sequence": 70000,
+      "body": "",
+      "bodyByteLength": 0,
+      "bodySha256Hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stringToSign": "GET\n/device/poll\n2200000000\n70000\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signatureHex": "b7a415f2a9625c4086e5f5c1c339147da7d5e3db36df4ff55ae5642dfe7318c7",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "70000",
+        "X-Timestamp": "2200000000",
+        "X-Signature": "b7a415f2a9625c4086e5f5c1c339147da7d5e3db36df4ff55ae5642dfe7318c7"
+      }
+    },
+    {
+      "id": "v7-query-string",
+      "note": "Caminho COM query é assinado exatamente como enviado (o firmware atual não usa query)",
+      "secret": "segredo-de-teste-0123456789abcdef",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "method": "GET",
+      "path": "/device/poll?x=1",
+      "timestamp": 1790000100,
+      "sequence": 6,
+      "body": "",
+      "bodyByteLength": 0,
+      "bodySha256Hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stringToSign": "GET\n/device/poll?x=1\n1790000100\n6\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signatureHex": "358325d958ff8d01a63799e7de161e9c543ce791e817e32c8bace6fc015cdb67",
+      "headers": {
+        "X-Device-Id": "RB-01",
+        "X-Session-Id": "boot-7-lq3k9z",
+        "X-Sequence": "6",
+        "X-Timestamp": "1790000100",
+        "X-Signature": "358325d958ff8d01a63799e7de161e9c543ce791e817e32c8bace6fc015cdb67"
+      }
+    }
+  ]
+}

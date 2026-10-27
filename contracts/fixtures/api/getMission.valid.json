@@ -1,0 +1,102 @@
+{
+  "schema": "getMission.response",
+  "description": "Missão com linha do tempo",
+  "value": {
+    "id": "RF-0111",
+    "robotId": "RB-01",
+    "origin": "carga",
+    "destination": "descarga",
+    "status": "completed",
+    "startedAt": "2026-10-26T08:15:00.000Z",
+    "endedAt": "2026-10-26T08:16:49.000Z",
+    "durationSeconds": 109,
+    "stopCount": 1,
+    "presenceStopCount": 1,
+    "errorCount": 0,
+    "eventCount": 7,
+    "stopReasons": [
+      {
+        "reason": "Presença detectada",
+        "count": 1
+      }
+    ],
+    "events": [
+      {
+        "id": "evt-11101",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:15:00.000Z",
+        "eventType": "mission_start",
+        "command": "station \"carga\"",
+        "roverState": "idle",
+        "severity": "info",
+        "message": "Rota iniciada na estação carga, destino descarga."
+      },
+      {
+        "id": "evt-11102",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:15:04.000Z",
+        "eventType": "command",
+        "command": "resume_line_following()",
+        "roverState": "moving",
+        "severity": "info",
+        "message": "Seguimento de linha retomado após carregamento."
+      },
+      {
+        "id": "evt-11103",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:15:41.000Z",
+        "eventType": "presence_detected",
+        "roverState": "obstacle_hold",
+        "severity": "warning",
+        "message": "PROX 42cm — obstáculo detectado à frente."
+      },
+      {
+        "id": "evt-11104",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:15:42.000Z",
+        "eventType": "stop_preventive",
+        "command": "stop()",
+        "roverState": "stopped",
+        "severity": "warning",
+        "message": "Parada preventiva executada. Aguardando via livre."
+      },
+      {
+        "id": "evt-11105",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:16:03.000Z",
+        "eventType": "resume",
+        "command": "resume_line_following()",
+        "roverState": "moving",
+        "severity": "info",
+        "message": "Via liberada, seguimento de linha retomado."
+      },
+      {
+        "id": "evt-11106",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:16:48.000Z",
+        "eventType": "destination_reached",
+        "command": "station \"descarga\"",
+        "roverState": "completed",
+        "severity": "info",
+        "message": "Chegada confirmada na estação descarga."
+      },
+      {
+        "id": "evt-11107",
+        "missionId": "RF-0111",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T08:16:49.000Z",
+        "eventType": "mission_end",
+        "command": "wait_signal(\"descarga_completa\")",
+        "roverState": "idle",
+        "severity": "info",
+        "message": "Rota concluída. Aguardando sinal de descarga."
+      }
+    ]
+  }
+}

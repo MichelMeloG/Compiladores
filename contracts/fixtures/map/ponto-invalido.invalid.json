@@ -1,0 +1,19 @@
+{
+  "schema": "map",
+  "description": "kind desconhecido",
+  "value": {
+    "id": "pista-1",
+    "version": 1,
+    "name": "Pista 1 — Linha de montagem A",
+    "cols": 5,
+    "rows": 4,
+    "points": [
+      {
+        "x": 0,
+        "y": 0,
+        "kind": "parede"
+      }
+    ],
+    "closedEdges": []
+  }
+}

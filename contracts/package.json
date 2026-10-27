@@ -1,0 +1,53 @@
+{
+  "name": "@roboflow/contracts",
+  "version": "1.1.0",
+  "description": "Contratos (schemas zod), geometria de rota, seed e suíte de contrato do RoboFlow",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./signing": {
+      "types": "./dist/signing.d.ts",
+      "import": "./dist/signing.js"
+    },
+    "./seed/*": "./seed/*",
+    "./fixtures/*": "./fixtures/*",
+    "./openapi.json": "./openapi.json"
+  },
+  "files": [
+    "dist",
+    "seed",
+    "fixtures",
+    "openapi.json"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "contract:test": "tsx scripts/contract-test.ts",
+    "seed:build": "node scripts/build-seed.mjs",
+    "openapi": "tsx scripts/build-openapi.ts",
+    "prepare": "npm run build",
+    "fixtures:build": "node scripts/build-fixtures.mjs",
+    "generate": "npm run build && npm run seed:build && npm run fixtures:build",
+    "mock": "tsx mock/server.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

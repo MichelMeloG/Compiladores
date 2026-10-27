@@ -1,0 +1,9 @@
+{
+  "schema": "health.response",
+  "description": "status diferente de ok",
+  "value": {
+    "status": "degraded",
+    "version": "1",
+    "robotsConnected": 0
+  }
+}

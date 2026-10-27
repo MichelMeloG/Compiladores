@@ -1,0 +1,20 @@
+{
+  "schema": "listMissions.response",
+  "description": "status inválido",
+  "value": [
+    {
+      "id": "RF-0112",
+      "robotId": "RB-01",
+      "origin": "carga",
+      "destination": "descarga",
+      "status": "running",
+      "startedAt": "2026-10-26T17:34:00.000Z",
+      "durationSeconds": null,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 3,
+      "stopReasons": []
+    }
+  ]
+}

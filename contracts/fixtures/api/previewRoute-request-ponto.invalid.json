@@ -1,0 +1,12 @@
+{
+  "schema": "previewRoute.request",
+  "description": "coordenada negativa",
+  "value": {
+    "waypoints": [
+      {
+        "x": -1,
+        "y": 0
+      }
+    ]
+  }
+}

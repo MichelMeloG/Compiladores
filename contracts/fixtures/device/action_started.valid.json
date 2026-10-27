@@ -1,0 +1,17 @@
+{
+  "schema": "device.action_started",
+  "description": "Início de ação",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "action_started",
+    "messageId": "evt-30",
+    "sequence": 30,
+    "missionId": "RF-0112",
+    "routeRevision": 1,
+    "actionIndex": 3,
+    "command": "D"
+  }
+}

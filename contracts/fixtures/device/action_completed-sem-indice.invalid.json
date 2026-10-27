@@ -1,0 +1,16 @@
+{
+  "schema": "device.action_completed",
+  "description": "actionIndex obrigatório",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "action_completed",
+    "messageId": "evt-31",
+    "sequence": 31,
+    "missionId": "RF-0112",
+    "routeRevision": 1,
+    "expectedNode": "2,1"
+  }
+}

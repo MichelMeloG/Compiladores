@@ -1,0 +1,15 @@
+{
+  "schema": "device.ack",
+  "description": "ack só aceita accepted",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "ack",
+    "messageId": "evt-2",
+    "sequence": 2,
+    "replyTo": "cmd-10",
+    "result": "ok"
+  }
+}

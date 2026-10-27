@@ -1,0 +1,36 @@
+{
+  "name": "@roboflow/backend",
+  "version": "1.0.0",
+  "description": "API RoboFlow (Cloud Run): operador, dispositivo e eventos internos",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "main": "dist/src/main.js",
+  "scripts": {
+    "build:contracts": "npm --prefix ../contracts run build",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/src/main.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "esp-sim": "tsx tools/esp-sim/cli.ts",
+    "seed": "tsx tools/seed.ts",
+    "contract:test": "npm --prefix ../contracts run contract:test --"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.1",
+    "@google-cloud/pubsub": "^6.3.1",
+    "@roboflow/contracts": "file:../contracts",
+    "fastify": "^5.12.7",
+    "firebase-admin": "^14.5.0",
+    "google-auth-library": "^11.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

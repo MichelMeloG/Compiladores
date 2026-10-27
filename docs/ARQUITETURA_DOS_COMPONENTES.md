@@ -39,7 +39,7 @@ O computador compila RoboFlow para um sketch completo, copiado e gravado manualm
 | ESP32 de desenvolvimento | 1 | Leitura dos sensores, decisão de movimento, PWM, veto de movimento e serial USB |
 | HW-095 / L298N | 1 | Dois canais de potência; recebe seis sinais do ESP32 e alimenta os motores |
 | Motor DC com redutor | 2 | Tração diferencial; tensão e corrente de partida a confirmar |
-| Sensores de linha | 3 canais | Identificar contraste sob o chassi; saída digital ou analógica a confirmar |
+| Sensores de linha | 3 canais + 1 infravermelho adicional | Identificar contraste sob o chassi; saída digital ou analógica a confirmar |
 | HC-SR04 | 1 | Medição frontal; alimentação de 5 V, TRIG e ECHO |
 | Resistores de 10 kΩ e 15 kΩ, preferencialmente 1% | 1 de cada | Divisor do ECHO de 5 V para aproximadamente 3 V |
 | Resistores de 10 kΩ | 2 adicionais | Pull-down em ENA e ENB para manter motores desabilitados no reset |
@@ -64,6 +64,7 @@ Os números são **GPIOs**, não posições físicas no conector.
 | Sensor de linha esquerdo | 32 | Entrada | Nível máximo compatível com 3,3 V |
 | Sensor de linha central | 34 | Entrada | Sem pull-up/pull-down interno |
 | Sensor de linha direito | 33 | Entrada | Nível máximo compatível com 3,3 V |
+| Sensor infravermelho adicional | **35** | Entrada | ADC1, somente entrada, sem pull-up/pull-down interno; nível máximo de 3,3 V |
 | HC-SR04 TRIG | **18** | Saída digital | Pulso de disparo |
 | HC-SR04 ECHO | **19** | Entrada digital | **Obrigatoriamente por divisor ou conversor de nível** |
 
@@ -147,6 +148,7 @@ Montar os sensores esquerdo, central e direito alinhados transversalmente, sob a
 Saída esquerda ---> GPIO32
 Saída central  ---> GPIO34
 Saída direita  ---> GPIO33
+Saída adicional ---> GPIO35
 GND de todos   ---> GND comum
 ```
 

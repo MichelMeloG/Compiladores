@@ -1,0 +1,19 @@
+# Contexto de build = raiz do repositório. Só backend/ e contracts/ entram na imagem.
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+**/.env
+**/.env.*
+.git
+.github
+.codegraph
+dashboard
+docs
+infra
+compiler
+examples
+tests
+backend/test
+contracts/tests
+contracts/fixtures

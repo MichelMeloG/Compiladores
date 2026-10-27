@@ -1,0 +1,30 @@
+{
+  "schema": "importLogs.request",
+  "description": "Lote de eventos",
+  "value": {
+    "events": [
+      {
+        "id": "evt-11201",
+        "missionId": "RF-0112",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T17:34:00.000Z",
+        "eventType": "mission_start",
+        "command": "station \"carga\"",
+        "roverState": "idle",
+        "severity": "info",
+        "message": "Rota iniciada na estação carga, destino descarga."
+      },
+      {
+        "id": "evt-11202",
+        "missionId": "RF-0112",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T17:35:00.000Z",
+        "eventType": "command",
+        "command": "resume_line_following()",
+        "roverState": "moving",
+        "severity": "info",
+        "message": "Seguimento de linha retomado após carregamento."
+      }
+    ]
+  }
+}

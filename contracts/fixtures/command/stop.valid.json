@@ -1,0 +1,13 @@
+{
+  "schema": "command.stop",
+  "description": "Parada",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "missionId": "RF-0113",
+    "validForMs": 5000,
+    "type": "stop",
+    "messageId": "cmd-12"
+  }
+}

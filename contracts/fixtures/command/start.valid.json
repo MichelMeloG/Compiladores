@@ -1,0 +1,14 @@
+{
+  "schema": "command.start",
+  "description": "Início",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "missionId": "RF-0113",
+    "validForMs": 5000,
+    "type": "start",
+    "messageId": "cmd-11",
+    "routeRevision": 1
+  }
+}

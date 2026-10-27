@@ -1,0 +1,37 @@
+{
+  "schema": "map",
+  "description": "Mapa do seed",
+  "value": {
+    "id": "pista-1",
+    "version": 1,
+    "name": "Pista 1 — Linha de montagem A",
+    "cols": 5,
+    "rows": 4,
+    "points": [
+      {
+        "x": 0,
+        "y": 0,
+        "kind": "station",
+        "label": "carga"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "kind": "station",
+        "label": "descarga"
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "kind": "station",
+        "label": "triagem"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "kind": "blocked"
+      }
+    ],
+    "closedEdges": []
+  }
+}

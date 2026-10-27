@@ -1,0 +1,18 @@
+{
+  "schema": "error",
+  "description": "Com detalhes estruturados",
+  "value": {
+    "success": false,
+    "message": "Rota inválida.",
+    "error": "ROUTE_INVALID",
+    "details": {
+      "errors": [
+        {
+          "code": "STEP_JUMP",
+          "index": 1,
+          "message": "O passo 1 salta de (0, 0) para (0, 2); inclua os cruzamentos intermediários."
+        }
+      ]
+    }
+  }
+}

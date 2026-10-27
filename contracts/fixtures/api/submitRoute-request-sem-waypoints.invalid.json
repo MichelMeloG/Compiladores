@@ -1,0 +1,7 @@
+{
+  "schema": "submitRoute.request",
+  "description": "waypoints obrigatório",
+  "value": {
+    "initialHeading": "E"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "forceCloseMission.response",
+  "description": "o estado resultante é sempre aborted",
+  "value": {
+    "missionId": "RF-0113",
+    "state": "completed"
+  }
+}

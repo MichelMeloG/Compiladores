@@ -1,0 +1,18 @@
+{
+  "schema": "device.snapshot",
+  "description": "Reconciliação",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "snapshot",
+    "messageId": "evt-36",
+    "sequence": 36,
+    "state": "paused",
+    "missionId": "RF-0112",
+    "routeRevision": 1,
+    "completedActions": 3,
+    "actionIndex": 3
+  }
+}

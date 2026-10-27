@@ -1,0 +1,174 @@
+{
+  "schema": "listMissions.response",
+  "description": "Missões sem events",
+  "value": [
+    {
+      "id": "RF-0112",
+      "robotId": "RB-01",
+      "origin": "carga",
+      "destination": "descarga",
+      "status": "in_progress",
+      "startedAt": "2026-10-26T17:34:00.000Z",
+      "durationSeconds": null,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 3,
+      "stopReasons": []
+    },
+    {
+      "id": "RF-0111",
+      "robotId": "RB-01",
+      "origin": "carga",
+      "destination": "descarga",
+      "status": "completed",
+      "startedAt": "2026-10-26T08:15:00.000Z",
+      "endedAt": "2026-10-26T08:16:49.000Z",
+      "durationSeconds": 109,
+      "stopCount": 1,
+      "presenceStopCount": 1,
+      "errorCount": 0,
+      "eventCount": 7,
+      "stopReasons": [
+        {
+          "reason": "Presença detectada",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "RF-0110",
+      "robotId": "RB-02",
+      "origin": "estoque",
+      "destination": "doca 1",
+      "status": "completed",
+      "startedAt": "2026-10-26T11:05:00.000Z",
+      "endedAt": "2026-10-26T11:07:03.000Z",
+      "durationSeconds": 123,
+      "stopCount": 1,
+      "presenceStopCount": 1,
+      "errorCount": 0,
+      "eventCount": 6,
+      "stopReasons": [
+        {
+          "reason": "Presença detectada",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "RF-0109",
+      "robotId": "RB-03",
+      "origin": "triagem",
+      "destination": "inspeção",
+      "status": "aborted",
+      "startedAt": "2026-10-26T16:22:00.000Z",
+      "endedAt": "2026-10-26T16:22:51.000Z",
+      "durationSeconds": 51,
+      "stopCount": 1,
+      "presenceStopCount": 0,
+      "errorCount": 1,
+      "eventCount": 3,
+      "stopReasons": [
+        {
+          "reason": "Linha perdida",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "RF-0108",
+      "robotId": "RB-01",
+      "origin": "descarga",
+      "destination": "carga",
+      "status": "completed",
+      "startedAt": "2026-10-25T07:40:00.000Z",
+      "endedAt": "2026-10-25T07:41:13.000Z",
+      "durationSeconds": 73,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 3,
+      "stopReasons": []
+    },
+    {
+      "id": "RF-0107",
+      "robotId": "RB-02",
+      "origin": "doca 1",
+      "destination": "doca 2",
+      "status": "completed",
+      "startedAt": "2026-10-25T14:12:00.000Z",
+      "endedAt": "2026-10-25T14:14:39.000Z",
+      "durationSeconds": 159,
+      "stopCount": 1,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 5,
+      "stopReasons": [
+        {
+          "reason": "Desvio de trajetória",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "RF-0106",
+      "robotId": "RB-03",
+      "origin": "inspeção",
+      "destination": "rejeito",
+      "status": "failed",
+      "startedAt": "2026-10-24T09:30:00.000Z",
+      "durationSeconds": null,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 1,
+      "eventCount": 2,
+      "stopReasons": []
+    },
+    {
+      "id": "RF-0104",
+      "robotId": "RB-02",
+      "origin": "doca 2",
+      "destination": "estoque",
+      "status": "completed",
+      "startedAt": "2026-10-23T09:02:00.000Z",
+      "endedAt": "2026-10-23T09:03:09.000Z",
+      "durationSeconds": 69,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 3,
+      "stopReasons": []
+    },
+    {
+      "id": "RF-0103",
+      "robotId": "RB-03",
+      "origin": "triagem",
+      "destination": "rejeito",
+      "status": "completed",
+      "startedAt": "2026-10-22T10:18:00.000Z",
+      "endedAt": "2026-10-22T10:19:45.000Z",
+      "durationSeconds": 105,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 3,
+      "stopReasons": []
+    },
+    {
+      "id": "RF-0102",
+      "robotId": "RB-04",
+      "origin": "doca 3",
+      "destination": "pátio",
+      "status": "completed",
+      "startedAt": "2026-10-26T05:40:00.000Z",
+      "endedAt": "2026-10-26T05:41:37.000Z",
+      "durationSeconds": 97,
+      "stopCount": 0,
+      "presenceStopCount": 0,
+      "errorCount": 0,
+      "eventCount": 3,
+      "stopReasons": []
+    }
+  ]
+}

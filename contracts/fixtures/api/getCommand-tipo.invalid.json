@@ -1,0 +1,15 @@
+{
+  "schema": "getCommand.response",
+  "description": "tipo inválido",
+  "value": {
+    "id": "cmd-12",
+    "type": "pause",
+    "missionId": "RF-0113",
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "status": "pending",
+    "attempts": 0,
+    "createdAt": "2026-10-26T18:00:00.000Z",
+    "expiresAt": "2026-10-26T18:00:30.000Z"
+  }
+}

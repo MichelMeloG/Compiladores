@@ -1,0 +1,17 @@
+{
+  "schema": "submitRoute.response",
+  "description": "Aceita",
+  "value": {
+    "routeId": "RT-0042",
+    "accepted": true,
+    "waypointCount": 4,
+    "message": "Rota aceita e enfileirada no robô.",
+    "missionId": "RF-0113",
+    "commandId": "cmd-0001",
+    "actions": [
+      "F",
+      "F",
+      "D"
+    ]
+  }
+}

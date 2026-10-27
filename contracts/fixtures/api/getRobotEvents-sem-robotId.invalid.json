@@ -1,0 +1,13 @@
+{
+  "schema": "getRobotEvents.response",
+  "description": "robotId obrigatório",
+  "value": [
+    {
+      "id": "evt-d1",
+      "timestamp": "2026-10-26T17:00:00.000Z",
+      "eventType": "state_change",
+      "severity": "info",
+      "message": "x"
+    }
+  ]
+}

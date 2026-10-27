@@ -1,0 +1,14 @@
+{
+  "schema": "getRobotEvents.response",
+  "description": "Evento sem missão (diagnóstico)",
+  "value": [
+    {
+      "id": "evt-d1",
+      "robotId": "RB-01",
+      "timestamp": "2026-10-26T17:00:00.000Z",
+      "eventType": "state_change",
+      "severity": "info",
+      "message": "Dispositivo iniciado (boot-7)."
+    }
+  ]
+}

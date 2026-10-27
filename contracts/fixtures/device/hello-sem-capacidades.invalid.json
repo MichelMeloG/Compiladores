@@ -1,0 +1,16 @@
+{
+  "schema": "device.hello",
+  "description": "capabilities obrigatório",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "hello",
+    "messageId": "evt-1",
+    "sequence": 1,
+    "firmwareVersion": "1.4.2",
+    "protocolVersion": 1,
+    "state": "ready"
+  }
+}

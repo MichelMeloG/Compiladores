@@ -1,0 +1,132 @@
+name: Backend (testes e infra)
+
+# Verificação contínua do backend e da infraestrutura. O build da imagem é feito no
+# GCP (Cloud Build), não aqui: veja infra/scripts/build-and-deploy.ps1.
+#
+# O deploy pelo CI é OPCIONAL e fica DESLIGADO por padrão. Para ligar, crie a variável de
+# repositório CI_DEPLOY_ENABLED=true e as demais abaixo (Settings > Secrets and variables >
+# Actions > Variables). Nenhum segredo é necessário (Workload Identity Federation).
+#   GCP_PROJECT_ID    compiladores-512823
+#   GCP_REGION        us-central1
+#   GCP_WIF_PROVIDER  saída `wif_provider` do Terraform
+#   GCP_DEPLOYER_SA   saída `deployer_service_account` do Terraform
+#
+# Pressupostos: backend/ e contracts/ têm `npm ci`, `npm test` e (opcional) `npm run typecheck`.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - 'infra/**'
+      - '.github/workflows/backend-deploy.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - 'infra/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            contracts/package-lock.json
+            backend/package-lock.json
+
+      - name: Contratos (typecheck e testes)
+        working-directory: contracts
+        run: |
+          npm ci
+          npm run typecheck --if-present
+          npm test
+
+      - name: Backend (typecheck e testes)
+        working-directory: backend
+        run: |
+          npm ci
+          npm run typecheck --if-present
+          npm test
+
+      - name: Kill-switch (testes)
+        working-directory: infra/killswitch
+        run: npm test
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.16.6'
+
+      - name: fmt
+        working-directory: infra/terraform
+        run: terraform fmt -check -recursive
+
+      - name: validate
+        working-directory: infra/terraform
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+  deploy:
+    # DESLIGADO por padrão: só roda com a variável CI_DEPLOY_ENABLED=true.
+    needs: [test, terraform]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.CI_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Cloud Build (staging regional, conta cloud-build)
+        env:
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          REGION: ${{ vars.GCP_REGION }}
+        run: |
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT}/roboflow/api:${GITHUB_SHA}"
+          gcloud builds submit . \
+            --project "$PROJECT" --region "$REGION" \
+            --config infra/cloudbuild/api.yaml \
+            --ignore-file infra/cloudbuild/api.gcloudignore \
+            --gcs-source-staging-dir "gs://${PROJECT}-build-staging/source" \
+            --service-account "projects/${PROJECT}/serviceAccounts/cloud-build@${PROJECT}.iam.gserviceaccount.com" \
+            --substitutions "_IMAGE=${IMAGE}" \
+            --suppress-logs
+          echo "IMAGE=${IMAGE}" >> "$GITHUB_ENV"
+
+      - name: Deploy no Cloud Run (só troca a imagem)
+        env:
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          REGION: ${{ vars.GCP_REGION }}
+        run: |
+          gcloud run deploy roboflow-api --image "$IMAGE" --region "$REGION" --project "$PROJECT" --quiet
+          echo "URL=$(gcloud run services describe roboflow-api --region "$REGION" --project "$PROJECT" --format 'value(status.url)')" >> "$GITHUB_ENV"
+
+      - name: Smoke (health + contrato)
+        run: bash infra/scripts/smoke.sh "$URL"

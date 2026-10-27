@@ -1,0 +1,41 @@
+{
+  "schema": "devicePoll.response",
+  "description": "nextPollMs abaixo do mínimo",
+  "value": {
+    "sessionId": "boot-7",
+    "serverTime": "2026-10-26T18:00:00.000Z",
+    "nextPollMs": 100,
+    "ackedSequence": 33,
+    "commands": [
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "missionId": "RF-0113",
+        "validForMs": 5000,
+        "type": "load_route",
+        "messageId": "cmd-10",
+        "routeRevision": 1,
+        "actions": [
+          "F",
+          "F",
+          "D",
+          "E",
+          "F",
+          "E"
+        ],
+        "expectedNodes": [
+          "1,0",
+          "2,0",
+          "2,1",
+          "3,1",
+          "4,1",
+          "4,0"
+        ],
+        "startNode": "0,0",
+        "initialHeading": "E"
+      }
+    ],
+    "resync": false
+  }
+}

@@ -1,0 +1,128 @@
+[
+  {
+    "id": "pista-1",
+    "version": 1,
+    "name": "Pista 1 — Linha de montagem A",
+    "cols": 5,
+    "rows": 4,
+    "points": [
+      {
+        "x": 0,
+        "y": 0,
+        "kind": "station",
+        "label": "carga"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "kind": "station",
+        "label": "descarga"
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "kind": "station",
+        "label": "triagem"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "kind": "blocked"
+      }
+    ],
+    "closedEdges": []
+  },
+  {
+    "id": "pista-2",
+    "version": 1,
+    "name": "Pista 2 — Expedição",
+    "cols": 5,
+    "rows": 4,
+    "points": [
+      {
+        "x": 4,
+        "y": 0,
+        "kind": "station",
+        "label": "doca 1"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "kind": "station",
+        "label": "doca 2"
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "kind": "station",
+        "label": "estoque"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "kind": "blocked"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "kind": "blocked"
+      }
+    ],
+    "closedEdges": []
+  },
+  {
+    "id": "pista-3",
+    "version": 1,
+    "name": "Pista 3 — Triagem",
+    "cols": 5,
+    "rows": 4,
+    "points": [
+      {
+        "x": 0,
+        "y": 3,
+        "kind": "station",
+        "label": "triagem"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "kind": "station",
+        "label": "inspeção"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "kind": "station",
+        "label": "rejeito"
+      }
+    ],
+    "closedEdges": []
+  },
+  {
+    "id": "pista-4",
+    "version": 1,
+    "name": "Pista 4 — Doca 3",
+    "cols": 4,
+    "rows": 4,
+    "points": [
+      {
+        "x": 0,
+        "y": 0,
+        "kind": "station",
+        "label": "doca 3"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "kind": "station",
+        "label": "pátio"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "kind": "blocked"
+      }
+    ],
+    "closedEdges": []
+  }
+]

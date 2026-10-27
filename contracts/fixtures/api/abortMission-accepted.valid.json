@@ -1,0 +1,9 @@
+{
+  "schema": "abortMission.response",
+  "description": "202 pendente",
+  "value": {
+    "commandId": "cmd-13",
+    "missionId": "RF-0113",
+    "status": "pending"
+  }
+}

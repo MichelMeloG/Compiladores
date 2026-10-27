@@ -1,0 +1,8 @@
+{
+  "schema": "forceCloseMission.response",
+  "description": "Missão incerta encerrada sem confirmação do dispositivo",
+  "value": {
+    "missionId": "RF-0113",
+    "state": "aborted"
+  }
+}

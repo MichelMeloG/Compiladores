@@ -1,0 +1,113 @@
+{
+  "aviso": "Resultado de verifyRequest (contracts/dist/signing.js) com toleranceSeconds=120 (padrão do backend: DEVICE_CLOCK_SKEW_MS=120000). A ordem de checagem é: cabeçalhos → assinatura → relógio → sequência.",
+  "toleranciaSegundos": 120,
+  "vetores": [
+    {
+      "id": "n0-controle",
+      "note": "Sem alterar nada: aceito",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "nenhuma",
+      "resultadoEsperado": {
+        "ok": true
+      }
+    },
+    {
+      "id": "n1-corpo-adulterado",
+      "note": "Corpo difere do assinado (um espaço a mais)",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "corpo + \" \"",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "SIGNATURE_INVALID"
+      }
+    },
+    {
+      "id": "n2-segredo-errado",
+      "note": "Servidor com outro segredo",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "segredo diferente",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "SIGNATURE_INVALID"
+      }
+    },
+    {
+      "id": "n3-relogio-servidor-adiantado",
+      "note": "Relógio do servidor 121 s à frente do timestamp (tolerância 120 s)",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "now = timestamp + 121",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "CLOCK_SKEW"
+      }
+    },
+    {
+      "id": "n4-relogio-dispositivo-adiantado",
+      "note": "Relógio do dispositivo 121 s à frente do servidor",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "now = timestamp - 121",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "CLOCK_SKEW"
+      }
+    },
+    {
+      "id": "n4b-limite-da-tolerancia",
+      "note": "Exatamente 120 s de diferença: ainda aceito",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "now = timestamp + 120",
+      "resultadoEsperado": {
+        "ok": true
+      }
+    },
+    {
+      "id": "n5-replay",
+      "note": "Mesma X-Sequence já aceita",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "lastAcceptedSequence = 3 (= X-Sequence)",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "REPLAY_DETECTED"
+      }
+    },
+    {
+      "id": "n6-sequencia-antiga",
+      "note": "X-Sequence menor que a última aceita",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "lastAcceptedSequence = 9",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "REPLAY_DETECTED"
+      }
+    },
+    {
+      "id": "n7-sem-assinatura",
+      "note": "Cabeçalho X-Signature ausente",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "sem x-signature",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "SIGNATURE_INVALID"
+      }
+    },
+    {
+      "id": "n8-assinatura-maiuscula",
+      "note": "Assinatura em HEX MAIÚSCULO: o servidor converte para minúsculas (aceita)",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "x-signature em maiúsculas",
+      "resultadoEsperado": {
+        "ok": true
+      }
+    },
+    {
+      "id": "n9-timestamp-decimal",
+      "note": "X-Timestamp com decimal",
+      "baseadoEm": "v3-events-ack",
+      "alteracao": "x-timestamp = \"1790000003.5\"",
+      "resultadoEsperado": {
+        "ok": false,
+        "error": "SIGNATURE_INVALID"
+      }
+    }
+  ]
+}

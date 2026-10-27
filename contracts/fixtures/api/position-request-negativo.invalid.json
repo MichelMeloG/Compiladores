@@ -1,0 +1,9 @@
+{
+  "schema": "confirmPosition.request",
+  "description": "coordenada negativa",
+  "value": {
+    "x": -1,
+    "y": 3,
+    "heading": "N"
+  }
+}

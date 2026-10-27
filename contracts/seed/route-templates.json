@@ -1,0 +1,176 @@
+[
+  {
+    "id": "rota-carga-descarga",
+    "version": 1,
+    "name": "Carga até descarga",
+    "mapId": "pista-1",
+    "mapVersion": 1,
+    "initialHeading": "E",
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "id": "rota-descarga-carga",
+    "version": 1,
+    "name": "Descarga até carga",
+    "mapId": "pista-1",
+    "mapVersion": 1,
+    "initialHeading": "W",
+    "waypoints": [
+      {
+        "x": 4,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "id": "rota-estoque-doca1",
+    "version": 1,
+    "name": "Estoque até doca 1",
+    "mapId": "pista-2",
+    "mapVersion": 1,
+    "initialHeading": "N",
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "id": "rota-triagem-inspecao",
+    "version": 1,
+    "name": "Triagem até inspeção",
+    "mapId": "pista-3",
+    "mapVersion": 1,
+    "initialHeading": "N",
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 2
+      },
+      {
+        "x": 0,
+        "y": 1
+      },
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      }
+    ]
+  },
+  {
+    "id": "rota-doca3-patio",
+    "version": 1,
+    "name": "Doca 3 até pátio",
+    "mapId": "pista-4",
+    "mapVersion": 1,
+    "initialHeading": "E",
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 0
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      }
+    ]
+  }
+]

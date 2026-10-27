@@ -1,0 +1,9 @@
+{
+  "schema": "startMission.response",
+  "description": "status deve ser pending",
+  "value": {
+    "commandId": "cmd-12",
+    "missionId": "RF-0113",
+    "status": "accepted"
+  }
+}

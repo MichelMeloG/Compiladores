@@ -1,0 +1,450 @@
+{
+  "schema": "deviceEvents.request",
+  "description": "mais de 16 eventos",
+  "value": {
+    "events": [
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e0",
+        "sequence": 100,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e1",
+        "sequence": 101,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e2",
+        "sequence": 102,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e3",
+        "sequence": 103,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e4",
+        "sequence": 104,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e5",
+        "sequence": 105,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e6",
+        "sequence": 106,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e7",
+        "sequence": 107,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e8",
+        "sequence": 108,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e9",
+        "sequence": 109,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e10",
+        "sequence": 110,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e11",
+        "sequence": 111,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e12",
+        "sequence": 112,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e13",
+        "sequence": 113,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e14",
+        "sequence": 114,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e15",
+        "sequence": 115,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      },
+      {
+        "v": 1,
+        "deviceId": "RB-01",
+        "sessionId": "boot-7",
+        "uptimeMs": 18000,
+        "type": "telemetry",
+        "messageId": "e16",
+        "sequence": 116,
+        "state": "blocked",
+        "missionId": "RF-0112",
+        "routeRevision": 1,
+        "actionIndex": 3,
+        "phase": "following_segment",
+        "line": [
+          0,
+          1,
+          0
+        ],
+        "distanceCm": 18.2,
+        "distanceValid": true,
+        "distanceAgeMs": 25,
+        "blockId": "block-4",
+        "blockReasons": [
+          "obstacle"
+        ]
+      }
+    ]
+  }
+}

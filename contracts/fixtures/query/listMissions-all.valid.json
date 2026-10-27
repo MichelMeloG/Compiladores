@@ -1,0 +1,8 @@
+{
+  "schema": "listMissions.query",
+  "description": "\"all\" equivale a omitido",
+  "value": {
+    "status": "all",
+    "period": "all"
+  }
+}

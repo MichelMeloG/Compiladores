@@ -1,0 +1,15 @@
+{
+  "seedNow": "2026-10-26T18:00:00.000Z",
+  "note": "Gerado por scripts/build-seed.mjs. Não edite à mão.",
+  "files": [
+    "maps.json",
+    "devices.json",
+    "robots.json",
+    "route-templates.json",
+    "active-routes.json",
+    "events.json",
+    "missions.json",
+    "mission-states.json",
+    "alerts.json"
+  ]
+}

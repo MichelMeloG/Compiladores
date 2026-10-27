@@ -1,0 +1,9 @@
+{
+  "schema": "error",
+  "description": "success deve ser false",
+  "value": {
+    "success": true,
+    "message": "x",
+    "error": "INTERNAL"
+  }
+}

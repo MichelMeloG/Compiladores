@@ -1,0 +1,15 @@
+{
+  "schema": "device.block_started",
+  "description": "reasons não pode ser vazio",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "block_started",
+    "messageId": "evt-33",
+    "sequence": 33,
+    "blockId": "block-4",
+    "reasons": []
+  }
+}

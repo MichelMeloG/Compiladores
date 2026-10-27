@@ -1,0 +1,62 @@
+{
+  "schema": "listAlerts.response",
+  "description": "Alertas do seed",
+  "value": [
+    {
+      "id": "alt-01",
+      "title": "Linha perdida durante o trajeto",
+      "description": "Transição FOLLOWING -> LOST_TRACK na rota RF-0109, entre triagem e inspeção.",
+      "severity": "error",
+      "timestamp": "2026-10-26T16:22:51.000Z",
+      "missionId": "RF-0109",
+      "robotId": "RB-03",
+      "occurrenceCount": 1,
+      "acknowledged": false,
+      "relatedEventIds": [
+        "evt-10903"
+      ]
+    },
+    {
+      "id": "alt-02",
+      "title": "Falha de comunicação com o ESP32",
+      "description": "Timeout na leitura serial após 3 tentativas durante a rota RF-0106.",
+      "severity": "critical",
+      "timestamp": "2026-10-24T09:30:47.000Z",
+      "missionId": "RF-0106",
+      "robotId": "RB-03",
+      "occurrenceCount": 1,
+      "acknowledged": false,
+      "relatedEventIds": [
+        "evt-10602"
+      ]
+    },
+    {
+      "id": "alt-03",
+      "title": "Desvio de trajetória recorrente",
+      "description": "Erro lateral acima do limite em 2 das últimas 3 rotas da doca 1.",
+      "severity": "warning",
+      "timestamp": "2026-10-25T14:12:55.000Z",
+      "missionId": "RF-0107",
+      "robotId": "RB-02",
+      "occurrenceCount": 2,
+      "acknowledged": false,
+      "relatedEventIds": [
+        "evt-10702"
+      ]
+    },
+    {
+      "id": "alt-04",
+      "title": "Paradas recorrentes por presença",
+      "description": "2 paradas preventivas por detecção de presença nas últimas rotas da frota.",
+      "severity": "warning",
+      "timestamp": "2026-10-26T08:15:42.000Z",
+      "occurrenceCount": 2,
+      "acknowledged": true,
+      "acknowledgedAt": "2026-10-26T09:00:00.000Z",
+      "relatedEventIds": [
+        "evt-11103",
+        "evt-11002"
+      ]
+    }
+  ]
+}

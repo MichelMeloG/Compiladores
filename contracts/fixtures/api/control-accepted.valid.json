@@ -1,0 +1,9 @@
+{
+  "schema": "startMission.response",
+  "description": "202 pendente",
+  "value": {
+    "commandId": "cmd-12",
+    "missionId": "RF-0113",
+    "status": "pending"
+  }
+}

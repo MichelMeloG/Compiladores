@@ -1,0 +1,7 @@
+{
+  "schema": "deviceEvents.request",
+  "description": "lote vazio",
+  "value": {
+    "events": []
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "confirmPosition.response",
+  "description": "currentPoint deve ser \"x,y\"",
+  "value": {
+    "currentPoint": "(0, 3)",
+    "heading": "N",
+    "positionConfidence": "confirmed"
+  }
+}

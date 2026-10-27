@@ -1,0 +1,17 @@
+{
+  "schema": "device.ack",
+  "description": "Aceitação de comando",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "ack",
+    "messageId": "evt-2",
+    "sequence": 2,
+    "replyTo": "cmd-10",
+    "result": "accepted",
+    "missionId": "RF-0113",
+    "routeRevision": 1
+  }
+}

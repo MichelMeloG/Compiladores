@@ -1,0 +1,15 @@
+{
+  "name": "budget-killswitch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Corta o tráfego público do roboflow-api quando o orçamento é atingido",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

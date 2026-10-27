@@ -1,0 +1,9 @@
+{
+  "schema": "error",
+  "description": "código fora do enum",
+  "value": {
+    "success": false,
+    "message": "x",
+    "error": "OOPS"
+  }
+}

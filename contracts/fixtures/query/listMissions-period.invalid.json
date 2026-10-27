@@ -1,0 +1,7 @@
+{
+  "schema": "listMissions.query",
+  "description": "period inválido",
+  "value": {
+    "period": "90d"
+  }
+}

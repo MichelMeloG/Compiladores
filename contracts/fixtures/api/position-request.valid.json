@@ -1,0 +1,9 @@
+{
+  "schema": "confirmPosition.request",
+  "description": "O operador confirma cruzamento e rumo",
+  "value": {
+    "x": 0,
+    "y": 3,
+    "heading": "N"
+  }
+}

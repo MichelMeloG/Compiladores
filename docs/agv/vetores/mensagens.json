@@ -1,0 +1,263 @@
+{
+  "aviso": "Mensagens de exemplo validadas contra os schemas de @roboflow/contracts em 26/10/2026. Segredo e IDs fictícios.",
+  "uplink": {
+    "hello": {
+      "v": 1,
+      "type": "hello",
+      "messageId": "hello-boot-7-lq3k9z",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "sequence": 1,
+      "uptimeMs": 1840,
+      "firmwareVersion": "0.1.0",
+      "protocolVersion": 1,
+      "capabilities": {
+        "supportsReverse": false,
+        "maxActions": 64,
+        "maxMessageBytes": 4096
+      },
+      "state": "ready"
+    },
+    "ack": {
+      "events": [
+        {
+          "v": 1,
+          "type": "ack",
+          "messageId": "evt-boot-7-lq3k9z-2",
+          "deviceId": "RB-01",
+          "sessionId": "boot-7-lq3k9z",
+          "sequence": 2,
+          "uptimeMs": 5210,
+          "replyTo": "cmd-0001",
+          "result": "accepted",
+          "missionId": "RF-0113",
+          "routeRevision": 1
+        }
+      ]
+    },
+    "progresso": {
+      "events": [
+        {
+          "v": 1,
+          "type": "action_started",
+          "messageId": "evt-boot-7-lq3k9z-3",
+          "deviceId": "RB-01",
+          "sessionId": "boot-7-lq3k9z",
+          "sequence": 3,
+          "uptimeMs": 9000,
+          "missionId": "RF-0113",
+          "routeRevision": 1,
+          "actionIndex": 0,
+          "command": "F"
+        },
+        {
+          "v": 1,
+          "type": "action_completed",
+          "messageId": "evt-boot-7-lq3k9z-4",
+          "deviceId": "RB-01",
+          "sessionId": "boot-7-lq3k9z",
+          "sequence": 4,
+          "uptimeMs": 12500,
+          "missionId": "RF-0113",
+          "routeRevision": 1,
+          "actionIndex": 0,
+          "expectedNode": "0,2"
+        }
+      ]
+    },
+    "falhaUtf8": {
+      "events": [
+        {
+          "v": 1,
+          "type": "fault",
+          "messageId": "evt-boot-7-lq3k9z-9",
+          "deviceId": "RB-01",
+          "sessionId": "boot-7-lq3k9z",
+          "sequence": 9,
+          "uptimeMs": 40000,
+          "code": "ULTRASONIC_TIMEOUT",
+          "message": "Sensor frontal sem eco — obstáculo ou leitura inválida",
+          "severity": "error",
+          "missionId": "RF-0113"
+        }
+      ]
+    }
+  },
+  "downlink": {
+    "load_route": {
+      "v": 1,
+      "type": "load_route",
+      "messageId": "cmd-0001",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "missionId": "RF-0113",
+      "validForMs": 120000,
+      "routeRevision": 1,
+      "actions": [
+        "F",
+        "D",
+        "E"
+      ],
+      "expectedNodes": [
+        "0,2",
+        "1,2",
+        "1,1"
+      ],
+      "startNode": "0,3",
+      "initialHeading": "N"
+    },
+    "start": {
+      "v": 1,
+      "type": "start",
+      "messageId": "cmd-0002",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "missionId": "RF-0113",
+      "validForMs": 60000,
+      "routeRevision": 1
+    },
+    "stop": {
+      "v": 1,
+      "type": "stop",
+      "messageId": "cmd-0003",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "missionId": "RF-0113",
+      "validForMs": 60000
+    },
+    "resume": {
+      "v": 1,
+      "type": "resume",
+      "messageId": "cmd-0004",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "missionId": "RF-0113",
+      "validForMs": 60000,
+      "routeRevision": 1,
+      "blockId": "block-boot-7-lq3k9z-1"
+    },
+    "abort": {
+      "v": 1,
+      "type": "abort",
+      "messageId": "cmd-0005",
+      "deviceId": "RB-01",
+      "sessionId": "boot-7-lq3k9z",
+      "missionId": "RF-0113",
+      "validForMs": 60000
+    }
+  },
+  "respostaSync": {
+    "sessionId": "boot-7-lq3k9z",
+    "serverTime": "2026-10-26T21:00:00.000Z",
+    "nextPollMs": 1500,
+    "ackedSequence": 4,
+    "resync": false,
+    "commands": [
+      {
+        "v": 1,
+        "type": "start",
+        "messageId": "cmd-0002",
+        "deviceId": "RB-01",
+        "sessionId": "boot-7-lq3k9z",
+        "missionId": "RF-0113",
+        "validForMs": 60000,
+        "routeRevision": 1
+      }
+    ]
+  },
+  "respostaHello": {
+    "sessionId": "boot-7-lq3k9z",
+    "serverTime": "2026-10-26T21:00:00.000Z",
+    "nextPollMs": 1500,
+    "ackedSequence": 1,
+    "resync": false,
+    "commands": [
+      {
+        "v": 1,
+        "type": "load_route",
+        "messageId": "cmd-0001",
+        "deviceId": "RB-01",
+        "sessionId": "boot-7-lq3k9z",
+        "missionId": "RF-0113",
+        "validForMs": 120000,
+        "routeRevision": 1,
+        "actions": [
+          "F",
+          "D",
+          "E"
+        ],
+        "expectedNodes": [
+          "0,2",
+          "1,2",
+          "1,1"
+        ],
+        "startNode": "0,3",
+        "initialHeading": "N"
+      }
+    ],
+    "accepted": true,
+    "reconcileRequired": false,
+    "limits": {
+      "supportsReverse": false,
+      "maxActions": 64,
+      "maxMessageBytes": 4096
+    }
+  },
+  "validacao": [
+    {
+      "id": "hello",
+      "schema": "HelloMessageSchema",
+      "valido": true
+    },
+    {
+      "id": "events-ack",
+      "schema": "DeviceEventsRequestSchema",
+      "valido": true
+    },
+    {
+      "id": "events-progresso",
+      "schema": "DeviceEventsRequestSchema",
+      "valido": true
+    },
+    {
+      "id": "events-falhaUtf8",
+      "schema": "DeviceEventsRequestSchema",
+      "valido": true
+    },
+    {
+      "id": "downlink-load_route",
+      "schema": "DeviceCommandMessageSchema",
+      "valido": true
+    },
+    {
+      "id": "downlink-start",
+      "schema": "DeviceCommandMessageSchema",
+      "valido": true
+    },
+    {
+      "id": "downlink-stop",
+      "schema": "DeviceCommandMessageSchema",
+      "valido": true
+    },
+    {
+      "id": "downlink-resume",
+      "schema": "DeviceCommandMessageSchema",
+      "valido": true
+    },
+    {
+      "id": "downlink-abort",
+      "schema": "DeviceCommandMessageSchema",
+      "valido": true
+    },
+    {
+      "id": "resposta-poll",
+      "schema": "DeviceSyncResponseSchema",
+      "valido": true
+    },
+    {
+      "id": "resposta-hello",
+      "schema": "DeviceHelloResponseSchema",
+      "valido": true
+    }
+  ]
+}

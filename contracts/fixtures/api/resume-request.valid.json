@@ -1,0 +1,8 @@
+{
+  "schema": "resumeMission.request",
+  "description": "Retomada com o bloqueio exibido",
+  "value": {
+    "sessionId": "boot-7",
+    "blockId": "block-4"
+  }
+}

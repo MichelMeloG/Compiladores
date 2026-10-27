@@ -1,0 +1,31 @@
+{
+  "schema": "previewRoute.response",
+  "description": "Prévia não executável (salto) com errors[]",
+  "value": {
+    "robotId": "RB-01",
+    "mapId": "pista-1",
+    "mapVersion": 1,
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": 2
+      }
+    ],
+    "actions": [],
+    "expectedNodes": [],
+    "initialHeading": "S",
+    "finalHeading": null,
+    "executable": false,
+    "errors": [
+      {
+        "code": "STEP_JUMP",
+        "index": 1,
+        "message": "O passo 1 salta de (0, 0) para (0, 2); inclua os cruzamentos intermediários."
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+# Copie para terraform.tfvars (ignorado pelo git) e ajuste.
+project_id      = "compiladores-512823"
+region          = "us-central1"
+github_repo     = "MichelMeloG/Compiladores"
+billing_account = "01B754-38F742-DA56DB"
+
+# Conta de faturamento em BRL: 5 BRL ~ US$1. A moeda precisa coincidir com a da conta.
+budget_amount   = 5
+budget_currency = "BRL"
+# Os e-mails de alerta de orçamento vão para os administradores da conta de faturamento.
+
+# Allowlist de operadores (e-mails Google). Vazio = ninguém autorizado.
+operator_emails = ["voce@example.com"]
+
+# Segredos HMAC dos dispositivos. OBRIGATÓRIO e NUNCA versionado (este arquivo .example só
+# traz um marcador). Gere 64 hex por AGV (ver infra/README.md).
+device_secrets_json = "{\"RB-01\":\"TROQUE_POR_64_HEX\"}"
+
+# TTL do Firestore (coleção = campo Timestamp). Vazio até o backend gravar Timestamps.
+firestore_ttl_fields = {}
+
+cors_origins = ["https://michelmelog.github.io"]
+auth_mode    = "firebase"
+log_level    = "info"
+
+# Estágios do bootstrap (ver infra/README.md). Comece tudo em false e ligue na ordem.
+enable_killswitch_service = false
+enable_budget             = false
+enable_main_stack         = false
+
+use_placeholder_image = true
+image_tag             = "bootstrap"
+killswitch_image_tag  = "v1"

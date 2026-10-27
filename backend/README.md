@@ -1,5 +1,7 @@
 # Backend RoboFlow — documentação técnica para implementação futura
 
+> **Aviso (26/10/2026):** a arquitetura de nuvem — **Cloud Run, poll HTTPS do ESP32, Firestore, Pub/Sub** — **supera** as seções deste documento que tratam de serial USB, backend no computador do operador, heartbeat/expiração de 250 ms / 1.000 ms e "stack/banco não escolhidos". Essas seções continuam abaixo, marcadas como **SUPERADAS**, só como histórico. Convenção de coordenadas: **y para baixo** (§4–§5 atualizadas). Decisões em [docs/adr/0001 a 0005](../docs/adr) (e [0008](../docs/adr/0008-um-start-resume-pendente-por-vez.md)); modelo de dados em [docs/FIRESTORE_MODEL.md](../docs/FIRESTORE_MODEL.md); contrato executável em [contracts/](../contracts).
+
 **Estado:** especificação; o backend ainda não foi implementado. Esta pasta contém somente documentação. Atualizado em 21/10/2026.
 
 Este documento descreve o comportamento esperado, os dados, as interfaces e os critérios para construir o backend. Exemplos de mensagens e endpoints novos são contratos propostos para implementação, não recursos disponíveis para uso.
@@ -27,6 +29,8 @@ Não há medição de velocidade, encoders ou localização absoluta na configur
 O contrato HTTP e os tipos existentes devem ser preservados. O plano apresenta a ordem de trabalho; este README detalha a implementação futura. Alterações nos contratos compartilhados deverão atualizar ambos os documentos e os clientes afetados.
 
 Atualmente há lexer, parser, AST, exemplos RoboFlow e uma dashboard. Não há servidor backend, banco configurado, protocolo operacional integrado ou firmware gerado executando esse fluxo. Seleção de rota e controles operacionais ainda exigem mudanças no frontend.
+
+> **SUPERADO (ADR 0001, 0003):** ~~Stack, banco e transporte sem cabo ainda não foram escolhidos.~~ Escolhidos: Cloud Run (TypeScript), Firestore nativo e poll HTTPS do ESP32. Este documento não apresenta comandos de instalação de um servidor inexistente.
 
 Stack, banco e transporte sem cabo ainda não foram escolhidos. Este documento não apresenta comandos de instalação de um servidor inexistente.
 
@@ -62,12 +66,13 @@ Avisos equivalentes a `signal_light`, `signal_buzzer` e logs são apresentados v
 
 A pista é uma grade de linhas e colunas desenhada no chão. Cada cruzamento é um nó `(x,y)` e cada trecho percorrido conecta dois cruzamentos vizinhos consecutivos.
 
-Convenção proposta, compartilhada com o planejador:
+Convenção adotada ([ADR 0004](../docs/adr/0004-eixo-de-coordenadas.md)), compartilhada com o planejador e com a dashboard:
 
-- `x` aumenta para leste, `y` aumenta para norte.
+- Coordenadas 0-indexadas, origem `(0,0)` no canto superior esquerdo: `x` aumenta para a direita (leste) e `y` aumenta para **baixo** (sul).
 - Coordenadas são inteiras, com incremento de uma unidade por cruzamento.
-- Orientação do chassi: `N`, `E`, `S`, `W`.
+- Orientação do chassi: `N=(0,-1)`, `E=(+1,0)`, `S=(0,+1)`, `W=(-1,0)`.
 - Orientação `E` significa leste; comando `E` significa esquerda.
+- Identificador de nó: `"x,y"`.
 - Conexões físicas são cadastradas explicitamente, inclusive sentidos permitidos e trechos indisponíveis.
 
 Antes de iniciar, o operador confirma o cruzamento e a orientação inicial do carrinho. O backend não deve supor que ele está na origem de uma missão anterior.
@@ -81,10 +86,10 @@ Uma rota de `(0,0)` até `(0,2)` deverá incluir `(0,1)`. O contrato do executor
   "id": "pista-1",
   "version": 1,
   "nodes": [
-    {"id":"A","x":0,"y":0},
-    {"id":"B","x":0,"y":1},
-    {"id":"C","x":1,"y":1},
-    {"id":"D","x":1,"y":2}
+    {"id":"A","x":0,"y":3},
+    {"id":"B","x":0,"y":2},
+    {"id":"C","x":1,"y":2},
+    {"id":"D","x":1,"y":1}
   ],
   "edges": [
     {"from":"A","to":"B"},
@@ -133,8 +138,8 @@ heading = orientacao_inicial
 
 para cada par consecutivo (origem, destino):
     validar vizinhanca e aresta fisica
-    rumo = N se delta=(0,+1), E se (+1,0),
-           S se (0,-1), W se (-1,0)
+    rumo = N se delta=(0,-1), E se (+1,0),
+           S se (0,+1), W se (-1,0)      # y cresce para baixo
     diferenca = (indice(rumo) - indice(heading) + 4) mod 4
 
     se diferenca == 0: comando = F
@@ -146,7 +151,7 @@ para cada par consecutivo (origem, destino):
     guardar comando, origem, destino, heading antes/depois
 ```
 
-Para `A(0,0) → B(0,1) → C(1,1) → D(1,2)`, iniciando em N:
+Para `A(0,3) → B(0,2) → C(1,2) → D(1,1)`, iniciando em N (y para baixo):
 
 | Índice | Trecho | Rumo antes → depois | Comando |
 |---|---|---|---|
@@ -154,7 +159,7 @@ Para `A(0,0) → B(0,1) → C(1,1) → D(1,2)`, iniciando em N:
 | 1 | B → C | N → E | D |
 | 2 | C → D | E → N | E |
 
-Resultado: `["F","D","E"]`. Quatro pontos produzem três ações. A origem não conta como ação concluída.
+Resultado: `["F","D","E"]`. Quatro pontos produzem três ações. A origem não conta como ação concluída. A implementação de referência é `translateRoute` em [contracts/src/geometry.ts](../contracts/src/geometry.ts).
 
 O primeiro planejador valida e traduz uma sequência cadastrada; não precisa escolher automaticamente o menor caminho. Busca automática entre origem/destino pode ser adicionada depois, considerando orientação e capacidades para evitar rotas inexequíveis.
 
@@ -214,16 +219,18 @@ Idempotência de criação HTTP: mesma chave e mesmo corpo retornam o resultado 
 
 | Estado interno | Significado | Próximas transições principais |
 |---|---|---|
-| queued | Missão persistida, dispositivo reservado | loading, failed |
-| loading | Fila enviada, aguardando aceitação | ready, failed, uncertain |
-| ready | Fila aceita, motores parados | running, aborted |
-| running | Execução confirmada | blocked, paused, completed, failed, uncertain |
+| queued | Missão persistida, dispositivo reservado | loading, failed, aborted |
+| loading | Fila enviada, aguardando aceitação | ready, failed, uncertain, aborted |
+| ready | Fila aceita, motores parados | running, aborted, failed, uncertain |
+| running | Execução confirmada | blocked, paused, completed, failed, uncertain, aborted |
 | blocked | Supervisor impede movimento | running após liberação aceita, aborted, failed, uncertain |
 | paused | Parada solicitada e confirmada | running após liberação aceita, aborted, uncertain |
 | completed | Última ação e parada final confirmadas | Terminal |
 | aborted | Cancelamento e invalidação da fila confirmados | Terminal |
 | failed | Falha terminal confirmada | Terminal |
-| uncertain | Estado físico não reconciliado | Reconciliação explícita; não retomar automaticamente |
+| uncertain | Estado físico não reconciliado | Reconciliação por `snapshot`/`hello`: paused, blocked, completed, aborted, failed. Nunca volta a `running` sozinho. `force-close` (admin) leva a aborted |
+
+> **Atualizado (26/10/2026, `contracts` 1.1.0):** a tabela inclui as transições `queued/loading/running → aborted` e `uncertain → completed/blocked`; a fonte executável é `MISSION_TRANSITIONS` em `contracts/src/mission.ts`.
 
 Um pedido de start/resume/abort não muda o estado para seu resultado final até o ESP32 confirmar. Pedido pendente é registrado em `DeviceCommand` e exposto pela API.
 
@@ -364,7 +371,9 @@ Erros previstos: `404` recurso inexistente, `409` conflito de estado/idempotênc
 
 ## 11. Protocolo com o ESP32
 
-### 11.1 Transporte e identificação
+### 11.1 Transporte e identificação — SUPERADA
+
+> **SUPERADA pelo [ADR 0001](../docs/adr/0001-transporte-agv-nuvem.md):** o transporte é **HTTPS por poll** (`POST /device/hello`, `GET /device/poll`, `POST /device/events`), não serial USB, e o backend roda no Cloud Run, não no computador do operador. Os conceitos de envelope, sessão, sequência e limites continuam válidos; veja `contracts/src/device.ts`. O texto abaixo é histórico.
 
 Proposta inicial de bancada: serial USB, 115200 baud, 8N1, uma mensagem JSON UTF-8 por linha terminada em `\n`. O backend utiliza a porta configurada; o Monitor Serial da Arduino IDE não pode ocupá-la simultaneamente.
 
@@ -394,7 +403,9 @@ Fila é recebida e validada integralmente enquanto parado, com arrays de mesmo c
 
 `reject` usa `replyTo` e `reason`, por exemplo `INVALID_SESSION`, `BUSY`, `UNSUPPORTED_ACTION`, `QUEUE_TOO_LARGE`, `BLOCKED`, `STALE_BLOCK` ou `EXPIRED`.
 
-### 11.3 Controle e validade
+### 11.3 Controle e validade — heartbeat/autorização SUPERADOS
+
+> **SUPERADO pelo [ADR 0002](../docs/adr/0002-perda-de-comunicacao.md):** não há heartbeat de 250 ms nem expiração local de 1.000 ms (inviáveis em HTTPS e acima da cota gratuita). A fila carregada executa localmente, os vetos locais são soberanos, sem nuvem o AGV segura no próximo cruzamento, e stop/abort remotos são melhor esforço. Comandos levam `validForMs` relativo ao recebimento. As regras de `start`/`resume` (fila correta, estado permitido, `blockId` atual) continuam válidas; veja também o [ADR 0008](../docs/adr/0008-um-start-resume-pendente-por-vez.md). O texto abaixo é histórico.
 
 Mensagens de controle: `start`, `stop`, `resume`, `abort`. Para aceitar start/resume, exigir a fila correta, estado permitido e supervisor liberado. Resume também referencia o bloqueio atual; pedidos rejeitados não ficam pendentes.
 
@@ -429,7 +440,7 @@ Distância inválida usa `null` e indicador de validade; não usar valor artific
 
 ## 12. Supervisor, parada e retomada
 
-O supervisor do ESP32 bloqueia movimento por obstáculo, leitura inválida/vencida, perda da linha fora das fases de manobra válidas, falha e parada solicitada. Expiração da comunicação é um bloqueio adicional proposto.
+O supervisor do ESP32 bloqueia movimento por obstáculo, leitura inválida/vencida, perda da linha fora das fases de manobra válidas, falha e parada solicitada. Expiração da comunicação é um bloqueio adicional proposto (**SUPERADO pelo [ADR 0002](../docs/adr/0002-perda-de-comunicacao.md)**: sem nuvem, o AGV conclui o trecho e segura no próximo cruzamento).
 
 Parâmetros iniciais dos documentos físicos: parar em ≤20 cm, considerar recuperação após três leituras consecutivas ≥25 cm, tratar idade >200 ms como distância vencida e adquirir ultrassom inicialmente a cada 70 ms. Esses valores não equivalem a uma distância de frenagem comprovada e serão calibrados no protótipo.
 
@@ -444,6 +455,8 @@ Implementar seleção de rota, prévia dos pontos e da fila, confirmação da or
 O cliente atual carrega dados ao abrir páginas, alterar filtros ou atualizar manualmente. Para operação acompanhada, acrescentar polling configurável ou outro canal explícito. Não prometer atualização contínua antes dessa implementação.
 
 Publicação estática da dashboard não hospeda o backend. Configurar `VITE_API_URL` para o serviço real e desativar `VITE_DEMO=true` na operação. O contrato antigo afirma ausência de demo, mas o README e o código documentam demonstração isolada; dados fictícios não devem acionar dispositivos reais.
+
+> **SUPERADO (ADR 0001):** o backend roda no Cloud Run e o ESP32 o acessa por HTTPS; a premissa de backend no computador do operador, conectado por USB, não vale mais.
 
 O transporte com o dispositivo pertence ao backend. Se ele rodar no computador conectado por USB, sua disponibilidade e acesso pela origem da dashboard precisam ser configurados; uma página hospedada remotamente não torna essa conexão disponível por si só.
 
@@ -482,6 +495,8 @@ Casos de teste indispensáveis:
 - Formatos HTTP, enums, filtros e métricas permanecem compatíveis com o frontend.
 
 ## 16. Decisões ainda pendentes
+
+> **SUPERADO (ADR 0001, 0003):** stack (TypeScript no Cloud Run), banco (Firestore) e transporte (poll HTTPS) já estão decididos. Seguem pendentes os itens físicos abaixo.
 
 Stack e banco; tamanho e dimensões físicas da grade; reconhecimento/alinhamento dos cruzamentos; comportamento de curvas; transporte operacional sem cabo; limites de memória e temporização; detalhes finais de autorização/heartbeat; validação da marcha à ré e integração com a extensão da DSL.
 

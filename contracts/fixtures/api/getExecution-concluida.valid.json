@@ -1,0 +1,22 @@
+{
+  "schema": "getExecution.response",
+  "description": "actionIndex null ao concluir a fila",
+  "value": {
+    "missionId": "RF-0112",
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "state": "completed",
+    "actionIndex": null,
+    "completedActions": 6,
+    "totalActions": 6,
+    "lastConfirmedNode": "2,1",
+    "expectedNode": null,
+    "atNode": true,
+    "positionConfidence": "estimated",
+    "headingAtLastConfirmedNode": "S",
+    "blockId": null,
+    "blockReasons": [],
+    "pendingCommands": [],
+    "updatedAt": "2026-10-26T17:59:00.000Z"
+  }
+}

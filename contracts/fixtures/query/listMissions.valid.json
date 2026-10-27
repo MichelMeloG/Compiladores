@@ -1,0 +1,10 @@
+{
+  "schema": "listMissions.query",
+  "description": "Filtros comuns",
+  "value": {
+    "period": "7d",
+    "robotId": "RB-01",
+    "status": "completed",
+    "limit": "25"
+  }
+}

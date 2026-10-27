@@ -1,0 +1,9 @@
+{
+  "schema": "confirmPosition.response",
+  "description": "só pode ser confirmed",
+  "value": {
+    "currentPoint": "0,3",
+    "heading": "N",
+    "positionConfidence": "estimated"
+  }
+}

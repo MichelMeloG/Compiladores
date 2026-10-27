@@ -1,0 +1,24 @@
+{
+  "schema": "command.load_route",
+  "description": "ação inexistente",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "missionId": "RF-0113",
+    "validForMs": 5000,
+    "type": "load_route",
+    "messageId": "cmd-10",
+    "routeRevision": 1,
+    "actions": [
+      "F",
+      "X"
+    ],
+    "expectedNodes": [
+      "1,0",
+      "2,0"
+    ],
+    "startNode": "0,0",
+    "initialHeading": "E"
+  }
+}

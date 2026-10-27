@@ -1,0 +1,12 @@
+# Build mínimo da imagem do kill-switch. Contexto: infra/killswitch.
+# Uso (via infra/scripts/bootstrap.ps1 -Stage 2):
+#   gcloud builds submit infra/killswitch --config infra/cloudbuild/killswitch.yaml ...
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', '${_IMAGE}', '.']
+images:
+  - '${_IMAGE}'
+options:
+  logging: CLOUD_LOGGING_ONLY # sem bucket de logs; exigido ao usar --service-account
+  # machineType omitido: pool padrão (e2-standard-2), o que a cota gratuita cobre.
+timeout: 600s

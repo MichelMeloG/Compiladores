@@ -1,0 +1,17 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+.terraform.tfstate.lock.info
+tfplan*
+
+# Segredos (nunca no repositório)
+*.pem
+*.key
+sa-key*.json
+credentials*.json
+secrets.local*

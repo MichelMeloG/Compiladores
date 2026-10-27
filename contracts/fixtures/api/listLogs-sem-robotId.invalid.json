@@ -1,0 +1,16 @@
+{
+  "schema": "listLogs.response",
+  "description": "robotId obrigatório em cada evento",
+  "value": [
+    {
+      "id": "evt-11201",
+      "missionId": "RF-0112",
+      "timestamp": "2026-10-26T17:34:00.000Z",
+      "eventType": "mission_start",
+      "command": "station \"carga\"",
+      "roverState": "idle",
+      "severity": "info",
+      "message": "Rota iniciada na estação carga, destino descarga."
+    }
+  ]
+}

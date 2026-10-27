@@ -1,0 +1,9 @@
+{
+  "schema": "health.response",
+  "description": "Health",
+  "value": {
+    "status": "ok",
+    "version": "1.0.0",
+    "robotsConnected": 4
+  }
+}

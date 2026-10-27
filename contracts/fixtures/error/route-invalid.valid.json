@@ -1,0 +1,9 @@
+{
+  "schema": "error",
+  "description": "Corpo inválido",
+  "value": {
+    "success": false,
+    "message": "A rota precisa de pelo menos dois pontos.",
+    "error": "ROUTE_INVALID"
+  }
+}

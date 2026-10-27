@@ -1,0 +1,69 @@
+{
+  "schema": "fleetMetrics.response",
+  "description": "Frota com perRobot",
+  "value": {
+    "totalMissions": 10,
+    "completedMissions": 7,
+    "inProgressMissions": 1,
+    "failedMissions": 1,
+    "abortedMissions": 1,
+    "indeterminateMissions": 0,
+    "avgDurationSeconds": 105,
+    "medianDurationSeconds": 105,
+    "minDurationSeconds": 69,
+    "maxDurationSeconds": 159,
+    "totalStops": 4,
+    "presenceStops": 2,
+    "otherStops": 2,
+    "unknownStops": 0,
+    "completionRate": 70,
+    "activeAlertsCount": 3,
+    "totalErrors": 2,
+    "totalRobots": 4,
+    "onlineRobots": 2,
+    "offlineRobots": 1,
+    "errorRobots": 1,
+    "perRobot": [
+      {
+        "robotId": "RB-01",
+        "robotName": "Carregador Norte",
+        "totalMissions": 3,
+        "completedMissions": 2,
+        "totalStops": 1,
+        "totalErrors": 0,
+        "completionRate": 66.7,
+        "avgDurationSeconds": 91
+      },
+      {
+        "robotId": "RB-02",
+        "robotName": "Esteira Leste",
+        "totalMissions": 3,
+        "completedMissions": 3,
+        "totalStops": 2,
+        "totalErrors": 0,
+        "completionRate": 100,
+        "avgDurationSeconds": 117
+      },
+      {
+        "robotId": "RB-03",
+        "robotName": "Triagem Sul",
+        "totalMissions": 3,
+        "completedMissions": 1,
+        "totalStops": 1,
+        "totalErrors": 2,
+        "completionRate": 33.3,
+        "avgDurationSeconds": 105
+      },
+      {
+        "robotId": "RB-04",
+        "robotName": "Expedição Oeste",
+        "totalMissions": 1,
+        "completedMissions": 1,
+        "totalStops": 0,
+        "totalErrors": 0,
+        "completionRate": 100,
+        "avgDurationSeconds": 97
+      }
+    ]
+  }
+}

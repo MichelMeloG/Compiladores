@@ -1,0 +1,12 @@
+{
+  "schema": "devicePoll.response",
+  "description": "Repouso: sem comandos e poll longo",
+  "value": {
+    "sessionId": "boot-7",
+    "serverTime": "2026-10-26T18:00:00.000Z",
+    "nextPollMs": 30000,
+    "ackedSequence": 33,
+    "commands": [],
+    "resync": false
+  }
+}

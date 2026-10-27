@@ -1,0 +1,53 @@
+{
+  "schema": "getRoute.response",
+  "description": "Rota em execução com extensões",
+  "value": {
+    "routeId": "RT-0041",
+    "robotId": "RB-01",
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      },
+      {
+        "x": 3,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 1
+      },
+      {
+        "x": 4,
+        "y": 0
+      }
+    ],
+    "createdAt": "2026-10-26T17:34:00.000Z",
+    "status": "running",
+    "currentWaypointIndex": 3,
+    "missionId": "RF-0112",
+    "state": "running",
+    "initialHeading": "E",
+    "actions": [
+      "F",
+      "F",
+      "D",
+      "E",
+      "F",
+      "E"
+    ],
+    "mapVersion": 1
+  }
+}

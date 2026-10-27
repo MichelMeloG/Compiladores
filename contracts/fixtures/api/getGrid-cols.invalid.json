@@ -1,0 +1,8 @@
+{
+  "schema": "getGrid.response",
+  "description": "cols deve ser positivo",
+  "value": {
+    "cols": 0,
+    "rows": 4
+  }
+}

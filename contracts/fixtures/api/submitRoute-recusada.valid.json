@@ -1,0 +1,10 @@
+{
+  "schema": "submitRoute.response",
+  "description": "Recusa de negócio: HTTP 200 com accepted:false",
+  "value": {
+    "routeId": "",
+    "accepted": false,
+    "waypointCount": 4,
+    "message": "Esteira Leste está offline e não pode receber uma rota agora."
+  }
+}

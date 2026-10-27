@@ -1,0 +1,54 @@
+[
+  {
+    "id": "RB-01",
+    "robotId": "RB-01",
+    "mapId": "pista-1",
+    "mapVersion": 1,
+    "lastConfirmedHeading": "E",
+    "capabilities": {
+      "supportsReverse": false,
+      "maxActions": 64,
+      "maxMessageBytes": 4096
+    },
+    "secretName": "device-secret-RB-01"
+  },
+  {
+    "id": "RB-02",
+    "robotId": "RB-02",
+    "mapId": "pista-2",
+    "mapVersion": 1,
+    "lastConfirmedHeading": "S",
+    "capabilities": {
+      "supportsReverse": false,
+      "maxActions": 64,
+      "maxMessageBytes": 4096
+    },
+    "secretName": "device-secret-RB-02"
+  },
+  {
+    "id": "RB-03",
+    "robotId": "RB-03",
+    "mapId": "pista-3",
+    "mapVersion": 1,
+    "lastConfirmedHeading": "N",
+    "capabilities": {
+      "supportsReverse": false,
+      "maxActions": 64,
+      "maxMessageBytes": 4096
+    },
+    "secretName": "device-secret-RB-03"
+  },
+  {
+    "id": "RB-04",
+    "robotId": "RB-04",
+    "mapId": "pista-4",
+    "mapVersion": 1,
+    "lastConfirmedHeading": "E",
+    "capabilities": {
+      "supportsReverse": false,
+      "maxActions": 64,
+      "maxMessageBytes": 4096
+    },
+    "secretName": "device-secret-RB-04"
+  }
+]

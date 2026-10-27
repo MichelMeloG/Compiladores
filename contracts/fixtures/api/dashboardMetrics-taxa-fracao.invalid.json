@@ -1,0 +1,23 @@
+{
+  "schema": "dashboardMetrics.response",
+  "description": "completionRate é percentual 0–100, não fração >100",
+  "value": {
+    "totalMissions": 10,
+    "completedMissions": 7,
+    "inProgressMissions": 1,
+    "failedMissions": 1,
+    "abortedMissions": 1,
+    "indeterminateMissions": 0,
+    "avgDurationSeconds": 105,
+    "medianDurationSeconds": 105,
+    "minDurationSeconds": 69,
+    "maxDurationSeconds": 159,
+    "totalStops": 4,
+    "presenceStops": 2,
+    "otherStops": 2,
+    "unknownStops": 0,
+    "completionRate": 150,
+    "activeAlertsCount": 3,
+    "totalErrors": 2
+  }
+}

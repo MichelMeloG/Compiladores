@@ -1,0 +1,7 @@
+{
+  "schema": "listAlerts.query",
+  "description": "Não reconhecidos",
+  "value": {
+    "status": "unacknowledged"
+  }
+}

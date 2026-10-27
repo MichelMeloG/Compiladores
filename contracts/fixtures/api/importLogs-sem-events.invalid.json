@@ -1,0 +1,5 @@
+{
+  "schema": "importLogs.request",
+  "description": "corpo sem events",
+  "value": {}
+}

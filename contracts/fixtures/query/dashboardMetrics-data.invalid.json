@@ -1,0 +1,7 @@
+{
+  "schema": "dashboardMetrics.query",
+  "description": "data inválida",
+  "value": {
+    "startDate": "ontem"
+  }
+}

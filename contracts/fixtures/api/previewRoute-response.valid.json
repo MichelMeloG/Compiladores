@@ -1,0 +1,41 @@
+{
+  "schema": "previewRoute.response",
+  "description": "Prévia executável",
+  "value": {
+    "robotId": "RB-01",
+    "mapId": "pista-1",
+    "mapVersion": 1,
+    "waypoints": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 1,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 0
+      },
+      {
+        "x": 2,
+        "y": 1
+      }
+    ],
+    "actions": [
+      "F",
+      "F",
+      "D"
+    ],
+    "expectedNodes": [
+      "1,0",
+      "2,0",
+      "2,1"
+    ],
+    "initialHeading": "E",
+    "finalHeading": "S",
+    "executable": true,
+    "errors": []
+  }
+}

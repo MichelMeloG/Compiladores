@@ -1,0 +1,36 @@
+{
+  "schema": "getDeviceStatus.response",
+  "description": "Dispositivo online",
+  "value": {
+    "deviceId": "RB-01",
+    "robotId": "RB-01",
+    "connection": "online",
+    "sessionId": "boot-7",
+    "firmwareVersion": "1.4.2",
+    "protocolVersion": 1,
+    "capabilities": {
+      "supportsReverse": false,
+      "maxActions": 64,
+      "maxMessageBytes": 4096
+    },
+    "state": "blocked",
+    "activeMissionId": "RF-0112",
+    "sensors": {
+      "line": [
+        0,
+        1,
+        0
+      ],
+      "distanceCm": 18.2,
+      "distanceValid": true,
+      "distanceAgeMs": 25
+    },
+    "blockId": "block-4",
+    "blockReasons": [
+      "obstacle"
+    ],
+    "lastSeenAt": "2026-10-26T17:59:58.000Z",
+    "dataAgeMs": 2000,
+    "nextPollMs": 1500
+  }
+}

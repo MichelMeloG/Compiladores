@@ -1,0 +1,7 @@
+{
+  "schema": "acknowledgeAlert.response",
+  "description": "acknowledged obrigatório",
+  "value": {
+    "id": "alt-01"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "listRobots.response",
+  "description": "lastSeenAt obrigatório",
+  "value": [
+    {
+      "id": "RB-01",
+      "name": "Carregador Norte",
+      "area": "Linha de montagem A",
+      "model": "RoboFlow AGV v2",
+      "status": "busy",
+      "roverState": "moving",
+      "currentMissionId": "RF-0112",
+      "batteryPercent": 78,
+      "currentPoint": "2,1",
+      "firmwareVersion": "1.4.2",
+      "activeAlertsCount": 0
+    }
+  ]
+}

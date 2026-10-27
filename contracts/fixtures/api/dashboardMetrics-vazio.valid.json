@@ -1,0 +1,23 @@
+{
+  "schema": "dashboardMetrics.response",
+  "description": "Sem missões: durações null, taxa 0",
+  "value": {
+    "totalMissions": 0,
+    "completedMissions": 0,
+    "inProgressMissions": 0,
+    "failedMissions": 0,
+    "abortedMissions": 0,
+    "indeterminateMissions": 0,
+    "avgDurationSeconds": null,
+    "medianDurationSeconds": null,
+    "minDurationSeconds": null,
+    "maxDurationSeconds": null,
+    "totalStops": 0,
+    "presenceStops": 0,
+    "otherStops": 0,
+    "unknownStops": 0,
+    "completionRate": 0,
+    "activeAlertsCount": 0,
+    "totalErrors": 0
+  }
+}

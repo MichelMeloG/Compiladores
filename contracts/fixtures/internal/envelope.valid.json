@@ -1,0 +1,24 @@
+{
+  "schema": "internal.event",
+  "description": "Evento publicado pelo ingest",
+  "value": {
+    "eventId": "RB-01_boot-7_33",
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "sequence": 33,
+    "receivedAt": "2026-10-26T18:00:00.000Z",
+    "event": {
+      "v": 1,
+      "deviceId": "RB-01",
+      "sessionId": "boot-7",
+      "uptimeMs": 18000,
+      "type": "block_started",
+      "messageId": "evt-33",
+      "sequence": 33,
+      "blockId": "block-4",
+      "reasons": [
+        "obstacle"
+      ]
+    }
+  }
+}

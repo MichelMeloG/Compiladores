@@ -1,0 +1,21 @@
+# Dependências e artefatos de build (cada pacote tem o seu próprio node_modules)
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+
+# Ambiente local e segredos
+.env
+.env.*
+!.env.example
+*.tfvars
+!*.tfvars.example
+
+# Índice local do codegraph
+.codegraph/
+
+# Python
+__pycache__/
+*.pyc

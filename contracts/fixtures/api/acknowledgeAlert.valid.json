@@ -1,0 +1,9 @@
+{
+  "schema": "acknowledgeAlert.response",
+  "description": "Reconhecimento persistido",
+  "value": {
+    "id": "alt-01",
+    "acknowledged": true,
+    "acknowledgedAt": "2026-10-26T18:05:00.000Z"
+  }
+}

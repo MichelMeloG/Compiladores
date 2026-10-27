@@ -1,0 +1,24 @@
+{
+  "schema": "getExecution.response",
+  "description": "positionConfidence inválido",
+  "value": {
+    "missionId": "RF-0112",
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "state": "blocked",
+    "actionIndex": 3,
+    "completedActions": 3,
+    "totalActions": 6,
+    "lastConfirmedNode": "2,1",
+    "expectedNode": "3,1",
+    "atNode": false,
+    "positionConfidence": "exact",
+    "headingAtLastConfirmedNode": "S",
+    "blockId": "block-4",
+    "blockReasons": [
+      "obstacle"
+    ],
+    "pendingCommands": [],
+    "updatedAt": "2026-10-26T17:59:00.000Z"
+  }
+}

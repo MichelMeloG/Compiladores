@@ -1,0 +1,37 @@
+{
+  "schema": "getMission.response",
+  "description": "eventType desconhecido",
+  "value": {
+    "id": "RF-0111",
+    "robotId": "RB-01",
+    "origin": "carga",
+    "destination": "descarga",
+    "status": "completed",
+    "startedAt": "2026-10-26T08:15:00.000Z",
+    "endedAt": "2026-10-26T08:16:49.000Z",
+    "durationSeconds": 109,
+    "stopCount": 1,
+    "presenceStopCount": 1,
+    "errorCount": 0,
+    "eventCount": 7,
+    "stopReasons": [
+      {
+        "reason": "Presença detectada",
+        "count": 1
+      }
+    ],
+    "events": [
+      {
+        "id": "evt-11201",
+        "missionId": "RF-0112",
+        "robotId": "RB-01",
+        "timestamp": "2026-10-26T17:34:00.000Z",
+        "eventType": "inventado",
+        "command": "station \"carga\"",
+        "roverState": "idle",
+        "severity": "info",
+        "message": "Rota iniciada na estação carga, destino descarga."
+      }
+    ]
+  }
+}

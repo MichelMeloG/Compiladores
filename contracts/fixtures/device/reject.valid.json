@@ -1,0 +1,15 @@
+{
+  "schema": "device.reject",
+  "description": "Rejeição com motivo",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "reject",
+    "messageId": "evt-3",
+    "sequence": 3,
+    "replyTo": "cmd-11",
+    "reason": "STALE_BLOCK"
+  }
+}

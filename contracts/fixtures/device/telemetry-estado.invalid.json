@@ -1,0 +1,30 @@
+{
+  "schema": "device.telemetry",
+  "description": "estado do firmware desconhecido",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "uptimeMs": 18000,
+    "type": "telemetry",
+    "messageId": "evt-32",
+    "sequence": 32,
+    "state": "blocked_by_obstacle",
+    "missionId": "RF-0112",
+    "routeRevision": 1,
+    "actionIndex": 3,
+    "phase": "following_segment",
+    "line": [
+      0,
+      1,
+      0
+    ],
+    "distanceCm": 18.2,
+    "distanceValid": true,
+    "distanceAgeMs": 25,
+    "blockId": "block-4",
+    "blockReasons": [
+      "obstacle"
+    ]
+  }
+}

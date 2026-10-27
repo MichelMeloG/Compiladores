@@ -1,0 +1,7 @@
+{
+  "schema": "importLogs.request",
+  "description": "lote vazio",
+  "value": {
+    "events": []
+  }
+}

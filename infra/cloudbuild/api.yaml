@@ -1,0 +1,11 @@
+# Build da imagem do backend. Contexto: RAIZ do repositório; Dockerfile em backend/.
+# Uso (via infra/scripts/build-and-deploy.ps1):
+#   gcloud builds submit . --config infra/cloudbuild/api.yaml --ignore-file infra/cloudbuild/api.gcloudignore ...
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', 'backend/Dockerfile', '-t', '${_IMAGE}', '.']
+images:
+  - '${_IMAGE}'
+options:
+  logging: CLOUD_LOGGING_ONLY
+timeout: 900s

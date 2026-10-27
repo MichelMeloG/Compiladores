@@ -1,0 +1,7 @@
+{
+  "schema": "listAlerts.query",
+  "description": "status inválido",
+  "value": {
+    "status": "pending"
+  }
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "missionId": "RF-0112",
+    "robotId": "RB-01",
+    "deviceId": "RB-01",
+    "state": "running",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0111",
+    "robotId": "RB-01",
+    "deviceId": "RB-01",
+    "state": "completed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0110",
+    "robotId": "RB-02",
+    "deviceId": "RB-02",
+    "state": "completed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0109",
+    "robotId": "RB-03",
+    "deviceId": "RB-03",
+    "state": "aborted",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0108",
+    "robotId": "RB-01",
+    "deviceId": "RB-01",
+    "state": "completed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0107",
+    "robotId": "RB-02",
+    "deviceId": "RB-02",
+    "state": "completed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0106",
+    "robotId": "RB-03",
+    "deviceId": "RB-03",
+    "state": "failed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0104",
+    "robotId": "RB-02",
+    "deviceId": "RB-02",
+    "state": "completed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0103",
+    "robotId": "RB-03",
+    "deviceId": "RB-03",
+    "state": "completed",
+    "routeRevision": 1
+  },
+  {
+    "missionId": "RF-0102",
+    "robotId": "RB-04",
+    "deviceId": "RB-04",
+    "state": "completed",
+    "routeRevision": 1
+  }
+]

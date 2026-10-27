@@ -1,0 +1,15 @@
+{
+  "schema": "internalEvents.request",
+  "description": "Entrega push",
+  "value": {
+    "message": {
+      "data": "eyJhIjoxfQ==",
+      "messageId": "123",
+      "publishTime": "2026-10-26T18:00:00.000Z",
+      "attributes": {
+        "deviceId": "RB-01"
+      }
+    },
+    "subscription": "projects/compiladores-512823/subscriptions/agv-events-push"
+  }
+}

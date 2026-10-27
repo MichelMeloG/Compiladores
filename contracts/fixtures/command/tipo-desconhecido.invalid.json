@@ -1,0 +1,13 @@
+{
+  "schema": "command.any",
+  "description": "tipo inexistente",
+  "value": {
+    "v": 1,
+    "deviceId": "RB-01",
+    "sessionId": "boot-7",
+    "missionId": "RF-0113",
+    "validForMs": 5000,
+    "type": "heartbeat",
+    "messageId": "cmd-15"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "_comment": "Índices compostos exigidos pelas consultas do backend (src/services/queries.ts e metrics.ts). Índices de campo único são automáticos. Combinações raras (ex.: alertas por missionId + status) podem exigir um índice novo no primeiro uso: o Firestore devolve um link para criá-lo. TTL: campo expireAt (Timestamp) nas 4 coleções abaixo.",
+  "indexes": [
+    { "collectionGroup": "missions", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "startedAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "missions", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "startedAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "missions", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "startedAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "missions", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "active", "order": "ASCENDING" }, { "fieldPath": "startedAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "missions", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "active", "order": "ASCENDING" }, { "fieldPath": "startedAt", "order": "DESCENDING" }] },
+
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "missionId", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "ASCENDING" }] },
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "missionId", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "events", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "missionId", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "acknowledged", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "acknowledged", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "missionId", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "severity", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "acknowledged", "order": "ASCENDING" }, { "fieldPath": "severity", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+    { "collectionGroup": "alerts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "severity", "order": "ASCENDING" }, { "fieldPath": "timestamp", "order": "DESCENDING" }] },
+
+    { "collectionGroup": "rollups", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "scope", "order": "ASCENDING" }, { "fieldPath": "day", "order": "ASCENDING" }] },
+    { "collectionGroup": "rollups", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "robotId", "order": "ASCENDING" }, { "fieldPath": "scope", "order": "ASCENDING" }, { "fieldPath": "day", "order": "ASCENDING" }] }
+  ],
+  "fieldOverrides": [
+    { "collectionGroup": "idempotency", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "deviceEvents", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "commands", "fieldPath": "expireAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "events", "fieldPath": "expireAt", "ttl": true, "indexes": [] }
+  ]
+}

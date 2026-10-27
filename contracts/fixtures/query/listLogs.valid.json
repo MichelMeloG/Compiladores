@@ -1,0 +1,9 @@
+{
+  "schema": "listLogs.query",
+  "description": "Filtros de log",
+  "value": {
+    "eventType": "stop_preventive",
+    "severity": "warning",
+    "missionId": "RF-0111"
+  }
+}

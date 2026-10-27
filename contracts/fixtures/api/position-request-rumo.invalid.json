@@ -1,0 +1,9 @@
+{
+  "schema": "confirmPosition.request",
+  "description": "rumo inválido",
+  "value": {
+    "x": 0,
+    "y": 3,
+    "heading": "norte"
+  }
+}

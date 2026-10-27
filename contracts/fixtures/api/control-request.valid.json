@@ -1,0 +1,7 @@
+{
+  "schema": "startMission.request",
+  "description": "Controle com sessão observada",
+  "value": {
+    "sessionId": "boot-7"
+  }
+}

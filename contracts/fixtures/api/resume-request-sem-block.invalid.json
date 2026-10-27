@@ -1,0 +1,7 @@
+{
+  "schema": "resumeMission.request",
+  "description": "blockId obrigatório em resume",
+  "value": {
+    "sessionId": "boot-7"
+  }
+}
