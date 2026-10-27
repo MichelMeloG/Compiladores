@@ -6,6 +6,7 @@ Documentação para a equipe do firmware e da bancada. Diz o que o ESP32 do carr
 
 | Documento | Para quê |
 |---|---|
+| [TESTE_WIFI_SENSORES.md](TESTE_WIFI_SENSORES.md) | Sketch de bancada para ver os quatro sensores e testar motores manualmente via Wi-Fi, com veto local do HC-SR04 |
 | [FIRMWARE_ESP32.md](FIRMWARE_ESP32.md) | Arquitetura do firmware: módulos, tarefas FreeRTOS, fila de eventos, executor, supervisor, memória, bibliotecas |
 | [PROTOCOLO_DISPOSITIVO.md](PROTOCOLO_DISPOSITIVO.md) | O protocolo visto do firmware: assinatura HMAC, `hello`/`poll`/`events`, comandos, eventos, erros e orçamento de requisições |
 | [VETORES_DE_TESTE.md](VETORES_DE_TESTE.md) e [`vetores/`](vetores/) | Assinaturas e mensagens geradas pelo código real, para validar o firmware sem rede |
