@@ -1,6 +1,8 @@
 # Firmware do ESP32 — o que construir
 
-Este documento diz **o que** o firmware precisa fazer para operar com o backend que já está na nuvem. Não existe firmware no repositório hoje; o comportamento esperado está em código executável no simulador [`backend/tools/esp-sim/sim.ts`](../../backend/tools/esp-sim/sim.ts), e este texto o transforma em requisitos. O pseudocódigo abaixo **não** é código para commitar.
+Este documento descreve o projeto original do firmware. A implementação para Arduino IDE está em [`firmware/roboflow_esp32`](../../firmware/roboflow_esp32/README.md), com compilação e testes do núcleo C++ contra o backend. Curvas e cruzamentos ainda exigem calibração física. O simulador de referência permanece em [`backend/tools/esp-sim/sim.ts`](../../backend/tools/esp-sim/sim.ts).
+
+**Ajuste solicitado em 28/10/2026:** no firmware implementado, o ultrassônico é **opcional**. Leitura válida pode bloquear por obstáculo; ausência de eco ou leitura vencida não veta movimento. Isso substitui, para essa implementação, os vetos por ultrassônico inválido/antigo descritos abaixo. Liberação de bloqueio não retoma a missão automaticamente. As demais tabelas e pseudocódigos abaixo são referências de projeto, não uma descrição integral de tudo que foi implementado; consulte o README do firmware para os limites e diferenças.
 
 Hardware de referência (pinagem completa em [`../ARQUITETURA_DOS_COMPONENTES.md`](../ARQUITETURA_DOS_COMPONENTES.md)): ESP32 clássico, ponte H HW-095/L298N (ENA 25, IN1 26, IN2 27, IN3 14, IN4 23, ENB 13), sensores de linha esquerdo 32, central 34, direito 33, **infravermelho adicional 35** (acrescentado ao documento de hardware; papel ainda não definido, ver [PENDENCIAS_DE_HARDWARE.md](PENDENCIAS_DE_HARDWARE.md)), HC-SR04 TRIG 18 e ECHO 19 (com divisor de tensão).
 
