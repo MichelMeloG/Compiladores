@@ -449,3 +449,75 @@ Guia de configuração e operação:
 
 O relatório descreve a versão local analisada em 03/11/2026. Mudanças posteriores
 de firmware, cadência, protocolo ou armazenamento exigem revisar seus impactos.
+
+## 11. Registro de deploy no Google Cloud — 03/11/2026
+
+Esta seção registra uma operação posterior à validação local descrita acima.
+O backend foi publicado no Cloud Run com o código do commit `aa509b0`.
+
+| Item | Resultado |
+|---|---|
+| Projeto / região | `compiladores-512823` / `us-central1` |
+| Serviço | `roboflow-api` |
+| Revisão publicada | `roboflow-api-00003-l7d`, pronta e recebendo 100% do tráfego |
+| Revisão anterior | `roboflow-api-00002-ft2` |
+| Imagem | `us-central1-docker.pkg.dev/compiladores-512823/roboflow/api:aa509b0-20261103` |
+| Digest implantado | `sha256:56c7a48635102f0ec7799f2b361bdbd3ff90b844b291affff4d61d8f3dc1836d` |
+| Cloud Build | `da92e678-11f6-48ba-a208-bf3e0dfe3fc7`, concluído com sucesso |
+| URL mantida | <https://roboflow-api-483331439325.us-central1.run.app> |
+
+Foram preservados o armazenamento Firestore, a autenticação Firebase, os
+segredos de dispositivos e a configuração existente do serviço. Não foi
+necessária migração, limpeza de dados ou alteração de índices, regras, TTL,
+Pub/Sub ou Scheduler. O banco `(default)` é Standard, em modo nativo, na região
+`us-central1`. Os 18 índices compostos previstos no código foram comparados com
+os remotos e todos estavam `READY`. Os quatro robôs cadastrados estavam sem
+missão ativa na consulta anterior ao deploy.
+
+Validação desta publicação:
+
+- Build TypeScript do backend concluído; 231 testes de contratos e 142 testes
+  do backend passaram novamente.
+- `/health` e `/api/health` responderam corretamente. O segundo endpoint
+  consultou os robôs no Firestore e informou zero robôs conectados.
+- Sete verificações remotas passaram: schema de saúde, erro 404, CORS permitido,
+  CORS desconhecido, ausência de token, token inválido e bloqueio de endpoints
+  internos sem credencial.
+- A consulta de logs da nova revisão após essas verificações não retornou
+  entradas de severidade `ERROR` ou superior naquele momento.
+
+As verificações remotas não enviaram comandos de movimento nem simularam uma
+missão no banco de produção. O fluxo com operador autenticado, o novo hello do
+ESP32 e a execução física continuam pendentes de validação no ambiente real.
+O workflow da dashboard no GitHub Pages permanece com `VITE_DEMO=true`; esta
+publicação atualizou o backend, sem publicar a interface em modo operacional.
+
+## 12. Preparação do front operacional e inspeção do Firestore — 03/11/2026
+
+A publicação posterior do front passa a usar `VITE_DEMO=false`, a API real do
+Cloud Run e login Google pelo Firebase Authentication. O front aguarda a
+autenticação, valida o acesso pela API e envia o ID token nas requisições. O
+domínio `michelmelog.github.io` foi autorizado e o provedor Google habilitado.
+O app web Firebase criado para a dashboard é
+`1:483331439325:web:2f91c20cb16a0b0d467934`. A configuração pública está no
+workflow; os segredos dos dispositivos continuam fora do navegador.
+
+A consulta ao banco remoto encontrou quatro documentos em `robots` (`RB-01`
+a `RB-04`) e quatro mapas em `maps/pista-1` a `maps/pista-4`, na subcoleção
+`versions/1`. Os documentos pais dos mapas não contêm dados próprios. Não
+foram encontradas coleções de missões, rotas, comandos, eventos, alertas ou
+agregações. Todos os robôs estavam sem missão ativa; o `RB-03` apresentava
+uma sessão antiga com firmware `sim-1.0.0`. Os demais dados são cadastros
+iniciais, e não prova de telemetria física atual. Nenhum documento foi alterado
+durante essa inspeção.
+
+O build operacional passou na checagem de tipos e nos seis testes existentes
+dos serviços. Uma verificação com Edge automatizado, servindo os arquivos do
+build sob a origem autorizada, confirmou a tela de login, ausência de consultas
+de dados antes do login e abertura do OAuth em `accounts.google.com`, sem erros
+JavaScript. Essa verificação não autenticou uma pessoa nem operou o carrinho.
+
+O login não atribui papéis automaticamente: usuários sem custom claim `role`
+continuam como `viewer`. Operar requer `operator` ou `admin`; o encerramento
+administrativo exige `admin`. A atribuição desses papéis e a validação com
+operador autenticado e ESP32 físico continuam como etapas operacionais.

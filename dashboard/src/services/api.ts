@@ -4,6 +4,7 @@
  */
 
 import { ApiResponse } from '../types';
+import { idToken } from './auth';
 
 /**
  * URL base do backend REST, configurada em `VITE_API_URL` (.env).
@@ -47,6 +48,8 @@ export async function apiRequest<T>(
   const url = `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
 
   const headers = new Headers(options.headers || {});
+  const token = await idToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
