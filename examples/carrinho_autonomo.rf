@@ -1,0 +1,49 @@
+// Perfil do carrinho autônomo ESP32. Substitua credenciais antes de gerar.
+robot "RB-01" {
+    profile autonomous_line_v1
+    board esp32
+
+    network {
+        ssid: "SUA_REDE"
+        password: "SUA_SENHA"
+        backend: "http://192.168.1.10:8080"
+        token: "SEGREDO_CADASTRADO_NO_BACKEND"
+        ca_certificate: ""
+        ntp: "pool.ntp.org"
+    }
+
+    motors {
+        left_pins: [25, 26, 27]
+        right_pins: [13, 14, 23]
+        left_direction: 1
+        right_direction: 1
+    }
+
+    line_sensors {
+        pins: [32, 34, 33]
+        active_level: high
+        stable_samples: 3
+        interval: 10ms
+    }
+
+    movement {
+        straight_power: 150
+        outer_power: 150
+        gentle_inner_power: 110
+        strong_inner_power: 60
+        alignment: 120ms
+        minimum_turn: 180ms
+        turn_timeout: 2500ms
+        segment_timeout: 15000ms
+    }
+
+    execution {
+        startup_delay: 3000ms
+        communication_timeout: 30000ms
+        max_actions: 16
+        max_events: 12
+        route_source: backend
+        actions: [forward, right, left]
+        require_start_command: true
+    }
+}

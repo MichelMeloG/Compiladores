@@ -1,3 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roboflow-compiler"
+version = "0.2.0"
+description = "Compilador RoboFlow para ESP32"
+requires-python = ">=3.10"
+
+[project.scripts]
+roboflow = "compiler.roboflow.__main__:main"
+
+[tool.setuptools]
+packages = ["compiler.roboflow"]
+
+[tool.setuptools.package-data]
+"compiler.roboflow" = ["runtime/*.template"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

@@ -3,6 +3,7 @@ name: Publicar dashboard no GitHub Pages
 # Publica a dashboard de observabilidade em
 # https://michelmelog.github.io/Compiladores/
 # https://michelmelog.github.io/Compiladores/dashboard/
+# https://michelmelog.github.io/Compiladores/compilador/
 #
 # A publicação é um BUILD DE DEMONSTRAÇÃO: o GitHub Pages serve apenas
 # arquivos estáticos, e a dashboard consome um backend REST que ainda não

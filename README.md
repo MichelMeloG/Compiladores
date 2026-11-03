@@ -32,6 +32,20 @@ os cruzamentos ao backend. Funciona na bateria e aguarda início pela dashboard.
 O [firmware original](firmware/carrinho_simples/README.md), que recebe potências
 de `POST /device/sensors`, continua disponível separadamente.
 
+O compilador agora também gera um sketch ESP32 a partir de um arquivo `.rf` de
+configuração. Consulte o [plano e estado da implementação](docs/PLANO_COMPILADOR_RF_PARA_ESP32.md)
+e o exemplo [carrinho_autonomo.rf](examples/carrinho_autonomo.rf). Com Python 3.10+
+instalado na raiz do projeto, execute `python -m pip install -e .` e depois
+`roboflow compile examples/carrinho_autonomo.rf`. A saída fica em
+`build/carrinho_autonomo/carrinho_autonomo.ino`; credenciais reais no `.rf`
+serão copiadas para o sketch gerado.
+
+Para usar a interface web do compilador, deixe `python -m compiler.roboflow serve`
+rodando em um terminal, inicie `npm --prefix dashboard run dev -- --host 127.0.0.1`
+em outro e abra `http://localhost:3000/Compiladores/compilador/`. A dashboard fica em
+`http://localhost:3000/Compiladores/dashboard/`. A página do compilador compila localmente,
+mostra erros, exibe o sketch e permite baixar o `.ino`.
+
 A documentação atual do carrinho está consolidada em dois documentos:
 
 1. [O que o robô faz](docs/O_QUE_O_ROBO_FAZ.md).

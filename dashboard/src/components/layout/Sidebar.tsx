@@ -194,7 +194,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        <a href={`${import.meta.env.BASE_URL}compilador/`} className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-[#25372D] hover:bg-[#F7FAF8] hover:text-[#245C43]">
+        <a href={`${import.meta.env.BASE_URL}compilador/index.html`} className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium text-[#25372D] hover:bg-[#F7FAF8] hover:text-[#245C43]">
           <span className="w-4 text-center font-mono text-[#78877D]">&lt;/&gt;</span>
           Compilador RoboFlow
         </a>

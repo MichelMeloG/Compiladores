@@ -29,7 +29,9 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
 
-  await app.listen({ host: '0.0.0.0', port: cfg.port });
+  // O modo local sem autenticação deve ficar acessível apenas nesta máquina.
+  const host = cfg.nodeEnv === 'production' ? '0.0.0.0' : '127.0.0.1';
+  await app.listen({ host, port: cfg.port });
 }
 
 main().catch((err: unknown) => {

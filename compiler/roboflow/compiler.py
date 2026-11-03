@@ -5,10 +5,12 @@ código-fonte, sempre devolve um `Result` com os diagnósticos da fase em que pa
 """
 
 from dataclasses import dataclass, field
+import re
 from typing import Dict, List, Optional
 
 from .codegen_cpp import CppCodeGenerator
 from .codegen_python import PythonCodeGenerator
+from .arduino import compile_arduino
 from .diagnostics import CompileError, Diagnostic
 from .lexer import Lexer
 from .parser import Parser
@@ -17,7 +19,7 @@ from .tokens import Token
 
 PYTHON_FILE = "compiled_behavior.py"
 
-TARGETS = ("cpp", "python")
+TARGETS = ("cpp", "python", "arduino")
 
 
 @dataclass
@@ -34,6 +36,13 @@ def compile_roboflow(source: str, config: Optional[dict] = None, target: str = "
     `target="python"` gera compiled_behavior.py (etapa futura com Raspberry Pi)."""
     if target not in TARGETS:
         raise ValueError(f"alvo desconhecido {target!r}; use um de {TARGETS}")
+
+    if target == "arduino" or (target == "cpp" and re.search(r"\brobot\s+\"", source)):
+        try:
+            files = compile_arduino(source)
+            return Result(ok=True, files=files)
+        except CompileError as exc:
+            return Result(ok=False, errors=[exc.diagnostic])
 
     try:
         tokens = Lexer(source).tokenize()
