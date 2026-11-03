@@ -18,6 +18,11 @@
         "name": "X-Signature",
         "description": "HMAC-SHA256 — ver contracts/src/signing.ts"
       },
+      "deviceToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Segredo do dispositivo, com X-Device-Id; controle por sensores em rede local."
+      },
       "oidc": {
         "type": "http",
         "scheme": "bearer",
@@ -26,6 +31,252 @@
     }
   },
   "paths": {
+    "/device/sensors": {
+      "post": {
+        "operationId": "deviceSensors",
+        "summary": "Recebe os sensores digitais e calcula a saída dos motores no backend.",
+        "tags": [
+          "device"
+        ],
+        "parameters": [
+          {
+            "name": "X-Device-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "line": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "enum": [
+                                0
+                              ]
+                            },
+                            {
+                              "type": "number",
+                              "enum": [
+                                1
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "enum": [
+                                0
+                              ]
+                            },
+                            {
+                              "type": "number",
+                              "enum": [
+                                1
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "enum": [
+                                0
+                              ]
+                            },
+                            {
+                              "type": "number",
+                              "enum": [
+                                1
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "boot": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,64}$"
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
+                  },
+                  "applied": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "line",
+                  "boot",
+                  "sequence",
+                  "applied"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sequence": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991
+                        },
+                        "left": {
+                          "type": "integer",
+                          "minimum": -255,
+                          "maximum": 255
+                        },
+                        "right": {
+                          "type": "integer",
+                          "minimum": -255,
+                          "maximum": 255
+                        }
+                      },
+                      "required": [
+                        "sequence",
+                        "left",
+                        "right"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991
+                    },
+                    "nextCursor": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erro (INVALID_BODY, CONFLICT_SESSION, REPLAY_DETECTED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "INVALID_BODY",
+                        "INVALID_QUERY",
+                        "IDEMPOTENCY_KEY_REQUIRED",
+                        "UNAUTHENTICATED",
+                        "FORBIDDEN",
+                        "NOT_FOUND",
+                        "CONFLICT_STATE",
+                        "CONFLICT_IDEMPOTENCY",
+                        "CONFLICT_SESSION",
+                        "STALE_BLOCK",
+                        "DEVICE_BUSY",
+                        "ROUTE_INVALID",
+                        "HEADING_REQUIRED",
+                        "CAPABILITY_UNSUPPORTED",
+                        "PAYLOAD_TOO_LARGE",
+                        "RATE_LIMITED",
+                        "SIGNATURE_INVALID",
+                        "REPLAY_DETECTED",
+                        "CLOCK_SKEW",
+                        "DEVICE_UNAVAILABLE",
+                        "NOT_IMPLEMENTED",
+                        "INTERNAL"
+                      ]
+                    },
+                    "details": {}
+                  },
+                  "required": [
+                    "success",
+                    "message",
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceToken": []
+          }
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "health",

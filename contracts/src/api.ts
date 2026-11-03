@@ -6,7 +6,7 @@
  * Caminhos usam `:param` no estilo Express.
  *
  * Prefixos:  /api/*      operador autenticado (ID token do Firebase)
- *            /device/*   dispositivo (HMAC)
+ *            /device/*   dispositivo (HMAC; /device/sensors usa token Bearer)
  *            /internal/* Pub/Sub e Scheduler (OIDC)
  */
 import { z } from 'zod';
@@ -39,6 +39,7 @@ import {
   PubSubPushBodySchema,
 } from './device.js';
 import { RobotGridSchema } from './map.js';
+import { SensorInputSchema, MotorOutputSchema } from './sensors.js';
 import {
   ActiveRouteSchema,
   ControlAcceptedSchema,
@@ -57,7 +58,7 @@ import {
 } from './mission.js';
 
 export type HttpMethod = 'GET' | 'POST' | 'PATCH';
-export type AuthKind = 'public' | 'operator' | 'device' | 'internal';
+export type AuthKind = 'public' | 'operator' | 'device' | 'device-token' | 'internal';
 export type Role = 'admin' | 'operator' | 'viewer';
 
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
@@ -89,6 +90,17 @@ const WRITE: readonly Role[] = ['operator', 'admin'];
 const ADMIN: readonly Role[] = ['admin'];
 
 export const ENDPOINTS = [
+  {
+    id: 'deviceSensors',
+    method: 'POST',
+    path: '/device/sensors',
+    auth: 'device-token',
+    summary: 'Recebe os sensores digitais e calcula a saída dos motores no backend.',
+    body: SensorInputSchema,
+    response: MotorOutputSchema,
+    okStatus: [200],
+    errors: ['INVALID_BODY', 'CONFLICT_SESSION', 'REPLAY_DETECTED'],
+  },
   // ---------------------------------------------------------------- público
   {
     id: 'health',

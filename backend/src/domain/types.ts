@@ -47,6 +47,23 @@ export interface RobotDoc extends Doc {
   pendingCommandIds: string[];
   /** Última telemetria (sobrescrita com taxa limitada). */
   live: LiveTelemetry | null;
+  sensorControl?: SensorControl;
+}
+
+/** Estado do executor no servidor; o ESP32 guarda apenas a última saída aplicada. */
+export interface SensorControl {
+  boot: string;
+  retiredBoots: string[];
+  sequence: number;
+  applied: number;
+  lastAt: number;
+  missionId: string | null;
+  phase: 'idle' | 'centering' | 'turning' | 'leaving' | 'following';
+  phaseAt: number;
+  stable: number;
+  leftOldLine: boolean;
+  pendingCommand: string | null;
+  output: { sequence: number; left: number; right: number };
 }
 
 export interface LiveTelemetry {

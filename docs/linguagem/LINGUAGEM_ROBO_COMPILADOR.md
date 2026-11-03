@@ -65,7 +65,7 @@ station "carga" {
 | `log(msg)` | Registro para auditoria | `RobotRuntime::log("<msg>")` |
 | `resume_line_following()` | Devolve controle à malha rápida (PID no ESP32) — **obrigatório em todo caminho** | `RobotRuntime::resumeLineFollowing()` |
 
-**O runtime é o contrato com o firmware.** O código gerado nunca toca pinos ou motores: só chama as funções do namespace `RobotRuntime`, declaradas em [`robot_runtime.hpp`](../../firmware/include/robot_runtime.hpp) e implementadas à mão no firmware do ESP32. O firmware decide *como* parar, virar ou sinalizar; o RoboFlow decide *quando*. E como o veto de proximidade não faz parte dessa API, nenhum programa RoboFlow consegue desligá-lo.
+**O runtime é o contrato com o firmware.** O código gerado nunca toca pinos ou motores: só chama as funções do namespace `RobotRuntime`, declaradas em [`robot_runtime.hpp`](../../compiler/roboflow/runtime/robot_runtime.hpp) e implementadas à mão no firmware do ESP32. O firmware decide *como* parar, virar ou sinalizar; o RoboFlow decide *quando*. E como o veto de proximidade não faz parte dessa API, nenhum programa RoboFlow consegue desligá-lo.
 
 ### Condicionais
 

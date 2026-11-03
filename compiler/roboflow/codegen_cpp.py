@@ -6,7 +6,7 @@ vira desvio entre `case`s. `wait_signal` NÃO bloqueia: sem o sinal, a função
 devolve `false` e o `loop()` do firmware segue (sensores, PID e veto de
 segurança continuam rodando); na volta seguinte retoma do mesmo `case`.
 
-O código gerado só chama a API declarada em firmware/include/robot_runtime.hpp
+O código gerado só chama a API declarada em compiler/roboflow/runtime/robot_runtime.hpp
 — nunca pinos ou motores. Compila como C++11, o mínimo do núcleo Arduino-ESP32.
 
 Semântica de `wait_signal(nome, timeout: t)`: segue para a próxima instrução

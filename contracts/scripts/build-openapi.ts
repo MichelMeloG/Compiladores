@@ -45,6 +45,9 @@ for (const e of ENDPOINTS as readonly Endpoint[]) {
       params.push({ name: h, in: 'header', required: true, schema: { type: 'string' } });
     }
   }
+  if (e.auth === 'device-token') {
+    params.push({ name: 'X-Device-Id', in: 'header', required: true, schema: { type: 'string' } });
+  }
 
   const responses: Record<string, unknown> = {};
   for (const s of e.okStatus) {
@@ -59,7 +62,7 @@ for (const e of ENDPOINTS as readonly Endpoint[]) {
   };
 
   const security =
-    e.auth === 'operator' ? [{ firebaseIdToken: [] }] : e.auth === 'device' ? [{ deviceHmac: [] }] : e.auth === 'internal' ? [{ oidc: [] }] : [];
+    e.auth === 'operator' ? [{ firebaseIdToken: [] }] : e.auth === 'device' ? [{ deviceHmac: [] }] : e.auth === 'device-token' ? [{ deviceToken: [] }] : e.auth === 'internal' ? [{ oidc: [] }] : [];
 
   (paths[oaPath] ??= {})[e.method.toLowerCase()] = {
     operationId: e.id,
@@ -85,6 +88,7 @@ const doc = {
     securitySchemes: {
       firebaseIdToken: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       deviceHmac: { type: 'apiKey', in: 'header', name: 'X-Signature', description: 'HMAC-SHA256 — ver contracts/src/signing.ts' },
+      deviceToken: { type: 'http', scheme: 'bearer', description: 'Segredo do dispositivo, com X-Device-Id; controle por sensores em rede local.' },
       oidc: { type: 'http', scheme: 'bearer', bearerFormat: 'OIDC' },
     },
   },

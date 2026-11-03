@@ -1,13 +1,15 @@
-import { ENDPOINTS, LIMITS, type DeviceEventMessage, type Endpoint, type HelloMessage } from '@roboflow/contracts';
+import { ENDPOINTS, LIMITS, SensorInputSchema, type DeviceEventMessage, type Endpoint, type HelloMessage } from '@roboflow/contracts';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { DeviceAuthenticator } from '../auth/device.js';
 import type { RobotDoc } from '../domain/types.js';
 import { AppError, invalidBody, tooMany } from '../errors.js';
-import type { RateLimiter } from '../lib/rateLimit.js';
+import { RateLimiter } from '../lib/rateLimit.js';
 import { labels } from '../lib/logging.js';
 import type { Deps } from '../services/common.js';
 import { handleEvents, handleHello, handlePoll, type DeviceAuth } from '../services/device.js';
 import { C } from '../store/types.js';
+import { handleSensors } from '../services/sensor-control.js';
 
 const ep = (id: string): Endpoint => {
   const e = (ENDPOINTS as readonly Endpoint[]).find((x) => x.id === id);
@@ -20,6 +22,24 @@ export function registerDeviceRoutes(
   deps: Deps,
   g: { deviceAuth: DeviceAuthenticator; deviceLimiter: RateLimiter },
 ): void {
+  // O controle remoto precisa de amostras frequentes, em rede local.
+  const sensorLimiter = new RateLimiter(1800);
+  app.post('/device/sensors', { bodyLimit: 1024 }, async (req, reply) => {
+    const deviceId = req.headers['x-device-id'];
+    const authorization = req.headers.authorization ?? '';
+    const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+    const digest = (s: string) => createHash('sha256').update(s).digest();
+    const secrets = typeof deviceId === 'string' && Object.hasOwn(deps.cfg.deviceSecrets, deviceId)
+      ? deps.cfg.deviceSecrets[deviceId]! : [];
+    if (!token || !secrets.some(secret => timingSafeEqual(digest(secret), digest(token)))) {
+      throw new AppError('SIGNATURE_INVALID', 'Credencial inválida.');
+    }
+    if (!sensorLimiter.allow(deviceId as string)) throw tooMany();
+    const parsed = SensorInputSchema.safeParse(req.body);
+    if (!parsed.success) throw invalidBody('Envie line:[0|1,0|1,0|1], boot, sequence e applied.');
+    return reply.send({ success: true, data: await handleSensors(deps, deviceId as string, parsed.data) });
+  });
+
   /** Autentica (HMAC) e aplica o limite por dispositivo. Dispositivo desconhecido não toca o banco. */
   async function guard(req: FastifyRequest): Promise<{ auth: DeviceAuth; robot: RobotDoc }> {
     const claimed = (req.headers['x-device-id'] as string | undefined) ?? '';

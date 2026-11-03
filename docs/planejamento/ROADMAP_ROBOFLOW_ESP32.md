@@ -10,7 +10,7 @@
 > |---|---|
 > | Lexer, parser, AST, análise semântica | ✅ implementados, com testes |
 > | Gerador C++ (`codegen_cpp.py`) | ✅ implementado; o C++ gerado é compilado e executado nos testes |
-> | Contrato com o firmware ([`robot_runtime.hpp`](../../firmware/include/robot_runtime.hpp)) | ✅ declarado; **a implementação (`robot_runtime.cpp`) e o firmware-base ainda não existem** |
+> | Contrato com o firmware ([`robot_runtime.hpp`](../../compiler/roboflow/runtime/robot_runtime.hpp)) | ✅ declarado; **a implementação (`robot_runtime.cpp`) e o firmware-base ainda não existem** |
 > | Build com PlatformIO e gravação no ESP32 | ⏳ não feito |
 > | IR como módulo separado (§4.6) | não adotada: o gerador achata a AST numa lista de instruções interna, o que dispensou o módulo |
 >
@@ -473,7 +473,7 @@ Tarefas:
 
 - gerar o enum `StationId` e `stationIdFromName`;
 - gerar uma máquina de estados não bloqueante por estação (`switch` sobre um contador `pc`);
-- traduzir cada comando para a API do runtime ([`robot_runtime.hpp`](../../firmware/include/robot_runtime.hpp));
+- traduzir cada comando para a API do runtime ([`robot_runtime.hpp`](../../compiler/roboflow/runtime/robot_runtime.hpp));
 - traduzir `if`/`else` em desvios entre instruções e `wait_signal` em espera com prazo em milissegundos;
 - gerar `startStationBehavior`, `updateStationBehavior` e `stationBehaviorActive`;
 - compilar o C++ gerado no computador com runtime simulado.
@@ -725,7 +725,7 @@ O projeto será considerado completo quando:
 
 O compilador já entrega o C++. O que falta para o carrinho andar é do lado do firmware:
 
-1. implementar `robot_runtime.cpp` (as funções de [`robot_runtime.hpp`](../../firmware/include/robot_runtime.hpp)) sobre os drivers de motor e o PID;
+1. implementar `robot_runtime.cpp` (as funções de [`robot_runtime.hpp`](../../compiler/roboflow/runtime/robot_runtime.hpp)) sobre os drivers de motor e o PID;
 2. escrever o `main.cpp` com o `loop()` não bloqueante da §4.8, chamando `updateStationBehavior(millis())`;
 3. definir como o ESP32 identifica a estação sozinho (leitor RFID ou outro sensor, sem o Pi) e como preenche o contexto (`next_destination`...) que o runtime consulta;
 4. criar o `platformio.ini` e compilar `behavior_generated.cpp` junto do firmware.

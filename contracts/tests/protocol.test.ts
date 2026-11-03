@@ -150,7 +150,10 @@ describe('erros e registro de endpoints', () => {
     expect(pos.errors).toContain('DEVICE_BUSY');
     expect(fc.roles).toEqual(['admin']);
     expect(fc.errors).toEqual(expect.arrayContaining(['CONFLICT_STATE', 'FORBIDDEN']));
-    expect(ENDPOINTS).toHaveLength(30);
+    expect(ENDPOINTS).toHaveLength(31);
+    expect(ENDPOINTS.find(e => e.id === 'deviceSensors')).toMatchObject({
+      method: 'POST', path: '/device/sensors', auth: 'device-token',
+    });
   });
 
   it('matchEndpoint resolve parâmetros e buildPath os recompõe', () => {

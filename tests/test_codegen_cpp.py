@@ -50,7 +50,7 @@ def run_scenario(tmp_path):
         exe = tmp_path / "harness.exe"
         subprocess.run(
             [*find_compiler(), "-std=c++11", "-Wall", "-Wextra", "-Werror",
-             "-I", str(ROOT / "firmware" / "include"), "-I", str(tmp_path),
+             "-I", str(ROOT / "compiler" / "roboflow" / "runtime"), "-I", str(tmp_path),
              str(ROOT / "tests" / "cpp" / "harness.cpp"), str(tmp_path / "behavior_generated.cpp"),
              "-o", str(exe)],
             check=True, capture_output=True, text=True,

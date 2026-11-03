@@ -1,6 +1,6 @@
 # Firmware do ESP32 — o que construir
 
-Este documento descreve o projeto original do firmware. A implementação para Arduino IDE está em [`firmware/roboflow_esp32`](../../firmware/roboflow_esp32/README.md), com compilação e testes do núcleo C++ contra o backend. Curvas e cruzamentos ainda exigem calibração física. O simulador de referência permanece em [`backend/tools/esp-sim/sim.ts`](../../backend/tools/esp-sim/sim.ts).
+**Arquitetura atual:** [`firmware/carrinho_simples`](../../firmware/carrinho_simples/README.md) contém um único `.ino`. O ESP32 lê os sensores digitais, envia os bits por HTTP local e aplica a saída dos motores. Cruzamentos, curvas, seguimento de linha e progresso são calculados pelo backend em `POST /device/sensors`. Esse é o modelo para o futuro gerador da linguagem. A documentação abaixo descreve o projeto anterior, com processamento local, e permanece como histórico; consulte o README do sketch para configurar a implementação atual.
 
 **Ajuste solicitado em 28/10/2026:** no firmware implementado, o ultrassônico é **opcional**. Leitura válida pode bloquear por obstáculo; ausência de eco ou leitura vencida não veta movimento. Isso substitui, para essa implementação, os vetos por ultrassônico inválido/antigo descritos abaixo. Liberação de bloqueio não retoma a missão automaticamente. As demais tabelas e pseudocódigos abaixo são referências de projeto, não uma descrição integral de tudo que foi implementado; consulte o README do firmware para os limites e diferenças.
 

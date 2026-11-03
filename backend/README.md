@@ -1,5 +1,12 @@
 # Backend RoboFlow — documentação técnica para implementação futura
 
+**Controle atual do carrinho:** `POST /device/sensors` recebe os três sensores
+digitais e calcula a potência dos motores. O firmware é um único `.ino` e usa HTTP
+na rede local. Configuração e protocolo estão em
+[`firmware/carrinho_simples`](../firmware/carrinho_simples/README.md). O endpoint já
+está implementado em `src/services/sensor-control.ts`; as seções abaixo descrevem
+as arquiteturas anteriores. Os endpoints existentes da dashboard foram preservados.
+
 > **Aviso (26/10/2026):** a arquitetura de nuvem — **Cloud Run, poll HTTPS do ESP32, Firestore, Pub/Sub** — **supera** as seções deste documento que tratam de serial USB, backend no computador do operador, heartbeat/expiração de 250 ms / 1.000 ms e "stack/banco não escolhidos". Essas seções continuam abaixo, marcadas como **SUPERADAS**, só como histórico. Convenção de coordenadas: **y para baixo** (§4–§5 atualizadas). Decisões em [docs/adr/0001 a 0005](../docs/adr) (e [0008](../docs/adr/0008-um-start-resume-pendente-por-vez.md)); modelo de dados em [docs/FIRESTORE_MODEL.md](../docs/FIRESTORE_MODEL.md); contrato executável em [contracts/](../contracts).
 
 **Estado:** especificação; o backend ainda não foi implementado. Esta pasta contém somente documentação. Atualizado em 21/10/2026.

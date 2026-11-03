@@ -10,6 +10,7 @@ export * from './geometry.js';
 export * from './dashboard.js';
 export * from './mission.js';
 export * from './device.js';
+export * from './sensors.js';
 export * from './api.js';
 export * from './metrics.js';
 export * from './projection.js';

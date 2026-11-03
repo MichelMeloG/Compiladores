@@ -22,6 +22,10 @@
 
 ## Documentação
 
+O [firmware atual](firmware/carrinho_simples/README.md) é um único `.ino`: envia
+os três sensores digitais por HTTP local e aplica a saída dos motores. O backend
+processa linha, cruzamentos, curvas e progresso em `POST /device/sensors`.
+
 A documentação atual do carrinho está consolidada em dois documentos:
 
 1. [O que o robô faz](docs/O_QUE_O_ROBO_FAZ.md).

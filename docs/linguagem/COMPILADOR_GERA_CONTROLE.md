@@ -76,7 +76,7 @@ Toda a lógica de estação roda **dentro do ESP32**, junto do seguimento de lin
 Duas consequências moldam o código gerado:
 
 - **Nada pode bloquear.** O `loop()` do ESP32 precisa atender sensores, PID e veto de proximidade a cada volta; um `delay()` ou um laço de espera dentro de uma estação congelaria tudo isso. Por isso `wait_signal` não espera: cada estação vira uma **máquina de estados** que o `loop()` avança aos poucos, e sem o sinal ela apenas devolve o controle.
-- **O código gerado não toca o hardware.** Ele só chama a API de [`robot_runtime.hpp`](../../firmware/include/robot_runtime.hpp) (`stop()`, `setSpeed()`, `hasSignal()`...), escrita à mão no firmware. Como o veto de proximidade vive fora dessa API, nenhum programa RoboFlow consegue desligá-lo — nem por engano.
+- **O código gerado não toca o hardware.** Ele só chama a API de [`robot_runtime.hpp`](../../compiler/roboflow/runtime/robot_runtime.hpp) (`stop()`, `setSpeed()`, `hasSignal()`...), escrita à mão no firmware. Como o veto de proximidade vive fora dessa API, nenhum programa RoboFlow consegue desligá-lo — nem por engano.
 
 O firmware-base (seguimento de linha, veto, drivers, o `loop()`) **não é gerado pelo compilador**: é escrito à mão em C++ uma única vez, porque essa lógica não muda por estação nem por comissionamento de pista.
 
@@ -446,7 +446,7 @@ O firmware usa quatro funções, declaradas no `.hpp` gerado:
 | `stationBehaviorActive()` | para saber se o comportamento já terminou |
 
 E o código gerado, por sua vez, só chama o runtime que o firmware implementa
-([`robot_runtime.hpp`](../../firmware/include/robot_runtime.hpp)). Esse arquivo é o **contrato**
+([`robot_runtime.hpp`](../../compiler/roboflow/runtime/robot_runtime.hpp)). Esse arquivo é o **contrato**
 entre compilador e firmware; o compilador nunca emite acesso a pinos ou motores.
 
 ### Uma estação = uma máquina de estados

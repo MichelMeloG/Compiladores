@@ -801,7 +801,7 @@ export async function handleEvents(
 }
 
 /** Efeito do `ack` aceito sobre a missão. */
-function applyAck(
+export function applyAck(
   _deps: Deps,
   _tx: Tx,
   robot: RobotDoc,
