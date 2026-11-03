@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <esp_system.h>
 
 namespace {
 
@@ -26,7 +27,22 @@ constexpr uint32_t COMMAND_TIMEOUT_MS = 450;
 constexpr bool LEFT_MOTOR_INVERTED = false;
 constexpr bool RIGHT_MOTOR_INVERTED = false;
 
+// Alimentação: com ESP e ponte H no mesmo power bank, a partida dos motores e o rádio Wi-Fi
+// competem pelo mesmo 5 V. Partida em rampa, rádio mais fraco e espera inicial reduzem os picos.
+constexpr uint32_t POWER_SETTLE_MS = 400;        // espera a alimentação estabilizar antes de ligar o Wi-Fi
+constexpr uint32_t RAMP_INTERVAL_MS = 15;
+constexpr int RAMP_STEP = 4;                     // pontos percentuais por passo (0 -> 100% em ~0,4 s)
+constexpr uint32_t LINE_SENSOR_INTERVAL_MS = 20;
+constexpr uint8_t AP_CHANNEL = 1;
+constexpr uint8_t AP_MAX_CLIENTS = 2;
+
 WebServer server(80);
+int targetLeft = 0;                              // potência pedida, -100..100
+int targetRight = 0;
+int currentLeft = 0;                             // potência aplicada agora, -100..100
+int currentRight = 0;
+uint32_t lastRampAt = 0;
+uint32_t lastLineAt = 0;
 uint16_t lineAnalog[4] = {};
 uint8_t lineDigital[4] = {};
 float distanceCm = 0;
@@ -50,6 +66,8 @@ section{background:white;padding:16px;margin:12px 0;border-radius:12px}
 </style><h2>Teste de bancada ESP32</h2>
 <section><b>HC-SR04 (opcional):</b> <span id="distance">verificando...</span><br><span id="safety"></span>
 <p>Sem sensor/eco, o controle funciona normalmente. Quando houver leitura válida, um obstáculo a 20 cm ou menos bloqueia o movimento.</p></section>
+<section><b>Alimentação:</b> <span id="power">verificando...</span><br>
+<small>Se o tempo ligado voltar a zero ao mexer no joystick, a tensão está caindo e o ESP reinicia.</small></section>
 <section><b>Sensores de linha (GPIO 32, 34, 33, 35)</b><div id="sensors"></div>
 <small>ADC bruto e nível digital. Para módulos digitais, use DO; para analógicos, AO. Os valores não controlam o carrinho.</small></section>
 <section><b>Joystick analógico</b><div id="pad" class="pad"><div id="stick"></div></div>
@@ -72,6 +90,7 @@ async function refresh(){try{const s=await(await fetch('/status')).json();
 document.querySelector('#distance').textContent=s.distanceValid?s.distanceCm.toFixed(1)+' cm':'sem sinal (opcional)';
 document.querySelector('#safety').textContent=s.obstacleBlocked?'BLOQUEADO — obstáculo detectado':'Controle liberado';
 document.querySelector('#safety').className=s.obstacleBlocked?'blocked':'safe';
+document.querySelector('#power').textContent='último reinício: '+s.resetReason+' · ligado há '+(s.uptimeMs/1000).toFixed(0)+' s';
 document.querySelector('#sensors').innerHTML=s.sensors.map((v,i)=>'<span class="sensor">S'+(i+1)+' GPIO '+v.gpio+': ADC '+v.analog+' / '+(v.digital?'HIGH':'LOW')+'</span>').join('');
 if(s.activeDirection==='stop'&&pointer===null)state.textContent='Parado';
 }catch(e){document.querySelector('#distance').textContent='sem conexão'}}
@@ -79,6 +98,8 @@ setInterval(refresh,200);refresh();
 </script></html>
 )HTML";
 
+// Parada imediata (sem rampa): é o caminho de segurança — soltar o joystick, comando vencido
+// e obstáculo sempre passam por aqui.
 void stopMotors() {
   analogWrite(MOTOR_LEFT_EN, 0);
   analogWrite(MOTOR_RIGHT_EN, 0);
@@ -86,6 +107,7 @@ void stopMotors() {
   digitalWrite(MOTOR_LEFT_IN2, LOW);
   digitalWrite(MOTOR_RIGHT_IN1, LOW);
   digitalWrite(MOTOR_RIGHT_IN2, LOW);
+  targetLeft = targetRight = currentLeft = currentRight = 0;
   activeDirection = "stop";
 }
 
@@ -93,6 +115,60 @@ void setMotor(uint8_t in1, uint8_t in2, bool forward, bool inverted) {
   const bool level = forward != inverted;
   digitalWrite(in1, level ? HIGH : LOW);
   digitalWrite(in2, level ? LOW : HIGH);
+}
+
+// Aplica a potência (-100..100) a um canal da ponte H.
+void driveMotor(uint8_t en, uint8_t in1, uint8_t in2, int power, bool inverted) {
+  if (power == 0) {
+    digitalWrite(in1, LOW);
+    digitalWrite(in2, LOW);
+    analogWrite(en, 0);
+    return;
+  }
+  setMotor(in1, in2, power > 0, inverted);
+  analogWrite(en, abs(power) * 255 / 100);
+}
+
+// Sobe/desce a potência em degraus. Inverter o sentido com o motor girando é o pior pico de
+// corrente: antes de trocar de sentido a rampa passa por zero.
+int rampToward(int current, int target) {
+  if (current != 0 && target != 0 && (current > 0) != (target > 0)) target = 0;
+  if (current < target) return min(current + RAMP_STEP, target);
+  if (current > target) return max(current - RAMP_STEP, target);
+  return current;
+}
+
+void updateMotorRamp() {
+  const uint32_t now = millis();
+  if (now - lastRampAt < RAMP_INTERVAL_MS) return;
+  lastRampAt = now;
+  if (obstacleBlocked) return;  // o loop() já chama stopMotors()
+
+  const int nextLeft = rampToward(currentLeft, targetLeft);
+  const int nextRight = rampToward(currentRight, targetRight);
+  if (nextLeft != currentLeft) {
+    currentLeft = nextLeft;
+    driveMotor(MOTOR_LEFT_EN, MOTOR_LEFT_IN1, MOTOR_LEFT_IN2, currentLeft, LEFT_MOTOR_INVERTED);
+  }
+  if (nextRight != currentRight) {
+    currentRight = nextRight;
+    driveMotor(MOTOR_RIGHT_EN, MOTOR_RIGHT_IN1, MOTOR_RIGHT_IN2, currentRight, RIGHT_MOTOR_INVERTED);
+  }
+}
+
+const char* resetReasonText() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON: return "ligado na energia";
+    case ESP_RST_SW: return "reinício por software";
+    case ESP_RST_PANIC: return "falha do programa (panic)";
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT: return "watchdog";
+    case ESP_RST_BROWNOUT: return "BROWNOUT (queda de tensão)";
+    case ESP_RST_DEEPSLEEP: return "saiu do sono profundo";
+    case ESP_RST_EXT: return "pino EN/reset";
+    default: return "desconhecido";
+  }
 }
 
 void updateObstacleSensor() {
@@ -137,13 +213,17 @@ void readLineSensors() {
 
 String makeStatusJson() {
   String json;
-  json.reserve(300);
+  json.reserve(420);
   json = "{\"distanceValid\":";
   json += distanceValid ? "true" : "false";
   json += ",\"distanceCm\":";
   json += String(distanceCm, 1);
   json += ",\"obstacleBlocked\":";
   json += obstacleBlocked ? "true" : "false";
+  json += ",\"resetReason\":\"";
+  json += resetReasonText();
+  json += "\",\"uptimeMs\":";
+  json += millis();
   json += ",\"activeDirection\":\"";
   json += activeDirection;
   json += "\",\"sensors\":[";
@@ -203,20 +283,9 @@ void handleMove() {
     return;
   }
 
-  if (leftPower == 0) {
-    digitalWrite(MOTOR_LEFT_IN1, LOW);
-    digitalWrite(MOTOR_LEFT_IN2, LOW);
-  } else {
-    setMotor(MOTOR_LEFT_IN1, MOTOR_LEFT_IN2, leftPower > 0, LEFT_MOTOR_INVERTED);
-  }
-  if (rightPower == 0) {
-    digitalWrite(MOTOR_RIGHT_IN1, LOW);
-    digitalWrite(MOTOR_RIGHT_IN2, LOW);
-  } else {
-    setMotor(MOTOR_RIGHT_IN1, MOTOR_RIGHT_IN2, rightPower > 0, RIGHT_MOTOR_INVERTED);
-  }
-  analogWrite(MOTOR_LEFT_EN, abs(leftPower) * 255 / 100);
-  analogWrite(MOTOR_RIGHT_EN, abs(rightPower) * 255 / 100);
+  // Só define o alvo: updateMotorRamp() leva os motores até ele aos poucos, sem pico de corrente.
+  targetLeft = leftPower;
+  targetRight = rightPower;
 
   if (y > JOYSTICK_DEADZONE) activeDirection = "frente";
   else if (y < -JOYSTICK_DEADZONE) activeDirection = "ré";
@@ -229,23 +298,32 @@ void handleMove() {
 }  // namespace
 
 void setup() {
-  Serial.begin(115200);
-  analogReadResolution(12);
-  for (uint8_t pin : LINE_PINS) pinMode(pin, INPUT);
-
+  // 1) Motores desligados antes de qualquer outra coisa.
   pinMode(MOTOR_LEFT_EN, OUTPUT);
   pinMode(MOTOR_LEFT_IN1, OUTPUT);
   pinMode(MOTOR_LEFT_IN2, OUTPUT);
   pinMode(MOTOR_RIGHT_IN1, OUTPUT);
   pinMode(MOTOR_RIGHT_IN2, OUTPUT);
+  pinMode(MOTOR_RIGHT_EN, OUTPUT);
   stopMotors();
+
+  Serial.begin(115200);
+  analogReadResolution(12);
+  for (uint8_t pin : LINE_PINS) pinMode(pin, INPUT);
 
   pinMode(ULTRASONIC_TRIG, OUTPUT);
   pinMode(ULTRASONIC_ECHO, INPUT_PULLDOWN);
   digitalWrite(ULTRASONIC_TRIG, LOW);
 
+  // 2) Espera o 5 V estabilizar (power bank + ponte H ligando juntos) antes de ligar o rádio,
+  //    que é o maior consumidor de pico do ESP32.
+  delay(POWER_SETTLE_MS);
+  Serial.print("Último reinício: ");
+  Serial.println(resetReasonText());
+
   WiFi.mode(WIFI_AP);
-  if (!WiFi.softAP(AP_SSID, AP_PASSWORD)) {
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);  // menos pico de corrente; basta para o celular ao lado do carrinho
+  if (!WiFi.softAP(AP_SSID, AP_PASSWORD, AP_CHANNEL, 0, AP_MAX_CLIENTS)) {
     Serial.println("Falha ao iniciar o ponto de acesso Wi-Fi.");
     return;
   }
@@ -277,5 +355,11 @@ void loop() {
        obstacleBlocked)) {
     stopMotors();
   }
-  readLineSensors();
+  updateMotorRamp();
+
+  if (millis() - lastLineAt >= LINE_SENSOR_INTERVAL_MS) {
+    lastLineAt = millis();
+    readLineSensors();
+  }
+  delay(1);  // cede CPU ao Wi-Fi e reduz o consumo do laço ocupado
 }
