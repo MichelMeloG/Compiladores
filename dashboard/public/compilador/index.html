@@ -1,0 +1,37 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#122b22">
+  <title>Compilador · RoboFlow</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../" aria-label="Voltar para a dashboard"><span class="brand-icon">R<span>.</span></span><span>RoboFlow <small> / COMPILADOR</small></span></a>
+    <a class="back" href="../dashboard/">← <span>Voltar à dashboard</span></a>
+  </header>
+  <main>
+    <div class="intro"><div><div class="eyebrow"><span></span> AMBIENTE DE DESENVOLVIMENTO</div><h1>Do código ao movimento<span>.</span></h1><p>Escreva os comportamentos do seu robô em RoboFlow. Em breve, transforme suas instruções em código para ESP32.</p></div><div class="target"><span class="target-icon">⌁</span><div><small>PLATAFORMA DE DESTINO</small><strong>ESP32 <em>· Arduino</em></strong></div></div></div>
+    <div class="notice"><span class="notice-icon">i</span><div><strong>O compilador está em desenvolvimento.</strong> Por enquanto, você pode escrever e salvar seu código. A geração do arquivo .ino será disponibilizada em uma próxima etapa.</div><span class="badge">EM BREVE</span></div>
+    <section class="workspace" aria-label="Área de trabalho do compilador">
+      <div class="workspace-head"><div><span class="workspace-dot"></span><strong>Área de trabalho</strong><span class="divider"></span><span class="muted">RoboFlow → ESP32</span></div><span class="local"><span></span> EDIÇÃO LOCAL</span></div>
+      <div class="panels">
+        <section class="panel editor-panel"><div class="panel-heading"><div><span class="step">01</span><div><h2>Código RoboFlow</h2><p>Defina o comportamento do robô</p></div></div><span class="file-tag">.RF</span></div>
+          <div class="toolbar"><span class="filename"><span>◈</span> programa.rf</span><div class="tool-actions"><button id="example" type="button">Exemplo</button><label class="upload" for="file">Abrir arquivo</label><input id="file" type="file" accept=".rf,text/plain" hidden><button id="save" type="button">Salvar .rf</button></div></div>
+          <div class="editor"><div class="editor-top"><span></span><span></span><span></span><small>programa.rf</small></div><div class="code-area"><div id="lines" aria-hidden="true"></div><textarea id="source" spellcheck="false" aria-label="Código RoboFlow" placeholder="Escreva seu código RoboFlow aqui..."></textarea></div></div>
+          <div class="editor-footer"><span>RoboFlow <i>•</i> UTF-8</span><span id="count">0 linhas</span></div>
+        </section>
+        <section class="panel output-panel"><div class="panel-heading"><div><span class="step">02</span><div><h2>Saída para ESP32</h2><p>Seu código gerado aparecerá aqui</p></div></div><span class="file-tag">.INO</span></div>
+          <div class="output"><div class="output-mark">&lt;/&gt;</div><h3>Pronto para o próximo passo</h3><p>Quando o compilador estiver disponível, o código gerado para Arduino aparecerá neste espaço.</p><span class="output-status"><span></span> AGUARDANDO INTEGRAÇÃO</span></div>
+          <div class="output-footer"><button class="compile" disabled>↗ &nbsp; Gerar código .ino <span>EM BREVE</span></button><p>A compilação ainda não está disponível.</p></div>
+        </section>
+      </div>
+    </section>
+    <div class="bottom"><span><strong>RoboFlow</strong> &nbsp; / &nbsp; Do planejamento à execução.</span><span>FEITO PARA DAR VIDA ÀS SUAS IDEIAS <b>✳</b></span></div>
+  </main>
+  <div id="message" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
