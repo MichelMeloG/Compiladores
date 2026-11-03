@@ -1,5 +1,10 @@
 # Backend RoboFlow — guia de desenvolvimento
 
+Para operar o ESP32 na bateria com rotas locais e comandos pela dashboard, siga
+[`firmware/carrinho_autonomo/README.md`](../firmware/carrinho_autonomo/README.md).
+`npm run dev:local` carrega `backend/.env`. O cadastro padrão é limpo; use
+`SEED_PROFILE=demo` explicitamente para testes que dependem das missões fictícias.
+
 API única (Fastify, Node 22, TypeScript estrito) para o Cloud Run. Três faces no mesmo serviço, cada uma com a sua autenticação:
 
 | Prefixo | Quem chama | Autenticação |
@@ -16,7 +21,7 @@ Os contratos (schemas, registro de endpoints, tradução de rota, assinatura, se
 ```bash
 cd contracts && npm ci && npm run build      # uma vez (o backend consome contracts/dist)
 cd ../backend && npm ci
-STORE=memory AUTH_MODE=off npm run dev       # http://localhost:8080 — já vem com o seed de demonstração
+STORE=memory AUTH_MODE=off npm run dev       # http://localhost:8080 — cadastro limpo
 ```
 
 `STORE=memory` + `AUTH_MODE=off` é o modo de desenvolvimento: dados em memória (perdem-se ao reiniciar), sem login (`x-dev-role: viewer|operator|admin` escolhe o papel; padrão `admin`). A configuração **recusa iniciar** com `AUTH_MODE=off` se `NODE_ENV=production` ou `STORE=firestore`.
@@ -76,7 +81,7 @@ Destaques da suíte (`test/`):
 ### Suíte de contrato contra o servidor local
 
 ```bash
-STORE=memory AUTH_MODE=off CORS_ORIGINS=http://localhost:3000 \
+STORE=memory AUTH_MODE=off SEED_PROFILE=demo CORS_ORIGINS=http://localhost:3000 \
   DEVICE_SECRETS_JSON='{"RB-02":"um-segredo-com-pelo-menos-16-chars"}' npm run dev &
 npm run contract:test -- --base-url http://localhost:8080 \
   --device-secret um-segredo-com-pelo-menos-16-chars --device-id RB-02 --allow-mutations

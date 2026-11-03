@@ -250,6 +250,9 @@ export interface RouteSubmitResult {
   accepted: boolean;
   waypointCount: number;
   message?: string;
+  missionId?: string;
+  commandId?: string;
+  actions?: string[];
 }
 
 /** Rota atualmente carregada no robô — `GET /robots/:id/route`. */
@@ -261,6 +264,44 @@ export interface ActiveRoute {
   status: 'queued' | 'running' | 'completed' | 'cancelled';
   /** Índice do waypoint que o robô já alcançou, ou `null` se não iniciou. */
   currentWaypointIndex?: number | null;
+  missionId?: string;
+  state?: MissionState;
+  initialHeading?: Heading;
+  actions?: string[];
+}
+
+export type Heading = 'N' | 'E' | 'S' | 'W';
+export type MissionState = 'queued' | 'loading' | 'ready' | 'running' | 'blocked' |
+  'paused' | 'completed' | 'aborted' | 'failed' | 'uncertain';
+export interface DeviceCommand {
+  id: string;
+  type: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired' | 'uncertain';
+  reason?: string;
+}
+export interface ExecutionState {
+  missionId: string;
+  sessionId: string | null;
+  state: MissionState;
+  completedActions: number;
+  totalActions: number;
+  lastConfirmedNode: string | null;
+  expectedNode: string | null;
+  blockId: string | null;
+  blockReasons: string[];
+  pendingCommands: DeviceCommand[];
+  positionConfidence: 'confirmed' | 'estimated' | 'unknown';
+}
+export interface DeviceStatus {
+  connection: 'online' | 'stale' | 'offline';
+  sessionId: string | null;
+  activeMissionId: string | null;
+  state: string | null;
+  sensors: { line: [number, number, number] | null } | null;
+  blockId: string | null;
+  blockReasons: string[];
+  lastSeenAt: string | null;
+  dataAgeMs: number | null;
 }
 
 /**

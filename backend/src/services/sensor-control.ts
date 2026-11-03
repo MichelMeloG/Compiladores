@@ -41,6 +41,10 @@ export async function handleSensors(deps: Deps, deviceId: string, input: SensorI
   return deps.store.runTransaction(async tx => {
     const robot = await tx.get<RobotDoc>(C.robots, deviceId);
     if (!robot) throw new AppError('SIGNATURE_INVALID', 'Credencial inválida.');
+    if (robot.controller === 'local-route' && robot.activeMissionId) {
+      throw new AppError('CONFLICT_STATE', 'Missão com execução local: não envie sensores ao controlador remoto.');
+    }
+    robot.controller = 'sensor-http';
     let m = robot.activeMissionId ? await tx.get<MissionDoc>(C.missions, robot.activeMissionId) : undefined;
     const previous = robot.sensorControl;
     if (!previous && m?.active && m.motionStartedAt) {

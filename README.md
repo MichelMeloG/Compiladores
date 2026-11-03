@@ -22,9 +22,15 @@
 
 ## Documentação
 
-O [firmware atual](firmware/carrinho_simples/README.md) é um único `.ino`: envia
-os três sensores digitais por HTTP local e aplica a saída dos motores. O backend
-processa linha, cruzamentos, curvas e progresso em `POST /device/sensors`.
+O [relatório de alterações e impacto no backend/banco](docs/RELATORIO_ALTERACOES_CARRINHO_BACKEND_DATABASE.md)
+registra os arquivos modificados, campos persistidos, compatibilidade e limites
+de validação da integração do carrinho.
+
+O [firmware com rotas locais](firmware/carrinho_autonomo/README.md) é um único
+`.ino`: recebe rotas e comandos por Wi-Fi, corrige a linha no ESP32 e confirma
+os cruzamentos ao backend. Funciona na bateria e aguarda início pela dashboard.
+O [firmware original](firmware/carrinho_simples/README.md), que recebe potências
+de `POST /device/sensors`, continua disponível separadamente.
 
 A documentação atual do carrinho está consolidada em dois documentos:
 

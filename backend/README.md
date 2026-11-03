@@ -1,6 +1,12 @@
 # Backend RoboFlow — documentação técnica para implementação futura
 
-**Controle atual do carrinho:** `POST /device/sensors` recebe os três sensores
+**Carrinho com execução local:** configuração e operação completas em
+[`firmware/carrinho_autonomo`](../firmware/carrinho_autonomo/README.md). Usa
+`/device/hello` e `/device/events` para receber fila/comandos e confirmar progresso.
+O ESP32 corrige a linha sem esperar a rede; a dashboard inicia, para, retoma e cancela.
+O backend usa cadastro limpo por padrão; demonstração exige `SEED_PROFILE=demo`.
+
+**Firmware original:** `POST /device/sensors` recebe os três sensores
 digitais e calcula a potência dos motores. O firmware é um único `.ino` e usa HTTP
 na rede local. Configuração e protocolo estão em
 [`firmware/carrinho_simples`](../firmware/carrinho_simples/README.md). O endpoint já
@@ -9,7 +15,8 @@ as arquiteturas anteriores. Os endpoints existentes da dashboard foram preservad
 
 > **Aviso (26/10/2026):** a arquitetura de nuvem — **Cloud Run, poll HTTPS do ESP32, Firestore, Pub/Sub** — **supera** as seções deste documento que tratam de serial USB, backend no computador do operador, heartbeat/expiração de 250 ms / 1.000 ms e "stack/banco não escolhidos". Essas seções continuam abaixo, marcadas como **SUPERADAS**, só como histórico. Convenção de coordenadas: **y para baixo** (§4–§5 atualizadas). Decisões em [docs/adr/0001 a 0005](../docs/adr) (e [0008](../docs/adr/0008-um-start-resume-pendente-por-vez.md)); modelo de dados em [docs/FIRESTORE_MODEL.md](../docs/FIRESTORE_MODEL.md); contrato executável em [contracts/](../contracts).
 
-**Estado:** especificação; o backend ainda não foi implementado. Esta pasta contém somente documentação. Atualizado em 21/10/2026.
+**Histórico abaixo:** partes desta especificação antecedem o backend implementado.
+Para executar e validar o código atual, use `DEV.md` e o README do firmware acima.
 
 Este documento descreve o comportamento esperado, os dados, as interfaces e os critérios para construir o backend. Exemplos de mensagens e endpoints novos são contratos propostos para implementação, não recursos disponíveis para uso.
 

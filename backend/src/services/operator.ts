@@ -358,9 +358,14 @@ export async function controlMission(
           if (!online) throw deviceUnavailable('Dispositivo sem conexão: a retomada foi recusada.');
           blockId = body.blockId;
           break;
-        case 'stop':
-          if (m.state !== 'running') throw conflictState(`Não é possível parar uma missão em ${m.state}.`);
+        case 'stop': {
+          const startPending = await findPendingOfKind(tx, robot, 'start', missionId);
+          const resumePending = await findPendingOfKind(tx, robot, 'resume', missionId);
+          if (m.state !== 'running' && !startPending && !resumePending) {
+            throw conflictState(`Não é possível parar uma missão em ${m.state}.`);
+          }
           break;
+        }
         case 'abort':
           if (m.state === 'queued') localResolution = true;
           break;
@@ -414,6 +419,20 @@ export async function controlMission(
           { source: 'system' },
         );
       } else {
+        // Uma parada nova invalida pedidos de movimento ainda pendentes.
+        // Assim uma resposta/reentrega atrasada não pode reiniciar o robô.
+        if (kind === 'stop' || kind === 'abort') {
+          for (const pid of [...robot.pendingCommandIds]) {
+            const previous = await tx.get<CommandDoc>(C.commands, pid);
+            if (previous?.status === 'pending' && previous.missionId === m.id &&
+                (previous.type === 'start' || previous.type === 'resume')) {
+              previous.status = 'expired'; previous.reason = 'SUPERSEDED_BY_STOP';
+              previous.resolvedAt = nowIso;
+              removePending(robot, previous.id);
+              tx.set(C.commands, previous.id, previous);
+            }
+          }
+        }
         addPending(robot, cmdId);
         if ((kind === 'stop' || kind === 'abort') && !online) {
           // Sem conexão: nunca alegar parada confirmada. Registra a intenção e

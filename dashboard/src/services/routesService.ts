@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ActiveRoute, RobotGrid, RouteSubmitResult, RouteWaypoint } from '../types';
-import { apiRequest } from './api';
+import { ActiveRoute, Heading, RobotGrid, RouteSubmitResult, RouteWaypoint } from '../types';
+import { ApiError, apiRequest } from './api';
+
+export const requestKey = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 /**
  * Obtém a malha percorrível de um robô.
@@ -28,10 +30,13 @@ export async function getRobotGrid(robotId: string): Promise<RobotGrid> {
  * situação normal e não erro de comunicação.
  */
 export async function getActiveRoute(robotId: string): Promise<ActiveRoute | null> {
-  const res = await apiRequest<ActiveRoute | null>(
-    `robots/${encodeURIComponent(robotId)}/route`
-  );
-  return res.data ?? null;
+  try {
+    const res = await apiRequest<ActiveRoute>(`robots/${encodeURIComponent(robotId)}/route`);
+    return res.data ?? null;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 /**
@@ -46,13 +51,15 @@ export async function getActiveRoute(robotId: string): Promise<ActiveRoute | nul
  */
 export async function submitRoute(
   robotId: string,
-  waypoints: RouteWaypoint[]
+  waypoints: RouteWaypoint[],
+  initialHeading?: Heading
 ): Promise<RouteSubmitResult> {
   const res = await apiRequest<RouteSubmitResult>(
     `robots/${encodeURIComponent(robotId)}/route`,
     {
       method: 'POST',
-      body: JSON.stringify({ waypoints }),
+      headers: { 'Idempotency-Key': requestKey() },
+      body: JSON.stringify({ waypoints, initialHeading }),
     }
   );
 
@@ -63,4 +70,18 @@ export async function submitRoute(
       waypointCount: waypoints.length,
     }
   );
+}
+
+export async function confirmPosition(robotId: string, point: RouteWaypoint, heading: Heading): Promise<void> {
+  await apiRequest(`robots/${encodeURIComponent(robotId)}/position`, {
+    method: 'POST', headers: { 'Idempotency-Key': requestKey() },
+    body: JSON.stringify({ ...point, heading }),
+  });
+}
+
+export async function previewRoute(robotId: string, waypoints: RouteWaypoint[], initialHeading: Heading) {
+  return (await apiRequest<{ executable: boolean; actions: string[]; errors: { message: string }[] }>(
+    `robots/${encodeURIComponent(robotId)}/route/preview`,
+    { method: 'POST', body: JSON.stringify({ waypoints, initialHeading }) },
+  )).data;
 }

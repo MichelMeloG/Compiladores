@@ -18,11 +18,12 @@ import {
 } from 'lucide-react';
 import { RobotHeaderCard } from '../components/robots/RobotHeaderCard';
 import { RouteGridCanvas } from '../components/robots/RouteGridCanvas';
+import { ExecutionPanel } from '../components/robots/ExecutionPanel';
 import { ErrorState } from '../components/common/ErrorState';
 import { getRobotById } from '../services/robotsService';
-import { getActiveRoute, getRobotGrid, submitRoute } from '../services/routesService';
+import { confirmPosition, getActiveRoute, getRobotGrid, previewRoute, submitRoute } from '../services/routesService';
 import { toErrorMessage } from '../services/api';
-import { ActiveRoute, Robot, RobotGrid, RouteWaypoint } from '../types';
+import { ActiveRoute, Heading, Robot, RobotGrid, RouteWaypoint } from '../types';
 import {
   appendWaypoint,
   describeStep,
@@ -111,6 +112,10 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
 
   const [newX, setNewX] = useState('');
   const [newY, setNewY] = useState('');
+  const [heading, setHeading] = useState<Heading>('E');
+  const [positionConfirmed, setPositionConfirmed] = useState(false);
+  const [dispatchVersion, setDispatchVersion] = useState(0);
+  const demo = import.meta.env.VITE_DEMO === 'true';
 
   useEffect(() => {
     let mounted = true;
@@ -118,12 +123,13 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
     const load = async () => {
       setLoading(true);
       setLoadError(null);
+      setPositionConfirmed(false);
       try {
         const [mRobot, mGrid, mRoute] = await Promise.all([
           getRobotById(robotId),
           getRobotGrid(robotId),
           // Uma rota ausente não é falha: o robô pode simplesmente não ter uma.
-          getActiveRoute(robotId).catch(() => null),
+          getActiveRoute(robotId),
         ]);
 
         if (!mounted) return;
@@ -162,6 +168,7 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
       setEditError(result.error);
       setSendResult(null);
       setSendError(null);
+      setPositionConfirmed(false);
     },
     []
   );
@@ -215,7 +222,7 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
     return validateRoute(waypoints, grid);
   }, [waypoints, grid]);
 
-  const canSend = Boolean(grid) && waypoints.length >= 2 && !validationError;
+  const canSend = Boolean(grid) && waypoints.length >= 2 && !validationError && positionConfirmed;
 
   const handleSend = async () => {
     if (!canSend) return;
@@ -225,10 +232,15 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
     setSendResult(null);
 
     try {
-      const result = await submitRoute(robotId, waypoints);
+      if (!demo) {
+        const preview = await previewRoute(robotId, waypoints, heading);
+        if (!preview.executable) throw new Error(preview.errors.map(e => e.message).join('; ') || 'Rota não executável.');
+        await confirmPosition(robotId, waypoints[0], heading);
+      }
+      const result = await submitRoute(robotId, waypoints, heading);
       if (result.accepted) {
         setSendResult(
-          `Rota enviada ao robô: ${result.waypointCount} pontos${
+          `Rota registrada; aguardando confirmação do carrinho: ${result.waypointCount} pontos${
             result.routeId ? ` (${result.routeId})` : ''
           }.`
         );
@@ -238,7 +250,10 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
           waypoints,
           createdAt: new Date().toISOString(),
           status: 'queued',
+          missionId: result.missionId,
         });
+        setDispatchVersion(n => n + 1);
+        setPositionConfirmed(false);
       } else {
         setSendError(result.message || 'O robô recusou a rota enviada.');
       }
@@ -273,6 +288,7 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
   return (
     <div className="space-y-6">
       {robot && <RobotHeaderCard robot={robot} />}
+      {!demo && <ExecutionPanel key={robotId} robotId={robotId} refreshTrigger={`${refreshTrigger}:${dispatchVersion}`} onRoute={setActiveRoute} />}
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* The clickable lattice */}
@@ -486,6 +502,19 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
 
       {/* Summary and dispatch */}
       <div className="bg-white rounded-xl border border-[#E4ECE6] p-5">
+        <div className="mb-4 space-y-3 text-xs text-[#25372D]">
+          <label className="flex items-center gap-2">Orientação inicial
+            <select value={heading} onChange={e => { setHeading(e.target.value as Heading); setPositionConfirmed(false); }} disabled={sending}
+              className="border border-[#E4ECE6] rounded-lg p-2">
+              <option value="N">Norte (y diminui)</option><option value="E">Leste (x aumenta)</option>
+              <option value="S">Sul (y aumenta)</option><option value="W">Oeste (x diminui)</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={positionConfirmed} disabled={sending || waypoints.length < 2}
+            onChange={e => setPositionConfirmed(e.target.checked)} />
+            Posicionei o carrinho no primeiro ponto da rota, orientado no sentido escolhido.
+          </label>
+        </div>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-[#25372D] mb-1">
@@ -514,7 +543,7 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
 
             {activeRoute && (
               <p className="text-[11px] text-[#78877D] mt-1">
-                Rota carregada no robô:{' '}
+                Última rota registrada:{' '}
                 <span className="font-mono tabular-nums">
                   {activeRoute.routeId}
                 </span>{' '}
@@ -534,7 +563,7 @@ export const RoutePlanner: React.FC<RoutePlannerProps> = ({
             ) : (
               <Send className="w-4 h-4" />
             )}
-            <span>{sending ? 'Enviando…' : 'Enviar rota ao robô'}</span>
+            <span>{sending ? 'Enviando…' : 'Carregar rota'}</span>
           </button>
         </div>
 

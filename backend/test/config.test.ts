@@ -47,6 +47,7 @@ describe('configuração: combinações inseguras nunca iniciam', () => {
   it('dev local: memory + off funciona sem credencial e semeia por padrão', () => {
     const c = loadConfig({ STORE: 'memory', AUTH_MODE: 'off' } as never);
     expect(c.seedOnBoot).toBe(true);
+    expect(c.seedProfile).toBe('clean');
     expect(c.port).toBe(8080);
   });
 

@@ -11,7 +11,7 @@ import { ApiResponse } from '../types';
  * (ou via proxy reverso / `server.proxy` do Vite).
  */
 export const API_BASE_URL: string =
-  (import.meta.env.VITE_API_URL as string) || '/api';
+  (import.meta.env?.VITE_API_URL as string) || '/api';
 
 /** Tempo máximo de espera por resposta do backend, em milissegundos. */
 export const REQUEST_TIMEOUT_MS = 10000;

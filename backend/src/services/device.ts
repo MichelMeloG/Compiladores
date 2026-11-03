@@ -34,7 +34,9 @@ const MAX_FAULTS = 10;
 /** Intervalo de poll ditado pelo servidor: curto com missão/comando, longo em repouso. */
 export function pollInterval(deps: Deps, robot: RobotDoc): number {
   const active = robot.activeMissionId !== null || robot.pendingCommandIds.length > 0;
-  return active ? deps.cfg.pollActiveMs : deps.cfg.pollIdleMs;
+  // O sketch autônomo também precisa receber uma rota quando está parado.
+  return active ? deps.cfg.pollActiveMs : robot.firmwareVersion?.startsWith('autonomo-')
+    ? Math.min(deps.cfg.pollIdleMs, 3000) : deps.cfg.pollIdleMs;
 }
 
 function syncBase(deps: Deps, robot: RobotDoc, now: Date) {
@@ -60,7 +62,7 @@ function commandStillValid(cmd: CommandDoc, m: MissionDoc | undefined): boolean 
     case 'start':
       return m.state === 'ready';
     case 'stop':
-      return m.state === 'running' || m.state === 'uncertain';
+      return ['ready', 'running', 'blocked', 'paused', 'uncertain'].includes(m.state);
     case 'resume':
       return m.state === 'blocked' || m.state === 'paused';
     case 'abort':
@@ -185,6 +187,11 @@ export async function handleHello(deps: Deps, auth: DeviceAuth, hello: HelloMess
   return deps.store.runTransaction(async (tx) => {
     const robot = await tx.get<RobotDoc>(C.robots, auth.deviceId);
     if (!robot) throw new AppError('NOT_FOUND', 'Dispositivo desconhecido.');
+    if ((robot.controller === 'sensor-http' || robot.sensorControl) && robot.activeMissionId) {
+      throw new AppError('CONFLICT_STATE', 'Finalize a missão antes de mudar o controlador do robô.');
+    }
+    robot.controller = 'local-route';
+    delete robot.sensorControl;
     // Um hello capturado e reenviado depois de um mais novo traria a sessão antiga de volta.
     if (auth.timestamp < robot.lastHelloTs) {
       throw new AppError('REPLAY_DETECTED', 'Hello mais antigo que o último aceito.');
@@ -224,6 +231,8 @@ export async function handleHello(deps: Deps, auth: DeviceAuth, hello: HelloMess
     robot.capabilities = hello.capabilities;
     robot.deviceState = hello.state;
     robot.firmwareVersion = hello.firmwareVersion;
+    // O sketch atual não mede bateria: não manter o percentual fictício do seed.
+    if (hello.firmwareVersion.startsWith('autonomo-')) robot.batteryPercent = null;
     robot.protocolVersion = hello.protocolVersion;
     robot.lastSeenAt = nowIso;
 
@@ -238,7 +247,9 @@ export async function handleHello(deps: Deps, auth: DeviceAuth, hello: HelloMess
       );
     }
 
-    const reconcileRequired = mission !== undefined && mission.active && mission.state === 'uncertain';
+    const remembered = hello.lastMission ? await tx.get<MissionDoc>(C.missions, hello.lastMission.missionId) : undefined;
+    const orphanedRoute = !!hello.lastMission && (!remembered || remembered.robotId !== robot.id);
+    const reconcileRequired = orphanedRoute || (mission !== undefined && mission.active && mission.state === 'uncertain');
     if (mission) tx.set(C.missions, mission.id, mission);
 
     const commands = await collectCommands(deps, tx, robot, now);

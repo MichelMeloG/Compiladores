@@ -41,7 +41,7 @@ const EnvSchema = z.object({
   RATE_LIMIT_USER_PER_MIN: num(300),
   RATE_LIMIT_DEVICE_PER_MIN: num(240),
   SEED_ON_BOOT: z.enum(['true', 'false']).optional(),
-  SEED_PROFILE: z.enum(['demo', 'clean']).default('demo'),
+  SEED_PROFILE: z.enum(['demo', 'clean']).default('clean'),
   // Recusa rotas enquanto a posição do robô for desconhecida (exige POST /api/robots/:id/position).
   REQUIRE_CONFIRMED_POSITION: z.enum(['true', 'false']).default('false'),
 });

@@ -1,5 +1,12 @@
 # Modelo de dados no Firestore — RoboFlow
 
+> **Nota de implementação — 03/11/2026:** o código atual reúne cadastro e runtime
+> do dispositivo em `robots/{id}`, inclui a coleção `routes` e acrescenta o campo
+> opcional `controller`. A separação em `devices` descrita abaixo pertence à
+> proposta histórica. Para o impacto efetivo da integração do firmware, campos,
+> migração e frequência de gravações, consulte o
+> [relatório de alterações do carrinho, backend e banco](RELATORIO_ALTERACOES_CARRINHO_BACKEND_DATABASE.md).
+
 Atualizado em 26/10/2026. Complementa o [ADR 0003](adr/0003-firestore-no-lugar-de-sql.md). Os tipos de cada documento vêm de `@roboflow/contracts` (`contracts/src`); este arquivo descreve **onde** ficam, **como** são acessados e **quanto custam** na cota gratuita.
 
 Banco: `(default)`, modo nativo, edição Standard, `us-central1`. A localização não pode ser mudada depois.

@@ -48,6 +48,8 @@ export interface RobotDoc extends Doc {
   /** Última telemetria (sobrescrita com taxa limitada). */
   live: LiveTelemetry | null;
   sensorControl?: SensorControl;
+  /** Impede misturar os dois controladores durante uma missão. */
+  controller?: 'sensor-http' | 'local-route';
 }
 
 /** Estado do executor no servidor; o ESP32 guarda apenas a última saída aplicada. */
