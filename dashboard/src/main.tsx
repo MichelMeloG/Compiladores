@@ -1,5 +1,6 @@
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
+import { AuthGate } from './components/AuthGate';
 import './index.css';
 
 /**
@@ -7,8 +8,7 @@ import './index.css';
  *
  * Em builds normais, `VITE_DEMO` não está definido e o bloco abaixo é
  * eliminado pelo Vite — nada do diretório `src/demo/` entra no bundle.
- * Ele só é incluído na publicação estática (GitHub Pages), onde não há
- * backend para responder às requisições.
+ * Ele só é incluído quando o modo de demonstração é pedido explicitamente.
  */
 async function bootstrap() {
   if (import.meta.env.VITE_DEMO === 'true') {
@@ -16,7 +16,11 @@ async function bootstrap() {
     installDemoBackend(import.meta.env.VITE_API_URL || '/api');
   }
 
-  createRoot(document.getElementById('root')!).render(<App />);
+  const demo = import.meta.env.VITE_DEMO === 'true';
+  const authenticated = import.meta.env.PROD || Boolean(import.meta.env.VITE_FIREBASE_API_KEY);
+  createRoot(document.getElementById('root')!).render(
+    demo || !authenticated ? <App /> : <AuthGate><App /></AuthGate>
+  );
 }
 
 bootstrap();

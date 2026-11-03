@@ -92,22 +92,27 @@ O mesmo build também fica disponível na raiz `/Compiladores/`. O workflow
 copia o HTML compilado para `dist/dashboard/index.html`, mantendo os assets
 compartilhados em `/Compiladores/assets/`.
 
-Como o GitHub Pages serve apenas arquivos estáticos e não há backend hospedado,
-**a publicação é um build de demonstração**: o workflow define `VITE_DEMO=true`,
-que embute um conjunto de dados fictícios e exibe um aviso permanente no topo da
-página.
+O workflow publica **o modo operacional**, com `VITE_DEMO=false`, consumindo
+`https://roboflow-api-483331439325.us-central1.run.app/api`. O navegador usa login
+Google pelo Firebase Authentication e envia o ID token nas chamadas à API.
+Somente contas com e-mail verificado e autorizadas pelo backend conseguem abrir
+os dados. O token é renovado pelo SDK; o botão **Sair** encerra a sessão.
 
-Esses dados vivem isolados em [`src/demo/`](src/demo/demoBackend.ts) e **não
-entram no build normal** — `src/services/` continua sendo apenas cliente HTTP,
-sem nenhuma ramificação entre dados reais e de exemplo.
+A configuração pública do app Firebase fica no workflow; segredos do ESP32 não
+fazem parte do front. O domínio `michelmelog.github.io` deve estar autorizado no
+Firebase Authentication, e a origem `https://michelmelog.github.io` no CORS da
+API. A configuração do provedor Google está em `../firebase.auth.json`.
 
-A demonstração traz quatro robôs fictícios, em estados diferentes (em rota,
-online, com falha e offline), para exercitar a navegação da frota. As rotas
-enviadas e os reconhecimentos de alertas duram apenas até recarregar a página, e
-a importação não persiste registros. Os filtros de período, missão,
-severidade e busca não são aplicados integralmente pelo backend de exemplo.
-Para operar com dados reais, é necessário hospedar o backend separadamente e
-gerar um build com `VITE_API_URL` apontando para ele e sem `VITE_DEMO=true`.
+O papel de cada usuário é definido pelo custom claim `role` do Firebase Auth:
+`viewer` consulta, `operator` opera e `admin` também faz encerramento
+administrativo. Na ausência do claim, o backend permite somente leitura. O
+login não concede privilégios de operação automaticamente.
+
+Para uma demonstração visual isolada, ainda é possível gerar um build com
+`VITE_DEMO=true`. Os dados de `src/demo/` só entram nesse build e não representam
+estado real do carrinho. No desenvolvimento local sem configuração Firebase,
+o front continua usando o backend/proxy local; o backend de produção sempre
+exige autenticação.
 
 ## Estrutura
 

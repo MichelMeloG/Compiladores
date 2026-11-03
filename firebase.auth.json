@@ -1,0 +1,14 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "RoboFlow",
+        "supportEmail": "bernardolobomarques@gmail.com",
+        "authorizedRedirectUris": [
+          "https://compiladores-512823.firebaseapp.com/__/auth/handler",
+          "https://michelmelog.github.io"
+        ]
+      }
+    }
+  }
+}

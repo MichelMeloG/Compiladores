@@ -4,11 +4,7 @@ name: Publicar dashboard no GitHub Pages
 # https://michelmelog.github.io/Compiladores/
 # https://michelmelog.github.io/Compiladores/dashboard/
 #
-# A publicação é um BUILD DE DEMONSTRAÇÃO: o GitHub Pages serve apenas
-# arquivos estáticos, e a dashboard consome um backend REST que ainda não
-# existe. Por isso o build define VITE_DEMO=true, que embute um conjunto
-# de dados fictícios e exibe um aviso permanente no topo da página.
-# Ver dashboard/BACKEND_INTEGRATION.md.
+# Publicação operacional: login Firebase e API real no Cloud Run.
 
 on:
   push:
@@ -46,13 +42,21 @@ jobs:
       - name: Checagem de tipos
         run: npm run lint
 
-      - name: Build de demonstração
+      - name: Testes dos serviços
+        run: npm test
+
+      - name: Build operacional
         run: npm run build
         env:
           # GitHub Pages de projeto serve em /<nome-do-repo>/
           BASE_PATH: /${{ github.event.repository.name }}/
-          VITE_DEMO: 'true'
-          VITE_API_URL: /api
+          VITE_DEMO: 'false'
+          VITE_API_URL: https://roboflow-api-483331439325.us-central1.run.app/api
+          # Configuração pública do app web Firebase; não contém segredos do ESP32.
+          VITE_FIREBASE_API_KEY: AIzaSyCrOsewE4IkTzPogJxt7EIc22oPyJ0FjSg
+          VITE_FIREBASE_AUTH_DOMAIN: compiladores-512823.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID: compiladores-512823
+          VITE_FIREBASE_APP_ID: 1:483331439325:web:2f91c20cb16a0b0d467934
 
       - name: Preparar endereço direto da dashboard
         run: |
