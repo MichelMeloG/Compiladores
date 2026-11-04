@@ -123,6 +123,19 @@ Criar `examples/carrinho_autonomo.rf` como programa de referência executável p
 - Aceitar apenas ações suportadas e configurações cujo comportamento esteja implementado. Rejeitar ré, valores contraditórios ou opções que removam verificações essenciais. Nenhum arquivo deve ser gerado após erro.
 - Emitir diagnóstico com código, mensagem e posição; avisos não podem mascarar configurações inválidas.
 
+**Implementado em `compiler/roboflow/arduino.py`:** além de validar cada campo isoladamente, o compilador rejeita combinações que o runtime não consegue executar. As relações vêm de `seguirLinha()` e `executarRota()` em `runtime/carrinho_autonomo.ino.template`:
+
+| Regra | Por que o runtime exige | Posição do erro |
+|---|---|---|
+| `gentle_inner_power` < `outer_power` | a roda interna só puxa o carrinho de volta à linha se for mais lenta que a externa; com valores iguais não há correção | `gentle_inner_power` |
+| `strong_inner_power` ≤ `gentle_inner_power` | a correção forte (centro apagado) não pode ser mais fraca que a suave | `strong_inner_power` |
+| `turn_timeout` > `minimum_turn` | a curva só termina depois de `minimum_turn` e falha ao passar de `turn_timeout`; com o limite menor ou igual, toda curva falha | `turn_timeout` |
+| `segment_timeout` > `alignment` | o alinhamento que antecede a curva falha ao passar de `segment_timeout` | `segment_timeout` |
+
+O diagnóstico aponta o campo que viola a relação e cita o outro na mensagem, com a linha ou "valor padrão" quando o campo foi omitido. Erros de pinos seguem a mesma regra: GPIO repetido aponta o campo onde ele reaparece e cita o campo anterior; GPIO reservado à flash ou só de entrada aponta o campo que o contém. Todo erro semântico do perfil `robot` tem posição (`tests/test_arduino_diagnostics.py`).
+
+Ainda não validado: `communication_timeout` em relação ao intervalo de consulta ao backend, que é definido no servidor (`POLL_ACTIVE_MS`) e que o compilador não conhece.
+
 ### 6.4. Representação intermediária e geração
 
 - Converter a AST validada em uma configuração tipada e normalizada: durações em milissegundos, pinos, strings e opções do perfil. Não deixar o gerador reinterpretar entradas inválidas.
