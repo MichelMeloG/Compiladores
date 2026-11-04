@@ -1,5 +1,6 @@
 """CLI mínima: python -m compiler.roboflow compile input.rf --output sketch.ino"""
 import argparse
+from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
@@ -42,7 +43,8 @@ def _serve(host: str, port: int) -> int:
                 source = payload.get("source")
                 if not isinstance(source, str): raise ValueError("campo source deve ser texto")
                 result = compile_roboflow(source, target="arduino")
-                response = {"ok": result.ok, "errors": [str(e) for e in result.errors], "files": result.files}
+                response = {"ok": result.ok, "errors": [str(e) for e in result.errors],
+                            "diagnostics": [asdict(e) for e in result.errors], "files": result.files}
                 body = json.dumps(response, ensure_ascii=False).encode("utf-8")
                 self.send_response(200 if result.ok else 422)
             except (ValueError, json.JSONDecodeError) as exc:

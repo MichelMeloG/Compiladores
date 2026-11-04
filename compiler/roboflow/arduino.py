@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from .diagnostics import CompileError, Diagnostic
 
@@ -12,9 +12,9 @@ INO_FILE = "carrinho_autonomo.ino"
 _RUNTIME = Path(__file__).parent / "runtime" / "carrinho_autonomo.ino.template"
 
 
-def _error(message: str, source: str, pos: int = 0, phase: str = "parser"):
-    line = source.count("\n", 0, pos) + 1
-    col = pos - source.rfind("\n", 0, pos)
+def _error(message: str, source: str, pos: Optional[int] = 0, phase: str = "parser"):
+    line = source.count("\n", 0, pos) + 1 if pos is not None else 0
+    col = pos - source.rfind("\n", 0, pos) if pos is not None else 0
     raise CompileError(Diagnostic(phase, "error", message, line, col))
 
 
@@ -42,7 +42,7 @@ def _blocks(source: str) -> Tuple[str, Dict[str, str]]:
     if not robot:
         _error('esperado robot "ID" {', source)
     # Read balanced blocks so nested braces and quoted strings remain intact.
-    def body_after(match, text=clean):
+    def body_after(match, text=clean, offset=0):
         start = match.end(); depth = 1; quoted = False; escaped = False
         for i in range(start, len(text)):
             ch = text[i]
@@ -55,7 +55,7 @@ def _blocks(source: str) -> Tuple[str, Dict[str, str]]:
             elif ch == "}":
                 depth -= 1
                 if depth == 0: return text[start:i], i + 1
-        _error("bloco sem chave de fechamento", source, match.start())
+        _error("bloco sem chave de fechamento", source, offset + match.start())
     root, end = body_after(robot)
     if clean[end:].strip(): _error("conteúdo depois do bloco robot", source, end)
     props: Dict[str, str] = {"robot_id": robot.group(1)}
@@ -69,17 +69,20 @@ def _blocks(source: str) -> Tuple[str, Dict[str, str]]:
     seen_blocks = set()
     for name in re.findall(r'\b(network|motors|line_sensors|movement|execution)\s*\{', root):
         m = re.search(r'\b' + name + r'\s*\{', root)
-        block, _ = body_after(m, root)
-        if name in seen_blocks: _error(f"bloco {name} duplicado", source, m.start(), "semantic")
+        block, _ = body_after(m, root, robot.end())
+        block_pos = robot.end() + m.start()
+        if name in seen_blocks: _error(f"bloco {name} duplicado", source, block_pos, "semantic")
         seen_blocks.add(name)
         declarations = re.findall(r'(?m)^\s*([a-z_]+)\s*:', block)
         for key in declarations:
-            if key not in allowed[name]: _error(f"propriedade desconhecida {name}.{key}", source, m.start(), "semantic")
+            if key not in allowed[name]:
+                field = re.search(r'(?m)^[ \t]*(' + re.escape(key) + r')\s*:', block)
+                _error(f"propriedade desconhecida {name}.{key}", source, robot.end() + m.end() + field.start(1), "semantic")
         parsed = re.findall(r'(?m)^\s*([a-z_]+)\s*:\s*(\[[^\]]*\]|"(?:\\.|[^"\\])*"|[^\s,}]+)\s*$', block)
-        if len(parsed) != len(declarations): _error(f"valor inválido no bloco {name}", source, m.start(), "parser")
+        if len(parsed) != len(declarations): _error(f"valor inválido no bloco {name}", source, block_pos, "parser")
         for key, value in parsed:
             qualified = f"{name}.{key}"
-            if qualified in props: _error(f"propriedade {qualified} duplicada", source, m.start(), "semantic")
+            if qualified in props: _error(f"propriedade {qualified} duplicada", source, block_pos, "semantic")
             props[qualified] = value.strip()
     # profile and board use positional syntax.
     for key, value in re.findall(r'\b(profile|board)\s+([A-Za-z_][A-Za-z_0-9]*)', root):
@@ -93,6 +96,19 @@ def _blocks(source: str) -> Tuple[str, Dict[str, str]]:
 
 def _value(props, key, default=None):
     return props.get(key, default)
+
+
+def _semantic_position(source: str, props: Dict[str, str], message: str) -> Optional[int]:
+    """Informa a posição apenas quando a mensagem identifica um campo presente."""
+    for key in sorted(props, key=len, reverse=True):
+        field = key.rsplit('.', 1)[-1]
+        if field == 'robot_id' or not re.search(r'(?<!\w)' + re.escape(field) + r'(?!\w)', message, re.IGNORECASE):
+            continue
+        separator = r'\s*:' if '.' in key else r'\s+'
+        match = re.search(r'(?m)^[ \t]*(' + re.escape(field) + r')' + separator, _strip_comments(source))
+        if match:
+            return match.start(1)
+    return None
 
 
 def _string(raw, key):
@@ -181,7 +197,7 @@ def compile_arduino(source: str) -> Dict[str, str]:
         vals["ALLOW_D"] = "true" if "right" in actions else "false"
         vals["ALLOW_E"] = "true" if "left" in actions else "false"
     except ValueError as exc:
-        _error(str(exc), source, 0, "semantic")
+        _error(str(exc), source, _semantic_position(source, p, str(exc)), "semantic")
     try:
         try:
             template = _RUNTIME.read_text(encoding="utf-8-sig")
