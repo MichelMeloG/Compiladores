@@ -98,17 +98,86 @@ def _value(props, key, default=None):
     return props.get(key, default)
 
 
+class _FieldError(ValueError):
+    """Erro semântico que já sabe quais campos o causam.
+
+    `keys` lista os campos (`bloco.campo`) em ordem de preferência: a posição do
+    diagnóstico é a do primeiro que existir no arquivo.
+    """
+
+    def __init__(self, message: str, *keys: str):
+        super().__init__(message)
+        self.keys = keys
+
+
+def _field_position(source: str, key: str) -> Optional[int]:
+    clean = _strip_comments(source)
+    if key == 'robot_id':
+        match = re.search(r'\brobot(?=\s+")', clean)
+        return match.start() if match else None
+    field = key.rsplit('.', 1)[-1]
+    separator = r'\s*:' if '.' in key else r'\s+'
+    match = re.search(r'(?m)^[ \t]*(' + re.escape(field) + r')' + separator, clean)
+    return match.start(1) if match else None
+
+
+def _where(source: str, props: Dict[str, str], key: str) -> str:
+    pos = _field_position(source, key) if key in props else None
+    return f"linha {source.count(chr(10), 0, pos) + 1}" if pos is not None else "valor padrão"
+
+
 def _semantic_position(source: str, props: Dict[str, str], message: str) -> Optional[int]:
     """Informa a posição apenas quando a mensagem identifica um campo presente."""
     for key in sorted(props, key=len, reverse=True):
         field = key.rsplit('.', 1)[-1]
         if field == 'robot_id' or not re.search(r'(?<!\w)' + re.escape(field) + r'(?!\w)', message, re.IGNORECASE):
             continue
-        separator = r'\s*:' if '.' in key else r'\s+'
-        match = re.search(r'(?m)^[ \t]*(' + re.escape(field) + r')' + separator, _strip_comments(source))
-        if match:
-            return match.start(1)
+        pos = _field_position(source, key)
+        if pos is not None:
+            return pos
     return None
+
+
+def _check_relations(source: str, props: Dict[str, str], vals: Dict[str, object]) -> None:
+    """Combinações que cada campo aceita sozinho, mas que o runtime não consegue executar.
+
+    As relações vêm de `seguirLinha()` e `executarRota()` em runtime/carrinho_autonomo.ino.template.
+    """
+    def ref(key: str, value: str) -> str:
+        return f"{key} = {value} ({_where(source, props, key)})"
+
+    outer = vals["POTENCIA_EXTERNA"]
+    gentle = vals["POTENCIA_INTERNA_SUAVE"]
+    strong = vals["POTENCIA_INTERNA_FORTE"]
+    # A roda interna só puxa o carrinho de volta à linha se for mais lenta que a externa,
+    # e a correção forte (linha longe do centro) não pode ser mais fraca que a suave.
+    if gentle >= outer:
+        raise _FieldError(
+            f"{ref('movement.gentle_inner_power', str(gentle))} deve ser menor que "
+            f"{ref('movement.outer_power', str(outer))}: a roda interna precisa ser mais lenta que a externa "
+            "para o carrinho voltar à linha",
+            "movement.gentle_inner_power", "movement.outer_power")
+    if strong > gentle:
+        raise _FieldError(
+            f"{ref('movement.strong_inner_power', str(strong))} não pode ser maior que "
+            f"{ref('movement.gentle_inner_power', str(gentle))}: a correção forte ficaria mais fraca que a suave",
+            "movement.strong_inner_power", "movement.gentle_inner_power")
+
+    # A curva só termina depois de minimum_turn e falha ao passar de turn_timeout; o
+    # alinhamento que a antecede falha ao passar de segment_timeout. Com o limite menor
+    # ou igual ao tempo mínimo, o limite vence antes e toda manobra falha.
+    turn_limit, turn_min = vals["LIMITE_CURVA_MS"], vals["CURVA_MINIMA_MS"]
+    if turn_limit <= turn_min:
+        raise _FieldError(
+            f"{ref('movement.turn_timeout', f'{turn_limit}ms')} deve ser maior que "
+            f"{ref('movement.minimum_turn', f'{turn_min}ms')}: a curva falharia antes de poder terminar",
+            "movement.turn_timeout", "movement.minimum_turn")
+    segment_limit, alignment = vals["LIMITE_TRECHO_MS"], vals["ALINHAMENTO_MS"]
+    if segment_limit <= alignment:
+        raise _FieldError(
+            f"{ref('movement.segment_timeout', f'{segment_limit}ms')} deve ser maior que "
+            f"{ref('movement.alignment', f'{alignment}ms')}: o alinhamento falharia antes de poder terminar",
+            "movement.segment_timeout", "movement.alignment")
 
 
 def _string(raw, key):
@@ -151,7 +220,7 @@ def compile_arduino(source: str) -> Dict[str, str]:
         if not vals["SSID"] or not vals["SENHA"]: raise ValueError("SSID e senha não podem ser vazios")
         if len(vals["SSID"].encode("utf-8")) > 32: raise ValueError("SSID excede o limite de 32 bytes")
         if len(vals["TOKEN"]) < 16: raise ValueError("network.token precisa ter pelo menos 16 caracteres")
-        if not robot_id or len(robot_id) > 64: raise ValueError("ID do robô deve ter de 1 a 64 caracteres")
+        if not robot_id or len(robot_id) > 64: raise _FieldError("ID do robô deve ter de 1 a 64 caracteres", "robot_id")
         url = vals["URL"]
         if not (url.startswith("http://") or url.startswith("https://")) or url.endswith("/") or "/api" in url:
             raise ValueError("network.backend deve ser URL http(s), sem barra final e sem /api")
@@ -159,13 +228,26 @@ def compile_arduino(source: str) -> Dict[str, str]:
         pins_e = _list(_value(p, "motors.left_pins"), "motors.left_pins", 3)
         pins_d = _list(_value(p, "motors.right_pins"), "motors.right_pins", 3)
         sensors = _list(_value(p, "line_sensors.pins"), "line_sensors.pins", 3)
-        if len(set(pins_e + pins_d + sensors)) != 9: raise ValueError("pinos de motores e sensores devem ser distintos")
-        if any(pin in {6,7,8,9,10,11} for pin in pins_e + pins_d + sensors):
-            raise ValueError("GPIO 6–11 são reservados à memória flash no ESP32 clássico")
+        pin_groups = {"motors.left_pins": pins_e, "motors.right_pins": pins_d, "line_sensors.pins": sensors}
+        used: Dict[int, str] = {}
+        for key, group in pin_groups.items():
+            for pin in group:
+                if pin in used and used[pin] == key:
+                    raise _FieldError(f"pinos de motores e sensores devem ser distintos: GPIO {pin} aparece mais de uma vez em {key}", key)
+                if pin in used:
+                    raise _FieldError(
+                        f"pinos de motores e sensores devem ser distintos: GPIO {pin} em {key} "
+                        f"já é usado por {used[pin]} ({_where(source, p, used[pin])})", key)
+                used[pin] = key
+        for key, group in pin_groups.items():
+            flash = next((pin for pin in group if 6 <= pin <= 11), None)
+            if flash is not None:
+                raise _FieldError(f"GPIO 6–11 são reservados à memória flash no ESP32 clássico: GPIO {flash} em {key}", key)
         vals["MOTOR_E"] = pins_e; vals["MOTOR_D"] = pins_d; vals["SENSORES"] = sensors
-        outputs = set(pins_e + pins_d)
-        if any(pin in {6, 7, 8, 9, 10, 11, 34, 35, 36, 37, 38, 39} for pin in outputs):
-            raise ValueError("pinos de motor usam GPIO sem saída compatível no ESP32 clássico")
+        for key in ("motors.left_pins", "motors.right_pins"):
+            input_only = next((pin for pin in pin_groups[key] if 34 <= pin <= 39), None)
+            if input_only is not None:
+                raise _FieldError(f"pinos de motor usam GPIO sem saída compatível no ESP32 clássico: GPIO {input_only} em {key} só tem entrada", key)
         for prop, const in [("left_direction", "SENTIDO_E"), ("right_direction", "SENTIDO_D")]:
             v = _int(_value(p, "motors." + prop, "1"), prop, -1, 1)
             if v == 0: raise ValueError(f"motors.{prop} aceita apenas -1 ou 1")
@@ -184,6 +266,7 @@ def compile_arduino(source: str) -> Dict[str, str]:
             raw = _value(p, block+"."+prop, default); m = re.fullmatch(r"(\d+)ms", raw)
             if not m: raise ValueError(f"{block}.{prop} deve usar milissegundos, ex.: 10ms")
             vals[const] = _int(m.group(1), prop, 1, 2147483647)
+        _check_relations(source, p, vals)
         vals["MAX_ACOES"] = _int(_value(p,"execution.max_actions","16"),"max_actions",1,16)
         vals["MAX_EVENTOS"] = _int(_value(p,"execution.max_events","12"),"max_events",8,64)
         if _value(p,"execution.route_source","backend") != "backend": raise ValueError("route_source deve ser backend")
@@ -197,7 +280,12 @@ def compile_arduino(source: str) -> Dict[str, str]:
         vals["ALLOW_D"] = "true" if "right" in actions else "false"
         vals["ALLOW_E"] = "true" if "left" in actions else "false"
     except ValueError as exc:
-        _error(str(exc), source, _semantic_position(source, p, str(exc)), "semantic")
+        keys = getattr(exc, "keys", None)
+        if keys is None:
+            pos = _semantic_position(source, p, str(exc))
+        else:
+            pos = next((q for q in map(lambda k: _field_position(source, k), keys) if q is not None), None)
+        _error(str(exc), source, pos, "semantic")
     try:
         try:
             template = _RUNTIME.read_text(encoding="utf-8-sig")
