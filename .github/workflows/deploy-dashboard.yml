@@ -1,37 +1,14 @@
-name: Retirar site publico do GitHub Pages
+name: GitHub Pages desativado
 
-# Publica somente uma pagina de erro, removendo dashboard, compilador e assets.
-# Este workflow sera desativado apos a retirada. Nao publica o aplicativo.
+# O aplicativo publico foi retirado. Nao ha build nem deploy neste workflow.
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/deploy-dashboard.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  withdraw:
+  status:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
-      - name: Preparar site sem aplicativo
-        run: |
-          mkdir withdrawn
-          touch withdrawn/.nojekyll
-          cat > withdrawn/404.html <<'HTML'
-          <!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Site desativado</title><p>Este site foi desativado. O projeto funciona apenas no ambiente local.</p></html>
-          HTML
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: withdrawn
-      - uses: actions/deploy-pages@v4
+      - run: echo 'Publicacao desativada. Execute o projeto localmente.'
