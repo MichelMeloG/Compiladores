@@ -7,6 +7,7 @@ resource "google_cloud_scheduler_job" "offline_check" {
   description = "Marca dispositivos sem poll como offline e gera alerta"
   schedule    = "*/5 * * * *"
   time_zone   = "America/Sao_Paulo"
+  paused      = true # Operação local: não consultar o banco remoto periodicamente.
 
   attempt_deadline = "30s"
 

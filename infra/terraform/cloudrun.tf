@@ -5,7 +5,8 @@ resource "google_cloud_run_v2_service" "api" {
   count    = local.main_stack
   name     = var.api_service_name
   location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  # Operação local: não reabrir a API pública em um futuro terraform apply.
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_ONLY"
 
   deletion_protection = false
 

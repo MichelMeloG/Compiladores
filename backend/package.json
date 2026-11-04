@@ -11,6 +11,7 @@
     "build:contracts": "npm --prefix ../contracts run build",
     "dev": "tsx watch src/main.ts",
     "dev:local": "node --env-file=.env --import tsx src/main.ts",
+    "device:local": "node tools/local-device-proxy.mjs",
     "start": "node dist/src/main.js",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
