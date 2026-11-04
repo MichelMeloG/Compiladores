@@ -1,15 +1,11 @@
-name: Publicar dashboard no GitHub Pages
+name: Retirar site publico do GitHub Pages
 
-# Publica a dashboard de observabilidade em
-# https://michelmelog.github.io/Compiladores/
-# https://michelmelog.github.io/Compiladores/dashboard/
-# https://michelmelog.github.io/Compiladores/compilador/
-#
-# Publicação operacional: login Firebase e API real no Cloud Run.
-
+# Publica somente uma pagina de erro, removendo dashboard, compilador e assets.
+# Este workflow sera desativado apos a retirada. Nao publica o aplicativo.
 on:
   push:
     branches: [main]
+    paths: ['.github/workflows/deploy-dashboard.yml']
   workflow_dispatch:
 
 permissions:
@@ -17,66 +13,25 @@ permissions:
   pages: write
   id-token: write
 
-# Uma publicação por vez, sem cancelar a que já estiver em andamento.
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: dashboard
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: dashboard/package-lock.json
-
-      - name: Instalar dependências
-        run: npm ci
-
-      - name: Checagem de tipos
-        run: npm run lint
-
-      - name: Testes dos serviços
-        run: npm test
-
-      - name: Build operacional
-        run: npm run build
-        env:
-          # GitHub Pages de projeto serve em /<nome-do-repo>/
-          BASE_PATH: /${{ github.event.repository.name }}/
-          VITE_DEMO: 'false'
-          VITE_API_URL: https://roboflow-api-483331439325.us-central1.run.app/api
-          # Configuração pública do app web Firebase; não contém segredos do ESP32.
-          VITE_FIREBASE_API_KEY: AIzaSyCrOsewE4IkTzPogJxt7EIc22oPyJ0FjSg
-          VITE_FIREBASE_AUTH_DOMAIN: compiladores-512823.firebaseapp.com
-          VITE_FIREBASE_PROJECT_ID: compiladores-512823
-          VITE_FIREBASE_APP_ID: 1:483331439325:web:2f91c20cb16a0b0d467934
-
-      - name: Preparar endereço direto da dashboard
-        run: |
-          mkdir -p dist/dashboard
-          cp dist/index.html dist/dashboard/index.html
-
-      - name: Configurar Pages
-        uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dashboard/dist
-
-  deploy:
-    needs: build
+  withdraw:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Preparar site sem aplicativo
+        run: |
+          mkdir withdrawn
+          touch withdrawn/.nojekyll
+          cat > withdrawn/404.html <<'HTML'
+          <!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Site desativado</title><p>Este site foi desativado. O projeto funciona apenas no ambiente local.</p></html>
+          HTML
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: withdrawn
+      - uses: actions/deploy-pages@v4
