@@ -7,7 +7,7 @@ resource "google_cloud_run_v2_service" "api" {
   location = var.region
   # Padrão seguro (operação local). Para ESP32/navegador pela internet use INGRESS_TRAFFIC_ALL:
   # a proteção passa a ser HMAC/Firebase + limites por IP + max_instance_count + kill-switch.
-  ingress  = var.api_ingress
+  ingress = var.api_ingress
 
   deletion_protection = false
 
