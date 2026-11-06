@@ -20,7 +20,7 @@ describe('firmware autônomo: rota local e comandos pela rede', () => {
 
   it('anuncia limites reais, aguarda start e não apresenta bateria fictícia', async () => {
     const hello = await esp.boot();
-    expect(hello.nextPollMs).toBe(3000);
+    expect(hello.nextPollMs).toBe(h.cfg.pollIdleAutonomoMs);
     expect(hello.limits).toEqual({ supportsReverse: false, maxActions: 16, maxMessageBytes: 4096 });
     const { missionId } = await loadMission(h, esp);
     expect(esp.state).toBe('ready');

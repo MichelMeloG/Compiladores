@@ -1,0 +1,30 @@
+{
+  "hosting": {
+    "site": "compiladores-512823",
+    "public": "dashboard/dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "/api/**", "run": { "serviceId": "roboflow-api", "region": "us-central1" } },
+      { "source": "**", "destination": "/index.html" }
+    ],
+    "headers": [
+      {
+        "source": "/api/**",
+        "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      },
+      {
+        "source": "/assets/**",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      },
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "Referrer-Policy", "value": "no-referrer" },
+          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+        ]
+      }
+    ]
+  }
+}

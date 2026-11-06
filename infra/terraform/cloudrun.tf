@@ -5,14 +5,15 @@ resource "google_cloud_run_v2_service" "api" {
   count    = local.main_stack
   name     = var.api_service_name
   location = var.region
-  # Operação local: não reabrir a API pública em um futuro terraform apply.
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  # Padrão seguro (operação local). Para ESP32/navegador pela internet use INGRESS_TRAFFIC_ALL:
+  # a proteção passa a ser HMAC/Firebase + limites por IP + max_instance_count + kill-switch.
+  ingress  = var.api_ingress
 
   deletion_protection = false
 
   template {
     service_account                  = google_service_account.api.email
-    max_instance_request_concurrency = 80
+    max_instance_request_concurrency = var.api_concurrency # baixo: cada requisição pode ler o Firestore
     timeout                          = "30s"
 
     scaling {

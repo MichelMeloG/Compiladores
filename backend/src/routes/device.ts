@@ -22,9 +22,20 @@ export function registerDeviceRoutes(
   deps: Deps,
   g: { deviceAuth: DeviceAuthenticator; deviceLimiter: RateLimiter },
 ): void {
-  // O controle remoto precisa de amostras frequentes, em rede local.
+  // Limites aplicados ANTES de qualquer leitura de banco: por IP de origem e por falhas de autenticação.
+  const ipLimiter = new RateLimiter(deps.cfg.rateLimitIpPerMin);
+  const failLimiter = new RateLimiter(deps.cfg.rateLimitAuthFailPerMin);
+  const preAuth = (req: FastifyRequest, reply: { header: (k: string, v: string) => unknown }): void => {
+    if (!ipLimiter.allow(req.ip) || failLimiter.peek(req.ip)) {
+      reply.header('retry-after', '60');
+      throw tooMany();
+    }
+  };
+
+  // O controle remoto precisa de amostras frequentes, em rede local. Legado: desligado em produção.
   const sensorLimiter = new RateLimiter(1800);
   app.post('/device/sensors', { bodyLimit: 1024 }, async (req, reply) => {
+    if (!deps.cfg.enableLegacySensors) throw new AppError('NOT_FOUND', 'Recurso não encontrado.');
     const deviceId = req.headers['x-device-id'];
     const authorization = req.headers.authorization ?? '';
     const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
@@ -41,10 +52,17 @@ export function registerDeviceRoutes(
   });
 
   /** Autentica (HMAC) e aplica o limite por dispositivo. Dispositivo desconhecido não toca o banco. */
-  async function guard(req: FastifyRequest): Promise<{ auth: DeviceAuth; robot: RobotDoc }> {
+  async function guard(req: FastifyRequest, reply: { header: (k: string, v: string) => unknown }): Promise<{ auth: DeviceAuth; robot: RobotDoc }> {
+    preAuth(req, reply);
     const claimed = (req.headers['x-device-id'] as string | undefined) ?? '';
     const robot = g.deviceAuth.hasDevice(claimed) ? await deps.store.get<RobotDoc>(C.robots, claimed) : undefined;
-    const auth = g.deviceAuth.verify(req, robot, req.rawBody ?? '');
+    let auth: DeviceAuth;
+    try {
+      auth = g.deviceAuth.verify(req, robot, req.rawBody ?? '');
+    } catch (err) {
+      failLimiter.allow(req.ip); // conta a falha; ao exceder o teto, preAuth passa a barrar antes do banco
+      throw err;
+    }
     if (!g.deviceLimiter.allow(auth.deviceId)) throw tooMany();
     req.log = req.log.child(labels({ deviceId: auth.deviceId, sessionId: auth.sessionId }));
     return { auth, robot: robot as RobotDoc };
@@ -57,7 +75,7 @@ export function registerDeviceRoutes(
     url: '/device/hello',
     ...opts,
     handler: async (req, reply) => {
-      const { auth } = await guard(req);
+      const { auth } = await guard(req, reply);
       const parsed = ep('deviceHello').body?.safeParse(req.body ?? {});
       if (!parsed?.success) throw invalidBody('Mensagem hello inválida.');
       const hello = parsed.data as HelloMessage;
@@ -75,7 +93,7 @@ export function registerDeviceRoutes(
     url: '/device/poll',
     ...opts,
     handler: async (req, reply) => {
-      const { auth, robot } = await guard(req);
+      const { auth, robot } = await guard(req, reply);
       if (robot.sessionId !== auth.sessionId) {
         throw new AppError('CONFLICT_SESSION', 'Sessão desconhecida: envie /device/hello.');
       }
@@ -88,7 +106,7 @@ export function registerDeviceRoutes(
     url: '/device/events',
     ...opts,
     handler: async (req, reply) => {
-      const { auth } = await guard(req);
+      const { auth } = await guard(req, reply);
       const parsed = ep('deviceEvents').body?.safeParse(req.body ?? {});
       if (!parsed?.success) throw invalidBody('Lote de eventos inválido.');
       const events = (parsed.data as { events: DeviceEventMessage[] }).events;

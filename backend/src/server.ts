@@ -52,7 +52,13 @@ export async function buildApp(opts: AppOptions): Promise<BuiltApp> {
     // Log de requisição próprio (onResponse): sem o par incoming/completed padrão do Fastify.
     logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 64 * 1024,
-    trustProxy: true,
+    // Cloud Run/GFE acrescenta o IP real ao fim do X-Forwarded-For: confiar em 1 salto evita IP forjado no início.
+    trustProxy: (_addr: string, hop: number) => hop < 1,
+    // Cloud Run limita a 30 s; clientes lentos (slowloris) não podem segurar a instância.
+    connectionTimeout: 15_000,
+    requestTimeout: 10_000,
+    keepAliveTimeout: 5_000,
+    maxRequestsPerSocket: 200,
   });
 
   const deps = { store, cfg, clock, log: app.log, mapCache: new Map() } as Deps;

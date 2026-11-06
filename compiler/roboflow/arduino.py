@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -216,6 +217,10 @@ def compile_arduino(source: str) -> Dict[str, str]:
             "CA_CERT": _string(_value(p, "network.ca_certificate", '""'), "network.ca_certificate"),
             "SERVIDOR_NTP": _string(_value(p, "network.ntp", '"pool.ntp.org"'), "network.ntp"),
         }
+        # Segredos fora do .rf versionado: variáveis de ambiente têm prioridade sobre o arquivo.
+        for chave, ambiente in (("SSID", "ROBOFLOW_SSID"), ("SENHA", "ROBOFLOW_PASSWORD"), ("URL", "ROBOFLOW_BACKEND"),
+                                ("TOKEN", "ROBOFLOW_TOKEN"), ("CA_CERT", "ROBOFLOW_CA_CERT")):
+            if os.environ.get(ambiente): vals[chave] = os.environ[ambiente]
         vals["ROBO"] = robot_id
         if not vals["SSID"] or not vals["SENHA"]: raise ValueError("SSID e senha não podem ser vazios")
         if len(vals["SSID"].encode("utf-8")) > 32: raise ValueError("SSID excede o limite de 32 bytes")

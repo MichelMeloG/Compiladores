@@ -31,6 +31,8 @@ const EnvSchema = z.object({
   // Ajustes opcionais (todos com padrão seguro para a cota gratuita).
   POLL_ACTIVE_MS: num(1500),
   POLL_IDLE_MS: num(30000),
+  // Firmware autônomo parado: precisa receber rota, mas 3 s custava ~28,8k leituras/dia por carro.
+  POLL_IDLE_AUTONOMO_MS: num(15000),
   OFFLINE_AFTER_MS: num(45000),
   OFFLINE_AFTER_IDLE_MS: num(180000),
   LAST_SEEN_WRITE_MS: num(10000),
@@ -40,6 +42,12 @@ const EnvSchema = z.object({
   DEVICE_CLOCK_SKEW_MS: num(120000),
   RATE_LIMIT_USER_PER_MIN: num(300),
   RATE_LIMIT_DEVICE_PER_MIN: num(240),
+  // Antes de qualquer autenticação/leitura de banco: por IP de origem.
+  RATE_LIMIT_IP_PER_MIN: num(180),
+  // Falhas de autenticação (assinatura/token) por IP; excedido => 429 sem tocar no banco.
+  RATE_LIMIT_AUTHFAIL_PER_MIN: num(10),
+  // Endpoint legado /device/sensors (bearer estático, escreve a cada amostra): desligado por padrão.
+  ENABLE_LEGACY_SENSORS: z.enum(['true', 'false']).default('false'),
   SEED_ON_BOOT: z.enum(['true', 'false']).optional(),
   SEED_PROFILE: z.enum(['demo', 'clean']).default('clean'),
   // Recusa rotas enquanto a posição do robô for desconhecida (exige POST /api/robots/:id/position).
@@ -63,6 +71,7 @@ export interface Config {
   schedulerSa: string;
   pollActiveMs: number;
   pollIdleMs: number;
+  pollIdleAutonomoMs: number;
   offlineAfterMs: number;
   offlineAfterIdleMs: number;
   lastSeenWriteMs: number;
@@ -72,6 +81,9 @@ export interface Config {
   deviceClockSkewMs: number;
   rateLimitUserPerMin: number;
   rateLimitDevicePerMin: number;
+  rateLimitIpPerMin: number;
+  rateLimitAuthFailPerMin: number;
+  enableLegacySensors: boolean;
   seedOnBoot: boolean;
   seedProfile: 'demo' | 'clean';
   requireConfirmedPosition: boolean;
@@ -121,6 +133,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     schedulerSa: e.SCHEDULER_SA,
     pollActiveMs: e.POLL_ACTIVE_MS,
     pollIdleMs: e.POLL_IDLE_MS,
+    pollIdleAutonomoMs: e.POLL_IDLE_AUTONOMO_MS,
     offlineAfterMs: e.OFFLINE_AFTER_MS,
     offlineAfterIdleMs: e.OFFLINE_AFTER_IDLE_MS,
     lastSeenWriteMs: e.LAST_SEEN_WRITE_MS,
@@ -130,6 +143,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     deviceClockSkewMs: e.DEVICE_CLOCK_SKEW_MS,
     rateLimitUserPerMin: e.RATE_LIMIT_USER_PER_MIN,
     rateLimitDevicePerMin: e.RATE_LIMIT_DEVICE_PER_MIN,
+    rateLimitIpPerMin: e.RATE_LIMIT_IP_PER_MIN,
+    rateLimitAuthFailPerMin: e.RATE_LIMIT_AUTHFAIL_PER_MIN,
+    enableLegacySensors: e.ENABLE_LEGACY_SENSORS === 'true',
     // Em memória o padrão é popular com o seed; em Firestore nunca sem pedido explícito.
     seedOnBoot: e.SEED_ON_BOOT ? e.SEED_ON_BOOT === 'true' : e.STORE === 'memory',
     seedProfile: e.SEED_PROFILE,

@@ -36,7 +36,7 @@ export function pollInterval(deps: Deps, robot: RobotDoc): number {
   const active = robot.activeMissionId !== null || robot.pendingCommandIds.length > 0;
   // O sketch autônomo também precisa receber uma rota quando está parado.
   return active ? deps.cfg.pollActiveMs : robot.firmwareVersion?.startsWith('autonomo-')
-    ? Math.min(deps.cfg.pollIdleMs, 3000) : deps.cfg.pollIdleMs;
+    ? Math.min(deps.cfg.pollIdleMs, deps.cfg.pollIdleAutonomoMs) : deps.cfg.pollIdleMs;
 }
 
 function syncBase(deps: Deps, robot: RobotDoc, now: Date) {

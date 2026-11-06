@@ -1,0 +1,80 @@
+diff --git a/compiler/roboflow/runtime/carrinho_autonomo.ino.template b/compiler/roboflow/runtime/carrinho_autonomo.ino.template
+index 1121b07..f7b95f4 100644
+--- a/compiler/roboflow/runtime/carrinho_autonomo.ino.template
++++ b/compiler/roboflow/runtime/carrinho_autonomo.ino.template
+@@ -8,6 +8,7 @@
+ #include <mbedtls/md.h>
+ #include <time.h>
+ #include <atomic>
++#include <esp_task_wdt.h>
+ 
+ // Preencha antes de gravar. URL sem barra no final e sem /api.
+ const char *SSID = "SUA_REDE";
+@@ -37,6 +38,7 @@ const unsigned long CURVA_MINIMA_MS = 180;
+ const unsigned long LIMITE_CURVA_MS = 2500;
+ const unsigned long LIMITE_TRECHO_MS = 15000;
+ const unsigned long LIMITE_COMUNICACAO_MS = 30000;
++const unsigned long LIMITE_PARADA_SEM_REDE_MS = 8000; // parada imediata em movimento sem contato
+ const int MAX_ACOES = 16;
+ const int MAX_EVENTOS = 12;
+ const bool ALLOW_F = true;
+@@ -334,6 +336,7 @@ void comunicarBackend(void *) {
+   WiFi.setAutoReconnect(true); WiFi.begin(SSID, SENHA); configTime(0, 0, SERVIDOR_NTP);
+   bool apresentado = false;
+   unsigned long sequencia = 0, tentativa = 0, intervalo = 1000;
++  int falhas = 0, naoAutorizado = 0; // Backoff exponencial com jitter: não martela o backend (cota/DDoS).
+   for (;;) {
+     vTaskDelay(pdMS_TO_TICKS(20));
+     if (WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000) continue;
+@@ -348,7 +351,8 @@ void comunicarBackend(void *) {
+     bool https = String(URL).startsWith("https://");
+     if (https && !strlen(CA_CERT)) { Serial.println("Configure CA_CERT para HTTPS."); vTaskDelay(pdMS_TO_TICKS(3000)); continue; }
+     if (https) seguro.setCACert(CA_CERT);
+-    http.setConnectTimeout(1200); http.setTimeout(1200);
++    // TLS e cold start do Cloud Run levam mais de 1,2 s; a tarefa de rede é separada do loop dos motores.
++    http.setConnectTimeout(https ? 6000 : 1200); http.setTimeout(https ? 8000 : 1200);
+     if (!http.begin(https ? (NetworkClient &)seguro : (NetworkClient &)cliente, String(URL) + caminho)) continue;
+     String timestamp = String((unsigned long)time(nullptr));
+     http.addHeader("Content-Type", "application/json");
+@@ -363,11 +367,19 @@ void comunicarBackend(void *) {
+         if (xQueueSend(respostas, &mensagem, pdMS_TO_TICKS(100)) == pdTRUE) {
+           ultimoContato = millis(); apresentado = true;
+           intervalo = constrain(doc["data"]["nextPollMs"] | 1500UL, 1000UL, 60000UL);
++          falhas = 0; naoAutorizado = 0;
+         } else delete mensagem;
+       }
+     } else {
+-      Serial.printf("Backend HTTP %d\n", status); intervalo = 1500;
+-      if (status == 409) apresentado = false;
++      Serial.printf("Backend HTTP %d\n", status);
++      falhas = min(falhas + 1, 6);
++      unsigned long base = min(1500UL << falhas, 60000UL);
++      intervalo = base + (esp_random() % (base / 4 + 1));
++      if (status == 429) intervalo = max(intervalo, 30000UL); // limite do servidor: espera de verdade
++      if (status == 409) { apresentado = false; falhas = 0; intervalo = 1500; }
++      if (status == 401 && ++naoAutorizado >= 3) { // relógio fora da janela ou sessão rejeitada
++        configTime(0, 0, SERVIDOR_NTP); apresentado = false; naoAutorizado = 0;
++      }
+     }
+     http.end();
+   }
+@@ -385,6 +397,7 @@ void setup() {
+   Serial.println("Aguardando 3 segundos; depois aguarda rota e início pela dashboard.");
+   delay(ESPERA_INICIAL_MS); publicarPacote();
+   if (xTaskCreate(comunicarBackend, "rede", 16384, nullptr, 1, nullptr) != pdPASS) estado = FALHA;
++  esp_task_wdt_add(NULL); // watchdog do loop: travamento reinicia o ESP32 com os motores parados
+ }
+ 
+ void loop() {
+@@ -401,8 +414,11 @@ void loop() {
+     bloqueioLiberado = true;
+     JsonObject e = evento("block_cleared"); e["blockId"] = bloqueio;
+   }
++  // Sem comunicação o carro não segue cego: para já, não só no próximo trecho.
++  if (estado == EXECUTANDO && millis() - ultimoContato > LIMITE_PARADA_SEM_REDE_MS) bloquear("stop_requested");
+   executarRota();
+   if (estado != EXECUTANDO) mover(0, 0);
++  esp_task_wdt_reset();
+   if (millis() - ultimaPublicacao >= 100) { publicarPacote(); ultimaPublicacao = millis(); }
+   delay(INTERVALO_LEITURA_MS);
+ }

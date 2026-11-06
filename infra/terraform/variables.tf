@@ -71,7 +71,7 @@ variable "firestore_ttl_fields" {
 variable "cors_origins" {
   description = "Origens permitidas por CORS. Vira CORS_ORIGINS."
   type        = list(string)
-  default     = ["https://michelmelog.github.io"]
+  default     = ["https://compiladores-512823.web.app", "https://compiladores-512823.firebaseapp.com"]
 }
 
 variable "auth_mode" {
@@ -137,4 +137,20 @@ variable "artifact_keep_versions" {
   description = "Quantas versões mais recentes de cada imagem manter no Artifact Registry (cota grátis: 0,5 GB por conta de faturamento)."
   type        = number
   default     = 2
+}
+
+variable "api_ingress" {
+  description = "Ingress do Cloud Run da API. INTERNAL_ONLY (seguro, padrão) ou ALL (necessário para ESP32/navegador na internet)."
+  type        = string
+  default     = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  validation {
+    condition     = contains(["INGRESS_TRAFFIC_INTERNAL_ONLY", "INGRESS_TRAFFIC_ALL"], var.api_ingress)
+    error_message = "Use INGRESS_TRAFFIC_INTERNAL_ONLY ou INGRESS_TRAFFIC_ALL."
+  }
+}
+
+variable "api_concurrency" {
+  description = "Requisições simultâneas por instância (menor = menos leituras paralelas no Firestore)."
+  type        = number
+  default     = 30
 }

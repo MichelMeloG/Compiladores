@@ -61,6 +61,7 @@ export async function makeHarness(o: HarnessOptions = {}): Promise<Harness> {
     LOG_LEVEL: 'silent',
     DEVICE_SECRETS_JSON: JSON.stringify(SECRETS),
     SEED_ON_BOOT: 'false',
+    ENABLE_LEGACY_SENSORS: 'true',
     CORS_ORIGINS: 'https://michelmelog.github.io',
     INTERNAL_AUDIENCE: 'https://api.test',
     PUBSUB_PUSH_SA: 'pubsub-invoker@test.iam',

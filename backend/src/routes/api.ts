@@ -8,7 +8,7 @@ import {
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { requireRole, type OperatorAuth } from '../auth/operator.js';
 import { AppError, invalidBody, invalidQuery, tooMany } from '../errors.js';
-import type { RateLimiter } from '../lib/rateLimit.js';
+import { RateLimiter } from '../lib/rateLimit.js';
 import type { Deps } from '../services/common.js';
 import * as ops from '../services/operator.js';
 import type { Operator } from '../services/operator.js';
@@ -57,6 +57,8 @@ export function registerApiRoutes(
   deps: Deps,
   g: { operatorAuth: OperatorAuth; userLimiter: RateLimiter },
 ): void {
+  // Por IP, antes de autenticar/ler o banco (inclui o /api/health público, que consulta o Firestore).
+  const ipLimiter = new RateLimiter(deps.cfg.rateLimitIpPerMin);
   const handlers: Partial<Record<EndpointId, Handler>> = {
     health: async () => ({ data: await q.health(deps, VERSION) }),
     listRobots: async () => ({ data: await q.listRobots(deps) }),
@@ -112,8 +114,17 @@ export function registerApiRoutes(
       url: ep.path,
       bodyLimit,
       handler: async (req, reply) => {
+        if (!ipLimiter.allow(req.ip)) {
+          reply.header('retry-after', '60');
+          throw tooMany();
+        }
         let op: Operator = { uid: 'anonymous', email: '', role: 'viewer' };
         if (ep.auth === 'operator') {
+          // Barato e antes da verificação do token Firebase: flood de tokens inválidos não consome CPU/rede.
+          const bearer = req.headers.authorization ?? '';
+          if (!bearer.startsWith('Bearer ') && deps.cfg.authMode !== 'off') {
+            throw new AppError('UNAUTHENTICATED', 'Credencial ausente.');
+          }
           op = await g.operatorAuth.authenticate(req);
           requireRole(op, ep.roles);
           if (!g.userLimiter.allow(op.uid)) {

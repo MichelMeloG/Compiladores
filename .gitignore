@@ -20,3 +20,10 @@ coverage/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Programas do carrinho com credenciais reais
+*.local.rf
+
+# Material local do carrinho (segredos, guia, sketches gerados) - nunca versionar
+local/
+*.local.md

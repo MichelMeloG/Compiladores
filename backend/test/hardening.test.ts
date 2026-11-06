@@ -67,3 +67,42 @@ describe('IDs vindos de fora nunca viram caminho inválido', () => {
     expect(err.body).toMatchObject({ success: false, error: 'SIGNATURE_INVALID' });
   });
 });
+
+describe('proteção de custo e abuso', () => {
+  it('/device/sensors fica desligado por padrão (produção)', async () => {
+    h = await makeHarness({ env: { ENABLE_LEGACY_SENSORS: 'false' } });
+    const r = await h.app.inject({ method: 'POST', url: '/device/sensors', headers: {
+      'x-device-id': 'RB-01', authorization: `Bearer ${SECRETS['RB-01']}`,
+    }, payload: { boot: 'b', sequence: 1, applied: 0, line: [0, 1, 0] } });
+    expect(r.statusCode).toBe(404);
+  });
+
+  it('flood por IP vira 429 antes de autenticar ou ler o banco', async () => {
+    h = await makeHarness({ env: { RATE_LIMIT_IP_PER_MIN: '5', RATE_LIMIT_AUTHFAIL_PER_MIN: '1000' } });
+    let reads = 0;
+    const original = h.store.get.bind(h.store);
+    h.store.get = (async (...a: Parameters<typeof original>) => { reads++; return original(...a); }) as typeof h.store.get;
+    const codes: number[] = [];
+    for (let i = 0; i < 12; i++) {
+      const r = await h.app.inject({ method: 'GET', url: '/device/poll', headers: { 'x-device-id': 'RB-01', 'x-signature': 'x' } });
+      codes.push(r.statusCode);
+    }
+    expect(codes.slice(0, 5).every((c) => c === 401)).toBe(true);
+    expect(codes.slice(5).every((c) => c === 429)).toBe(true);
+    expect(reads).toBeLessThanOrEqual(5);
+  });
+
+  it('falhas repetidas de assinatura bloqueiam o IP sem tocar no banco', async () => {
+    h = await makeHarness({ env: { RATE_LIMIT_AUTHFAIL_PER_MIN: '3' } });
+    let reads = 0;
+    const original = h.store.get.bind(h.store);
+    h.store.get = (async (...a: Parameters<typeof original>) => { reads++; return original(...a); }) as typeof h.store.get;
+    const codes: number[] = [];
+    for (let i = 0; i < 8; i++) {
+      const r = await h.app.inject({ method: 'GET', url: '/device/poll', headers: { 'x-device-id': 'RB-01', 'x-signature': 'x' } });
+      codes.push(r.statusCode);
+    }
+    expect(codes.filter((c) => c === 429).length).toBeGreaterThanOrEqual(4);
+    expect(reads).toBeLessThanOrEqual(3);
+  });
+});
