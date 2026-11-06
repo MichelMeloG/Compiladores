@@ -1,0 +1,425 @@
+// RoboFlow profile autonomous_line_v1 | robô RB-01
+// ESP32: recebe a rota por Wi-Fi e controla a linha localmente.
+// Arduino IDE: ESP32 3.x, ArduinoJson 7 e partição No OTA.
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+#include <mbedtls/md.h>
+#include <time.h>
+#include <atomic>
+#include <esp_task_wdt.h>
+
+// Preencha antes de gravar. URL sem barra no final e sem /api.
+const char *SSID = "SUA_REDE_2_4GHZ";
+const char *SENHA = "SUA_SENHA";
+const char *URL = "https://roboflow-api-483331439325.us-central1.run.app";
+const char *ROBO = "RB-01";
+const char *TOKEN = "SEGREDO_DO_ROBO_NO_BACKEND";
+// Para URL https://, coloque aqui o certificado PEM da CA do servidor.
+const char *CA_CERT = "-----BEGIN CERTIFICATE-----\nMIIFVzCCAz+gAwIBAgINAgPlk28xsBNJiGuiFzANBgkqhkiG9w0BAQwFADBHMQsw\nCQYDVQQGEwJVUzEiMCAGA1UEChMZR29vZ2xlIFRydXN0IFNlcnZpY2VzIExMQzEU\nMBIGA1UEAxMLR1RTIFJvb3QgUjEwHhcNMTYwNjIyMDAwMDAwWhcNMzYwNjIyMDAw\nMDAwWjBHMQswCQYDVQQGEwJVUzEiMCAGA1UEChMZR29vZ2xlIFRydXN0IFNlcnZp\nY2VzIExMQzEUMBIGA1UEAxMLR1RTIFJvb3QgUjEwggIiMA0GCSqGSIb3DQEBAQUA\nA4ICDwAwggIKAoICAQC2EQKLHuOhd5s73L+UPreVp0A8of2C+X0yBoJx9vaMf/vo\n27xqLpeXo4xL+Sv2sfnOhB2x+cWX3u+58qPpvBKJXqeqUqv4IyfLpLGcY9vXmX7w\nCl7raKb0xlpHDU0QM+NOsROjyBhsS+z8CZDfnWQpJSMHobTSPS5g4M/SCYe7zUjw\nTcLCeoiKu7rPWRnWr4+wB7CeMfGCwcDfLqZtbBkOtdh+JhpFAz2weaSUKK0Pfybl\nqAj+lug8aJRT7oM6iCsVlgmy4HqMLnXWnOunVmSPlk9orj2XwoSPwLxAwAtcvfaH\nszVsrBhQf4TgTM2S0yDpM7xSma8ytSmzJSq0SPly4cpk9+aCEI3oncKKiPo4Zor8\nY/kB+Xj9e1x3+naH+uzfsQ55lVe0vSbv1gHR6xYKu44LtcXFilWr06zqkUspzBmk\nMiVOKvFlRNACzqrOSbTqn3yDsEB750Orp2yjj32JgfpMpf/VjsPOS+C12LOORc92\nwO1AK/1TD7Cn1TsNsYqiA94xrcx36m97PtbfkSIS5r762DL8EGMUUXLeXdYWk70p\naDPvOmbsB4om3xPXV2V4J95eSRQAogB/mqghtqmxlbCluQ0WEdrHbEg8QOB+DVrN\nVjzRlwW5y0vtOUucxD/SVRNuJLDWcfr0wbrM7Rv1/oFB2ACYPTrIrnqYNxgFlQID\nAQABo0IwQDAOBgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4E\nFgQU5K8rJnEaK0gnhS9SZizv8IkTcT4wDQYJKoZIhvcNAQEMBQADggIBAJ+qQibb\nC5u+/x6Wki4+omVKapi6Ist9wTrYggoGxval3sBOh2Z5ofmmWJyq+bXmYOfg6LEe\nQkEzCzc9zolwFcq1JKjPa7XSQCGYzyI0zzvFIoTgxQ6KfF2I5DUkzps+GlQebtuy\nh6f88/qBVRRiClmpIgUxPoLW7ttXNLwzldMXG+gnoot7TiYaelpkttGsN/H9oPM4\n7HLwEXWdyzRSjeZ2axfG34arJ45JK3VmgRAhpuo+9K4l/3wV3s6MJT/KYnAK9y8J\nZgfIPxz88NtFMN9iiMG1D53Dn0reWVlHxYciNuaCp+0KueIHoI17eko8cdLiA6Ef\nMgfdG+RCzgwARWGAtQsgWSl4vflVy2PFPEz0tv/bal8xa5meLMFrUKTX5hgUvYU/\nZ6tGn6D/Qqc6f1zLXbBwHSs09dR2CQzreExZBfMzQsNhFRAbd03OIozUhfJFfbdT\n6u9AWpQKXCBfTkBdYiJ23//OYb2MI3jSNwLgjt7RETeJ9r/tSQdirpLsQBqvFAnZ\n0E6yove+7u7Y/9waLd64NnHi/Hm3lCXRSHNboTXns5lndcEZOitHTtNCjv0xyBZm\n2tIMPNuzjsmhDYAPexZ3FL//2wmUspO8IFgV6dtxQ/PeEMMA3KgqlbbC1j+Qa3bb\nbP6MvPJwNQzcmRk13NfIRmPVNnGuV/u3gm3c\n-----END CERTIFICATE-----";
+const char *SERVIDOR_NTP = "pool.ntp.org";
+
+const int MOTOR_E[3] = {25, 26, 27}; // EN, IN1, IN2
+const int MOTOR_D[3] = {13, 14, 23};
+const int SENSORES[3] = {32, 34, 33}; // Esquerda, centro, direita
+const int NIVEL_LINHA = HIGH;
+const int SENTIDO_E = 1;
+const int SENTIDO_D = 1;
+const int POTENCIA_RETA = 150;
+const int POTENCIA_EXTERNA = 150;
+const int POTENCIA_INTERNA_SUAVE = 110;
+const int POTENCIA_INTERNA_FORTE = 60;
+const int AMOSTRAS_ESTAVEIS = 3;
+const int INTERVALO_LEITURA_MS = 10;
+const unsigned long ESPERA_INICIAL_MS = 3000;
+const unsigned long ALINHAMENTO_MS = 120;
+const unsigned long CURVA_MINIMA_MS = 180;
+const unsigned long LIMITE_CURVA_MS = 2500;
+const unsigned long LIMITE_TRECHO_MS = 15000;
+const unsigned long LIMITE_COMUNICACAO_MS = 30000;
+const unsigned long LIMITE_PARADA_SEM_REDE_MS = 8000; // parada imediata em movimento sem contato
+const int MAX_ACOES = 16;
+const int MAX_EVENTOS = 12;
+const bool ALLOW_F = true;
+const bool ALLOW_D = true;
+const bool ALLOW_E = true;
+
+enum Estado { PRONTO, EXECUTANDO, PAUSADO, BLOQUEADO, CONCLUIDO, FALHA };
+enum Fase { ALINHANDO, VIRANDO, SAINDO, SEGUINDO };
+Estado estado = PRONTO;
+Fase fase = SAINDO;
+String sessao, missao, bloqueio, motivoBloqueio;
+char acoes[MAX_ACOES];
+String nos[MAX_ACOES];
+int total = 0, concluidas = 0, revisao = 0;
+int sensores = 0, leituraAnterior = -1, repeticoes = 0, leituraEstavel = 0;
+bool saiuDaLinha = false, proximaAcao = false, bloqueioLiberado = false;
+unsigned long faseDesde = 0, pausadoDesde = 0, ultimaPublicacao = 0;
+unsigned long sequenciaEvento = 1, ultimoComando = 0;
+JsonDocument eventos; // Críticos ficam aqui até a confirmação do backend.
+
+// Só o loop escreve nos motores e no estado. A rede troca cópias.
+struct RespostaRede { String corpo; unsigned long inicio; };
+QueueHandle_t respostas;
+SemaphoreHandle_t travaPacote;
+String pacote, apresentacao;
+std::atomic<unsigned long> ultimoContato{0};
+
+const char *nomeEstado() {
+  switch (estado) {
+    case EXECUTANDO: return "running";
+    case PAUSADO: return "paused";
+    case BLOQUEADO: return "blocked";
+    case CONCLUIDO: return "finished";
+    case FALHA: return "fault";
+    default: return "ready";
+  }
+}
+
+void motor(const int pinos[3], int potencia) {
+  potencia = constrain(potencia, -255, 255);
+  analogWrite(pinos[0], 0);
+  digitalWrite(pinos[1], potencia > 0);
+  digitalWrite(pinos[2], potencia < 0);
+  analogWrite(pinos[0], abs(potencia));
+}
+
+void mover(int esquerda, int direita) {
+  motor(MOTOR_E, esquerda * SENTIDO_E);
+  motor(MOTOR_D, direita * SENTIDO_D);
+}
+
+void identificar(JsonObject e, const char *tipo, unsigned long sequencia) {
+  e["v"] = 1; e["type"] = tipo;
+  e["messageId"] = sessao + "-" + String(sequencia);
+  e["deviceId"] = ROBO; e["sessionId"] = sessao;
+  e["sequence"] = sequencia; e["uptimeMs"] = millis();
+}
+
+JsonObject evento(const char *tipo) {
+  JsonArray fila = eventos["events"].as<JsonArray>();
+  if (fila.size() >= MAX_EVENTOS) {
+    mover(0, 0); estado = FALHA;
+    Serial.println("Fila de eventos cheia: reinicie e confira a posição.");
+    return JsonObject();
+  }
+  JsonObject e = fila.add<JsonObject>();
+  identificar(e, tipo, ++sequenciaEvento);
+  if (missao.length()) e["missionId"] = missao;
+  return e;
+}
+
+void progresso(const char *tipo) {
+  JsonObject e = evento(tipo);
+  e["routeRevision"] = revisao; e["actionIndex"] = concluidas;
+  if (String(tipo) == "action_completed") e["expectedNode"] = nos[concluidas];
+  else e["command"] = String(acoes[concluidas]);
+}
+
+void snapshot() {
+  JsonObject e = evento("snapshot"); e["state"] = nomeEstado();
+  if (missao.length()) {
+    e["routeRevision"] = revisao; e["completedActions"] = concluidas;
+    if (concluidas < total) e["actionIndex"] = concluidas;
+  }
+  e["blockId"] = bloqueio.length() ? bloqueio.c_str() : nullptr;
+}
+
+void bloquear(const char *motivo) {
+  mover(0, 0); pausadoDesde = millis(); estado = BLOQUEADO;
+  motivoBloqueio = motivo; bloqueioLiberado = false;
+  bloqueio = sessao + "-b-" + String(sequenciaEvento + 1);
+  JsonObject e = evento("block_started");
+  e["blockId"] = bloqueio; e["reasons"].add(motivo); e["actionIndex"] = concluidas;
+  Serial.printf("Parado: %s\n", motivo);
+}
+
+void falhar(const char *codigo) {
+  mover(0, 0); estado = FALHA;
+  JsonObject e = evento("fault");
+  e["code"] = codigo; e["message"] = "Confira a posição e reinicie o carrinho.";
+  e["severity"] = "critical";
+  Serial.printf("Falha: %s\n", codigo);
+}
+
+void iniciarAcao() {
+  fase = acoes[concluidas] == 'F' ? SAINDO : ALINHANDO;
+  faseDesde = millis(); saiuDaLinha = false; repeticoes = 0; proximaAcao = false;
+  leituraEstavel = sensores;
+  progresso("action_started");
+}
+
+void seguirLinha() {
+  bool esquerda = leituraEstavel & 4, centro = leituraEstavel & 2;
+  bool direita = leituraEstavel & 1;
+  int interna = centro ? POTENCIA_INTERNA_SUAVE : POTENCIA_INTERNA_FORTE;
+  if (esquerda && direita) mover(POTENCIA_RETA, POTENCIA_RETA);
+  else if (esquerda) mover(interna, POTENCIA_EXTERNA);
+  else if (direita) mover(POTENCIA_EXTERNA, interna);
+  else mover(POTENCIA_RETA, POTENCIA_RETA);
+}
+
+void executarRota() {
+  if (estado != EXECUTANDO) return;
+  bool cruzamento = (sensores & 5) == 5;
+  if (proximaAcao) {
+    // Reserva espaço para os eventos do próximo trecho.
+    if (eventos["events"].size() >= 8) { bloquear("fault"); return; }
+    if (millis() - ultimoContato > LIMITE_COMUNICACAO_MS) { bloquear("stop_requested"); return; }
+    iniciarAcao();
+  }
+  unsigned long tempo = millis() - faseDesde;
+  if (tempo > (fase == VIRANDO ? LIMITE_CURVA_MS : LIMITE_TRECHO_MS)) {
+    falhar("MANOBRA_SEM_CONFIRMACAO"); return;
+  }
+  // Durante a curva, passar por uma área sem linha é esperado por pouco tempo.
+  if (sensores == 0 && fase != VIRANDO) { bloquear("line_lost"); return; }
+  if (fase == ALINHANDO) {
+    mover(POTENCIA_RETA, POTENCIA_RETA);
+    if (tempo >= ALINHAMENTO_MS) { fase = VIRANDO; faseDesde = millis(); repeticoes = 0; }
+  } else if (fase == VIRANDO) {
+    int potencia = acoes[concluidas] == 'D' ? POTENCIA_RETA : -POTENCIA_RETA;
+    mover(potencia, -potencia);
+    if (!(sensores & 2) && repeticoes >= AMOSTRAS_ESTAVEIS) saiuDaLinha = true;
+    if (saiuDaLinha && tempo >= CURVA_MINIMA_MS && sensores == 2 && repeticoes >= AMOSTRAS_ESTAVEIS) {
+      fase = SAINDO; faseDesde = millis(); repeticoes = 0;
+    }
+  } else {
+    seguirLinha();
+    if (repeticoes < AMOSTRAS_ESTAVEIS) return;
+    if (fase == SAINDO && !cruzamento) {
+      fase = SEGUINDO; faseDesde = millis(); repeticoes = 0;
+    } else if (fase == SEGUINDO && cruzamento) {
+      mover(0, 0); progresso("action_completed"); concluidas++;
+      if (concluidas == total) {
+        estado = CONCLUIDO;
+        JsonObject e = evento("mission_completed");
+        e["routeRevision"] = revisao; e["completedActions"] = concluidas;
+        Serial.println("Rota concluída.");
+      } else proximaAcao = true;
+    }
+  }
+}
+
+void responderComando(JsonObjectConst c, const char *erro = nullptr) {
+  JsonObject e = evento(erro ? "reject" : "ack"); e["replyTo"] = c["messageId"];
+  if (erro) e["reason"] = erro;
+  else { e["result"] = "accepted"; e["routeRevision"] = revisao; }
+}
+
+void aplicarComando(JsonObjectConst c, unsigned long inicioRequisicao) {
+  if (c["sessionId"] != sessao || c["deviceId"] != ROBO) return;
+  String id = c["messageId"] | "";
+  // IDs crescentes gerados pelo backend em services/ids.ts.
+  unsigned long numero = id.startsWith("cmd-") ? strtoul(id.c_str() + 4, nullptr, 10) : 0;
+  if (!numero || numero <= ultimoComando) return;
+  ultimoComando = numero;
+  String tipo = c["type"] | "";
+  bool parada = tipo == "stop" || tipo == "abort";
+  if (!parada && millis() - inicioRequisicao >= (c["validForMs"] | 0UL)) {
+    responderComando(c, "EXPIRED"); return;
+  }
+  if (tipo == "load_route") {
+    if (estado != PRONTO && estado != CONCLUIDO) { responderComando(c, "BUSY"); return; }
+    JsonArrayConst fila = c["actions"], destinos = c["expectedNodes"];
+    if (!fila.size() || fila.size() > MAX_ACOES || fila.size() != destinos.size()) {
+      responderComando(c, "QUEUE_TOO_LARGE"); return;
+    }
+    for (JsonVariantConst acao : fila) {
+      String valor = acao.as<String>();
+      bool suportada = (valor == "F" && ALLOW_F) || (valor == "D" && ALLOW_D) || (valor == "E" && ALLOW_E);
+      if (!suportada) { responderComando(c, "UNSUPPORTED_ACTION"); return; }
+    }
+    missao = c["missionId"].as<String>(); revisao = c["routeRevision"] | 0;
+    total = fila.size(); concluidas = 0;
+    for (int i = 0; i < total; i++) {
+      acoes[i] = fila[i].as<const char *>()[0]; nos[i] = destinos[i].as<String>();
+    }
+    bloqueio = ""; estado = PRONTO; proximaAcao = true;
+  } else {
+    if (!missao.length() || c["missionId"] != missao) { responderComando(c, "NO_ROUTE_LOADED"); return; }
+    if (parada) {
+      mover(0, 0);
+      if (estado == EXECUTANDO) { pausadoDesde = millis(); estado = PAUSADO; }
+      if (tipo == "abort") { total = 0; proximaAcao = false; }
+    } else if (tipo == "start" || tipo == "resume") {
+      if (c["routeRevision"] != revisao || !total || concluidas >= total) { responderComando(c, "NO_ROUTE_LOADED"); return; }
+      bool iniciar = tipo == "start";
+      if ((iniciar && estado != PRONTO) || (!iniciar && estado != PAUSADO && estado != BLOQUEADO)) {
+        responderComando(c, "INVALID_STATE"); return;
+      }
+      if (!iniciar && estado == BLOQUEADO && c["blockId"] != bloqueio) { responderComando(c, "STALE_BLOCK"); return; }
+      if ((!sensores && fase != VIRANDO) || (!iniciar && estado == BLOQUEADO && !bloqueioLiberado)) {
+        responderComando(c, "BLOCKED"); return;
+      }
+      if (iniciar && !sensores) { responderComando(c, "BLOCKED"); return; }
+      if (!iniciar) faseDesde += millis() - pausadoDesde;
+      estado = EXECUTANDO; bloqueio = "";
+    } else { responderComando(c, "MALFORMED"); return; }
+  }
+  responderComando(c);
+  if (tipo == "abort") { missao = ""; bloqueio = ""; estado = PRONTO; }
+  Serial.printf("Comando: %s | %s\n", tipo.c_str(), nomeEstado());
+}
+
+void receberResposta(RespostaRede *resposta) {
+  JsonDocument doc;
+  if (deserializeJson(doc, resposta->corpo) || doc["success"] != true || doc["data"]["sessionId"] != sessao) return;
+  JsonObjectConst dados = doc["data"];
+  unsigned long confirmada = dados["ackedSequence"] | 0UL;
+  JsonArray fila = eventos["events"];
+  while (fila.size() && fila[0]["sequence"].as<unsigned long>() <= confirmada) fila.remove(0);
+  if (dados["rejected"].size()) { falhar("EVENTO_RECUSADO"); return; }
+  if (dados["resync"] == true || dados["reconcileRequired"] == true) {
+    if (estado == EXECUTANDO) { mover(0, 0); estado = PAUSADO; pausadoDesde = millis(); }
+    snapshot();
+  }
+  JsonArrayConst comandos = dados["commands"];
+  for (JsonObjectConst c : comandos) if (c["type"] == "stop" || c["type"] == "abort") aplicarComando(c, resposta->inicio);
+  for (JsonObjectConst c : comandos) if (c["type"] != "stop" && c["type"] != "abort") aplicarComando(c, resposta->inicio);
+}
+
+void publicarPacote() {
+  JsonDocument doc; doc.set(eventos);
+  JsonObject t = doc["events"].add<JsonObject>(); identificar(t, "telemetry", ++sequenciaEvento);
+  t["state"] = nomeEstado();
+  for (int bit : {4, 2, 1}) t["line"].add((sensores & bit) ? 1 : 0);
+  t["distanceCm"] = nullptr; t["distanceValid"] = false; t["distanceAgeMs"] = nullptr;
+  t["blockId"] = bloqueio.length() ? bloqueio.c_str() : nullptr;
+  if (bloqueio.length()) t["blockReasons"].add(motivoBloqueio);
+  if (missao.length()) {
+    t["missionId"] = missao; t["routeRevision"] = revisao;
+    if (concluidas < total) t["actionIndex"] = concluidas;
+  }
+  String corpo; serializeJson(doc, corpo);
+  // O backend limita o corpo a 4096 bytes. Envia primeiro os eventos mais antigos.
+  while (corpo.length() > 4096 && doc["events"].size() > 1) {
+    doc["events"].as<JsonArray>().remove(doc["events"].size() - 1);
+    corpo = ""; serializeJson(doc, corpo);
+  }
+  JsonDocument hello; identificar(hello.to<JsonObject>(), "hello", 1);
+  hello["firmwareVersion"] = "autonomo-1.0.0"; hello["protocolVersion"] = 1;
+  hello["state"] = nomeEstado();
+  hello["capabilities"]["supportsReverse"] = false;
+  hello["capabilities"]["maxActions"] = MAX_ACOES;
+  hello["capabilities"]["maxMessageBytes"] = 4096;
+  if (missao.length()) {
+    hello["lastMission"]["missionId"] = missao;
+    hello["lastMission"]["routeRevision"] = revisao;
+    hello["lastMission"]["completedActions"] = concluidas;
+  }
+  String inicio; serializeJson(hello, inicio);
+  xSemaphoreTake(travaPacote, portMAX_DELAY);
+  pacote = corpo; apresentacao = inicio;
+  xSemaphoreGive(travaPacote);
+}
+
+String hexadecimal(const unsigned char *bytes, size_t tamanho) {
+  String resultado; const char *digitos = "0123456789abcdef";
+  for (size_t i = 0; i < tamanho; i++) { resultado += digitos[bytes[i] >> 4]; resultado += digitos[bytes[i] & 15]; }
+  return resultado;
+}
+
+// Mesmo HMAC de contracts/src/signing.ts, usando o SHA256 do pacote ESP32.
+String assinatura(const String &caminho, const String &corpo, const String &timestamp, unsigned long sequencia) {
+  unsigned char hash[32];
+  const mbedtls_md_info_t *algoritmo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+  mbedtls_md(algoritmo, (const unsigned char *)corpo.c_str(), corpo.length(), hash);
+  String texto = "POST\n" + caminho + "\n" + timestamp + "\n" + String(sequencia) + "\n" + hexadecimal(hash, 32);
+  mbedtls_md_hmac(algoritmo, (const unsigned char *)TOKEN, strlen(TOKEN),
+                  (const unsigned char *)texto.c_str(), texto.length(), hash);
+  return hexadecimal(hash, 32);
+}
+
+void comunicarBackend(void *) {
+  WiFi.setAutoReconnect(true); WiFi.begin(SSID, SENHA); configTime(0, 0, SERVIDOR_NTP);
+  bool apresentado = false;
+  unsigned long sequencia = 0, tentativa = 0, intervalo = 1000;
+  int falhas = 0, naoAutorizado = 0; // Backoff exponencial com jitter: não martela o backend (cota/DDoS).
+  for (;;) {
+    vTaskDelay(pdMS_TO_TICKS(20));
+    if (WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000) continue;
+    if (millis() - tentativa < intervalo) continue;
+    tentativa = millis();
+    String corpo;
+    xSemaphoreTake(travaPacote, portMAX_DELAY);
+    corpo = apresentado ? pacote : apresentacao;
+    xSemaphoreGive(travaPacote);
+    String caminho = apresentado ? "/device/events" : "/device/hello";
+    WiFiClient cliente; WiFiClientSecure seguro; HTTPClient http;
+    bool https = String(URL).startsWith("https://");
+    if (https && !strlen(CA_CERT)) { Serial.println("Configure CA_CERT para HTTPS."); vTaskDelay(pdMS_TO_TICKS(3000)); continue; }
+    if (https) seguro.setCACert(CA_CERT);
+    // TLS e cold start do Cloud Run levam mais de 1,2 s; a tarefa de rede é separada do loop dos motores.
+    http.setConnectTimeout(https ? 6000 : 1200); http.setTimeout(https ? 8000 : 1200);
+    if (!http.begin(https ? (NetworkClient &)seguro : (NetworkClient &)cliente, String(URL) + caminho)) continue;
+    String timestamp = String((unsigned long)time(nullptr));
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("X-Device-Id", ROBO); http.addHeader("X-Session-Id", sessao);
+    http.addHeader("X-Timestamp", timestamp); http.addHeader("X-Sequence", String(++sequencia));
+    http.addHeader("X-Signature", assinatura(caminho, corpo, timestamp, sequencia));
+    unsigned long inicio = millis(); int status = http.POST(corpo);
+    if (status == 200) {
+      String resposta = http.getString(); JsonDocument doc;
+      if (resposta.length() <= 8192 && !deserializeJson(doc, resposta) && doc["success"] == true && doc["data"]["sessionId"] == sessao) {
+        RespostaRede *mensagem = new RespostaRede{resposta, inicio};
+        if (xQueueSend(respostas, &mensagem, pdMS_TO_TICKS(100)) == pdTRUE) {
+          ultimoContato = millis(); apresentado = true;
+          intervalo = constrain(doc["data"]["nextPollMs"] | 1500UL, 1000UL, 60000UL);
+          falhas = 0; naoAutorizado = 0;
+        } else delete mensagem;
+      }
+    } else {
+      Serial.printf("Backend HTTP %d\n", status);
+      falhas = min(falhas + 1, 6);
+      unsigned long base = min(1500UL << falhas, 60000UL);
+      intervalo = base + (esp_random() % (base / 4 + 1));
+      if (status == 429) intervalo = max(intervalo, 30000UL); // limite do servidor: espera de verdade
+      if (status == 409) { apresentado = false; falhas = 0; intervalo = 1500; }
+      if (status == 401 && ++naoAutorizado >= 3) { // relógio fora da janela ou sessão rejeitada
+        configTime(0, 0, SERVIDOR_NTP); apresentado = false; naoAutorizado = 0;
+      }
+    }
+    http.end();
+  }
+}
+
+void setup() {
+  for (int i = 0; i < 3; i++) {
+    pinMode(MOTOR_E[i], OUTPUT); pinMode(MOTOR_D[i], OUTPUT); pinMode(SENSORES[i], INPUT);
+  }
+  mover(0, 0); Serial.begin(115200);
+  sessao = String(esp_random(), HEX) + String(esp_random(), HEX);
+  eventos["events"].to<JsonArray>();
+  travaPacote = xSemaphoreCreateMutex(); respostas = xQueueCreate(2, sizeof(RespostaRede *));
+  if (!travaPacote || !respostas) { estado = FALHA; return; }
+  Serial.println("Aguardando 3 segundos; depois aguarda rota e início pela dashboard.");
+  delay(ESPERA_INICIAL_MS); publicarPacote();
+  if (xTaskCreate(comunicarBackend, "rede", 16384, nullptr, 1, nullptr) != pdPASS) estado = FALHA;
+  esp_task_wdt_add(NULL); // watchdog do loop: travamento reinicia o ESP32 com os motores parados
+}
+
+void loop() {
+  if (!travaPacote || !respostas) { mover(0, 0); delay(100); return; }
+  sensores = 0;
+  for (int i = 0; i < 3; i++) if (digitalRead(SENSORES[i]) == NIVEL_LINHA) sensores |= 4 >> i;
+  if (sensores != leituraAnterior) { leituraAnterior = sensores; repeticoes = 1; }
+  else if (repeticoes < AMOSTRAS_ESTAVEIS) repeticoes++;
+  if (repeticoes >= AMOSTRAS_ESTAVEIS) leituraEstavel = sensores;
+  RespostaRede *resposta;
+  while (xQueueReceive(respostas, &resposta, 0) == pdTRUE) { receberResposta(resposta); delete resposta; }
+  if (estado == BLOQUEADO && !bloqueioLiberado && sensores && repeticoes >= AMOSTRAS_ESTAVEIS &&
+      eventos["events"].size() < 4 && millis() - ultimoContato < LIMITE_COMUNICACAO_MS) {
+    bloqueioLiberado = true;
+    JsonObject e = evento("block_cleared"); e["blockId"] = bloqueio;
+  }
+  // Sem comunicação o carro não segue cego: para já, não só no próximo trecho.
+  if (estado == EXECUTANDO && millis() - ultimoContato > LIMITE_PARADA_SEM_REDE_MS) bloquear("stop_requested");
+  executarRota();
+  if (estado != EXECUTANDO) mover(0, 0);
+  esp_task_wdt_reset();
+  if (millis() - ultimaPublicacao >= 100) { publicarPacote(); ultimaPublicacao = millis(); }
+  delay(INTERVALO_LEITURA_MS);
+}
